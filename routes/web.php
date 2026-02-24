@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,40 +25,35 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
 
-    Route::get('dashboard',
-        [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
-        ->name('dashboard');
+        Route::get('dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
+            ->name('dashboard');
 
-    Route::get('bookings/calendar',
-        [BookingController::class, 'calendar'])
-        ->name('bookings.calendar');
+        Route::get('bookings/calendar', [BookingController::class, 'calendar'])
+            ->name('bookings.calendar');
 
-    Route::get('bookings/calendar-data',
-        [BookingController::class, 'calendarData'])
-        ->name('bookings.calendar-data');
+        Route::get('bookings/calendar-data', [BookingController::class, 'calendarData'])
+            ->name('bookings.calendar-data');
 
-    Route::resource('customers',
-        \App\Http\Controllers\Admin\CustomerController::class);
+        Route::resource('customers',  \App\Http\Controllers\Admin\CustomerController::class);
+        Route::resource('therapists', \App\Http\Controllers\Admin\TherapistController::class);
+        Route::resource('services',   \App\Http\Controllers\Admin\ServiceController::class);
+        Route::resource('bookings',   \App\Http\Controllers\Admin\BookingController::class);
+        Route::resource('payments',   \App\Http\Controllers\Admin\PaymentController::class);
+        Route::resource('memberships', \App\Http\Controllers\Admin\MembershipController::class);
 
-    Route::resource('therapists',
-        \App\Http\Controllers\Admin\TherapistController::class);
+        // ================= CUSTOMER MEMBERSHIP (NESTED) =================
+        Route::prefix('customers/{customer}/memberships')
+            ->name('customers.membership.')
+            ->group(function () {
+                Route::get('/',                              [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'index'])->name('index');
+                Route::get('/create',                        [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'create'])->name('create');
+                Route::post('/',                             [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'store'])->name('store');
+                Route::get('/{customerMembership}/edit',    [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'edit'])->name('edit');
+                Route::put('/{customerMembership}',         [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'update'])->name('update');
+                Route::delete('/{customerMembership}',      [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'destroy'])->name('destroy');
+            });
+    });
 
-    Route::resource('services',
-        \App\Http\Controllers\Admin\ServiceController::class);
-
-    Route::resource('bookings',
-        \App\Http\Controllers\Admin\BookingController::class);
-
-    Route::resource('payments',
-        \App\Http\Controllers\Admin\PaymentController::class);
-
-    // ================= MEMBERSHIP =================
- Route::resource('memberships',
-    \App\Http\Controllers\Admin\MembershipController::class);
-
-Route::resource('customer-memberships',
-    \App\Http\Controllers\Admin\CustomerMembershipController::class);
-});
 
 // ================= USER =================
 Route::middleware(['auth', 'role:user'])->group(function () {
@@ -69,9 +65,9 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 
 // ================= PROFILE =================
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

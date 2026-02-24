@@ -14,34 +14,35 @@ class AdminDashboardController extends Controller
     public function index()
     {
         // Stats
+        $customers = Customer::with('memberships')->get();
         $todayBookings  = Booking::whereDate('scheduled_at', today())->count();
         $monthRevenue   = Payment::whereMonth('paid_at', now()->month)
-                                  ->whereYear('paid_at', now()->year)
-                                  ->sum('amount');
+            ->whereYear('paid_at', now()->year)
+            ->sum('amount');
         $totalTherapists = Therapist::count();
         $totalCustomers  = Customer::count();
 
         // Recent bookings (5 terbaru)
         $recentBookings = Booking::with(['customer', 'therapist', 'service'])
-                                  ->latest()
-                                  ->take(5)
-                                  ->get();
+            ->latest()
+            ->take(5)
+            ->get();
 
         // Therapist list
         $therapists = Therapist::take(5)->get();
 
         // Booking selesai tapi belum dibayar
         $unpaidBookings = Booking::with(['customer', 'service'])
-                                  ->where('status', 'completed')
-                                  ->whereDoesntHave('payment')
-                                  ->take(5)
-                                  ->get();
+            ->where('status', 'completed')
+            ->whereDoesntHave('payment')
+            ->take(5)
+            ->get();
 
         // Layanan terpopuler
         $topServices = Service::withCount('bookings')
-                               ->orderByDesc('bookings_count')
-                               ->take(4)
-                               ->get();
+            ->orderByDesc('bookings_count')
+            ->take(4)
+            ->get();
 
         return view('admin.dashboard', compact(
             'todayBookings',
@@ -51,7 +52,8 @@ class AdminDashboardController extends Controller
             'recentBookings',
             'therapists',
             'unpaidBookings',
-            'topServices'
+            'topServices',
+            'customers'
         ));
     }
 }

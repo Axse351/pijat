@@ -11,75 +11,93 @@ use Carbon\Carbon;
 
 class CustomerMembershipController extends Controller
 {
-    public function create($customer_id)
+    public function index(Customer $customer)
     {
-        $customer = Customer::with('user')->findOrFail($customer_id);
-        $memberships = Membership::all();
+        $customer->load('user');
+
+        $activeMembership = CustomerMembership::with('membership')
+            ->where('customer_id', $customer->id)
+            ->where('is_active', true)
+            ->first();
+
+        $histories = CustomerMembership::with('membership')
+            ->where('customer_id', $customer->id)
+            ->latest()
+            ->get();
+
+        return view('admin.customer_memberships.index', compact('customer', 'activeMembership', 'histories'));
+    }
+
+    public function create(Customer $customer)
+    {
+        $customer->load('user');
+        $memberships = Membership::orderBy('name')->get();
 
         return view('admin.customer_memberships.create', compact('customer', 'memberships'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, Customer $customer)
     {
         $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'membership_id' => 'required|exists:memberships,id'
+            'membership_id' => 'required|exists:memberships,id',
         ]);
 
         $membership = Membership::findOrFail($request->membership_id);
 
-        $startDate = Carbon::now();
-        $endDate = Carbon::now()->addDays($membership->duration_days);
-
         // Nonaktifkan membership lama
-        CustomerMembership::where('customer_id', $request->customer_id)
+        CustomerMembership::where('customer_id', $customer->id)
             ->where('is_active', true)
             ->update(['is_active' => false]);
 
-        // Buat membership baru
         CustomerMembership::create([
-            'customer_id' => $request->customer_id,
+            'customer_id'  => $customer->id,
             'membership_id' => $membership->id,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'is_active' => true
+            'start_date'   => Carbon::today(),
+            'end_date'     => Carbon::today()->addDays($membership->duration_days),
+            'is_active'    => true,
         ]);
 
-        return redirect()->route('admin.customers.index')
-            ->with('success', 'Membership berhasil ditambahkan');
+        return redirect()
+            ->route('admin.customers.membership.index', $customer)
+            ->with('success', "Membership {$membership->name} berhasil diberikan.");
     }
 
-    public function history($customer_id)
+    public function edit(Customer $customer, CustomerMembership $customerMembership)
     {
-        $customer = Customer::with(['user','memberships.membership'])
-            ->findOrFail($customer_id);
+        $customer->load('user');
+        $memberships = Membership::orderBy('name')->get();
 
-        return view('admin.customer_memberships.history', compact('customer'));
+        return view('admin.customer_memberships.edit', compact('customer', 'customerMembership', 'memberships'));
     }
 
-    public function edit($id)
-{
-    $customerMembership = CustomerMembership::findOrFail($id);
-    $memberships = Membership::all();
+    public function update(Request $request, Customer $customer, CustomerMembership $customerMembership)
+    {
+        $request->validate([
+            'membership_id' => 'required|exists:memberships,id',
+            'start_date'    => 'required|date',
+            'is_active'     => 'boolean',
+        ]);
 
-    return view('admin.customer_memberships.edit',
-        compact('customerMembership','memberships'));
-}
+        $membership = Membership::findOrFail($request->membership_id);
 
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'membership_id' => 'required|exists:memberships,id',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after_or_equal:start_date',
-        'is_active' => 'required|boolean'
-    ]);
+        $customerMembership->update([
+            'membership_id' => $membership->id,
+            'start_date'    => $request->start_date,
+            'end_date'      => Carbon::parse($request->start_date)->addDays($membership->duration_days),
+            'is_active'     => $request->boolean('is_active'),
+        ]);
 
-    $membership = CustomerMembership::findOrFail($id);
-    $membership->update($request->all());
+        return redirect()
+            ->route('admin.customers.membership.index', $customer)
+            ->with('success', 'Membership berhasil diperbarui.');
+    }
 
-    return redirect()
-        ->route('admin.customers.membership.history', $membership->customer_id)
-        ->with('success','Membership berhasil diupdate');
-}
+    public function destroy(Customer $customer, CustomerMembership $customerMembership)
+    {
+        $customerMembership->delete();
+
+        return redirect()
+            ->route('admin.customers.membership.index', $customer)
+            ->with('success', 'Membership berhasil dihapus.');
+    }
 }
