@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+
 // Redirect root ke login
 Route::get('/', function () {
     return redirect()->route('login');
@@ -18,21 +19,45 @@ Route::middleware('auth')->get('/dashboard', function () {
 
 
 // ================= ADMIN =================
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-    // ← INI YANG DIPERBAIKI: pakai controller, bukan closure
-   Route::get('dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
-    ->name('dashboard');
-     Route::get('bookings/calendar',      [BookingController::class, 'calendar'])     ->name('bookings.calendar');
-    Route::get('bookings/calendar-data', [BookingController::class, 'calendarData']) ->name('bookings.calendar-data');
+    Route::get('dashboard',
+        [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
+        ->name('dashboard');
 
-    Route::resource('customers',  \App\Http\Controllers\Admin\CustomerController::class);
-    Route::resource('therapists', \App\Http\Controllers\Admin\TherapistController::class);
-    Route::resource('services',   \App\Http\Controllers\Admin\ServiceController::class);
-    Route::resource('bookings',   \App\Http\Controllers\Admin\BookingController::class);
-    Route::resource('payments',   \App\Http\Controllers\Admin\PaymentController::class);
+    Route::get('bookings/calendar',
+        [BookingController::class, 'calendar'])
+        ->name('bookings.calendar');
+
+    Route::get('bookings/calendar-data',
+        [BookingController::class, 'calendarData'])
+        ->name('bookings.calendar-data');
+
+    Route::resource('customers',
+        \App\Http\Controllers\Admin\CustomerController::class);
+
+    Route::resource('therapists',
+        \App\Http\Controllers\Admin\TherapistController::class);
+
+    Route::resource('services',
+        \App\Http\Controllers\Admin\ServiceController::class);
+
+    Route::resource('bookings',
+        \App\Http\Controllers\Admin\BookingController::class);
+
+    Route::resource('payments',
+        \App\Http\Controllers\Admin\PaymentController::class);
+
+    // ================= MEMBERSHIP =================
+ Route::resource('memberships',
+    \App\Http\Controllers\Admin\MembershipController::class);
+
+Route::resource('customer-memberships',
+    \App\Http\Controllers\Admin\CustomerMembershipController::class);
 });
-
 
 // ================= USER =================
 Route::middleware(['auth', 'role:user'])->group(function () {

@@ -52,4 +52,9 @@ public function isUser()
 {
     return $this->role === 'user';
 }
+
+public function customer()
+{
+    return $this->hasOne(Customer::class);
+}
 }
