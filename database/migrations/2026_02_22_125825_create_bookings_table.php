@@ -11,26 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('bookings', function (Blueprint $table) {
-    $table->id();
+        Schema::create('bookings', function (Blueprint $table) {
+            $table->id();
 
-    $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('therapist_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('service_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('therapist_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('service_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('promo_id')->constrained()->cascadeOnDelete();
 
-    $table->enum('order_source', ['wa','walkin','web']);
-    $table->dateTime('scheduled_at');
+            $table->enum('order_source', ['wa', 'walkin', 'web']);
+            $table->dateTime('scheduled_at');
 
-    $table->decimal('price', 12, 2); // sebelum discount
-    $table->decimal('discount', 12, 2)->default(0);
-    $table->decimal('final_price', 12, 2);
-    $table->text('notes')->nullable();
+            $table->decimal('price', 12, 2); // sebelum discount
+            $table->decimal('discount', 12, 2)->default(0);
+            $table->decimal('final_price', 12, 2);
+            $table->text('notes')->nullable();
 
-    $table->enum('status', ['pending','scheduled','completed','cancelled', 'ongoing'])->default('pending');
+            $table->enum('status', ['pending', 'scheduled', 'completed', 'cancelled', 'ongoing'])->default('pending');
 
-    $table->timestamps();
-});
-
+            $table->timestamps();
+        });
     }
 
     /**

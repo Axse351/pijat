@@ -8,12 +8,27 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::with('user')->latest()->get();
+        $customers = Customer::with(['user', 'bookings' => function ($q) {
+            $q->where('status', 'completed')->orderByDesc('scheduled_at');
+        }])->latest()->get();
+
+        // Tambahkan atribut kunjungan & last visit ke setiap customer
+        $customers->each(function ($c) {
+            $completed       = $c->bookings; // sudah di-filter completed
+            $c->visit_count  = $completed->count();
+            $c->last_visit   = $completed->first()?->scheduled_at; // booking terbaru
+
+            // Inactive: sudah pernah datang tapi terakhir kunjungan > 30 hari lalu
+            $c->is_inactive  = $c->last_visit
+                && Carbon::parse($c->last_visit)->lt(now()->subDays(30));
+        });
+
         return view('admin.customers.index', compact('customers'));
     }
 
@@ -25,33 +40,31 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-            'phone'    => 'nullable|string|max:20',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email',
+            'password'    => 'required|string|min:8|confirmed',
+            'phone'       => 'nullable|string|max:20',
             'ulang_tahun' => 'nullable|date',
-            'notes'    => 'nullable|string',
+            'notes'       => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($request) {
-            // 1. Buat User terlebih dahulu
             $user = User::create([
-                'name'     => $request->name,
-                'email'    => $request->email,
-                'password' => Hash::make($request->password),
-                'phone'    => $request->phone,
+                'name'        => $request->name,
+                'email'       => $request->email,
+                'password'    => Hash::make($request->password),
+                'phone'       => $request->phone,
                 'ulang_tahun' => $request->ulang_tahun,
-                'role'     => 'user',
+                'role'        => 'user',
             ]);
 
-            // 2. Buat Customer yang terhubung ke User
             Customer::create([
-                'user_id' => $user->id,
-                'name'    => $request->name,
-                'email'   => $request->email,
-                'phone'   => $request->phone,
+                'user_id'     => $user->id,
+                'name'        => $request->name,
+                'email'       => $request->email,
+                'phone'       => $request->phone,
                 'ulang_tahun' => $request->ulang_tahun,
-                'notes'   => $request->notes,
+                'notes'       => $request->notes,
             ]);
         });
 
@@ -69,16 +82,15 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email,' . $customer->user_id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'phone'    => 'nullable|string|max:20',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email,' . $customer->user_id,
+            'password'    => 'nullable|string|min:8|confirmed',
+            'phone'       => 'nullable|string|max:20',
             'ulang_tahun' => 'nullable|date',
-            'notes'    => 'nullable|string',
+            'notes'       => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($request, $customer) {
-            // Update User
             $userData = [
                 'name'  => $request->name,
                 'email' => $request->email,
@@ -88,12 +100,11 @@ class CustomerController extends Controller
             }
             $customer->user->update($userData);
 
-            // Update Customer
             $customer->update([
-                'name'  => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'notes' => $request->notes,
+                'name'        => $request->name,
+                'email'       => $request->email,
+                'phone'       => $request->phone,
+                'notes'       => $request->notes,
                 'ulang_tahun' => $request->ulang_tahun,
             ]);
         });
@@ -106,7 +117,6 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         DB::transaction(function () use ($customer) {
-            // Hapus user juga (cascade akan hapus customer otomatis)
             $customer->user->delete();
         });
 

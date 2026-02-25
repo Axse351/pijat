@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -6,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Therapist;
 use App\Models\Service;
+use App\Models\Promo;
 use App\Models\Commission;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -14,17 +16,14 @@ class BookingController extends Controller
 {
     public function index()
     {
-    $bookings   = Booking::with(['customer','therapist','service'])->latest()->get();
-    $customers  = Customer::all();
-    $therapists = Therapist::where('is_active', 1)->get();
-    $services   = Service::all();
+        $bookings   = Booking::with(['customer', 'therapist', 'service'])->latest()->get();
+        $customers  = Customer::all();
+        $therapists = Therapist::where('is_active', 1)->get();
+        $services   = Service::all();
 
-    return view('admin.bookings.index', compact('bookings', 'customers', 'therapists', 'services'));
+        return view('admin.bookings.index', compact('bookings', 'customers', 'therapists', 'services'));
     }
 
-    /**
-     * Tampilkan halaman kalender booking.
-     */
     public function calendar()
     {
         $customers  = Customer::all();
@@ -34,19 +33,39 @@ class BookingController extends Controller
         return view('admin.bookings.calendar', compact('customers', 'therapists', 'services'));
     }
 
-    /**
-     * API: kembalikan booking pada tanggal tertentu (format JSON untuk kalender).
-     * GET /admin/bookings/calendar-data?date=2025-06-01
-     */
     public function calendarData(Request $request)
     {
-        $date = $request->get('date', now()->toDateString());
+        $date     = $request->get('date', now()->toDateString());
+        $today    = now()->toDateString();
+        $tomorrow = now()->addDay()->toDateString();
 
-        $bookings = Booking::with(['customer','therapist','service'])
+        $bookings = Booking::with(['customer', 'therapist', 'service'])
             ->whereDate('scheduled_at', $date)
-            ->whereIn('status', ['scheduled','ongoing','completed','cancelled'])
+            ->whereIn('status', ['scheduled', 'ongoing', 'completed', 'cancelled'])
             ->get()
-            ->map(function ($b) {
+            ->map(function ($b) use ($date, $today, $tomorrow) {
+                $waUrl = null;
+
+                // Tampilkan tombol WA hanya untuk booking H-0 atau H-1 yang masih scheduled
+                $isRemindable = in_array($date, [$today, $tomorrow]) && $b->status === 'scheduled';
+                $phone        = $b->customer->phone ?? null;
+
+                if ($isRemindable && $phone) {
+                    $phone = preg_replace('/\D/', '', $phone);
+                    if (str_starts_with($phone, '0')) {
+                        $phone = '62' . substr($phone, 1);
+                    }
+                    $jadwal  = Carbon::parse($b->scheduled_at)->locale('id')->translatedFormat('l, d F Y \p\u\k\u\l H:i');
+                    $msg     = urlencode(
+                        "Halo {$b->customer->name}, kami ingin mengingatkan booking Anda:\n\n"
+                            . "📋 Layanan : {$b->service->name}\n"
+                            . "👤 Terapis : {$b->therapist->name}\n"
+                            . "🗓 Jadwal  : {$jadwal}\n\n"
+                            . "Mohon hadir tepat waktu. Terima kasih! 🙏"
+                    );
+                    $waUrl = "https://wa.me/{$phone}?text={$msg}";
+                }
+
                 return [
                     'id'            => $b->id,
                     'therapist_id'  => $b->therapist_id,
@@ -56,6 +75,7 @@ class BookingController extends Controller
                     'service_name'  => $b->service->name  ?? '—',
                     'final_price'   => $b->final_price,
                     'edit_url'      => route('admin.bookings.edit', $b->id),
+                    'wa_url'        => $waUrl,
                 ];
             });
 
@@ -67,17 +87,31 @@ class BookingController extends Controller
         $customers  = Customer::all();
         $therapists = Therapist::where('is_active', 1)->get();
         $services   = Service::all();
+        $promos     = Promo::where('status', 'aktif')->get();
 
-        return view('admin.bookings.create', compact('customers', 'therapists', 'services'));
+        return view('admin.bookings.create', compact('customers', 'therapists', 'services', 'promos'));
     }
 
     public function store(Request $request)
     {
-        $service = Service::findOrFail($request->service_id);
+        $service   = Service::findOrFail($request->service_id);
+        $price     = $service->price;
+        $promoDisc = 0;
+        $promoId   = $request->promo_id ?: null;
 
-        $price      = $service->price;
-        $discount   = $request->discount ?? 0;
-        $finalPrice = max(0, $price - $discount);
+        // Hitung diskon dari promo (kolom `discount` = persentase)
+        if ($promoId) {
+            $promo = Promo::where('id', $promoId)->where('status', 'aktif')->first();
+            if ($promo) {
+                $promoDisc = round($price * $promo->discount / 100);
+            } else {
+                $promoId = null;
+            }
+        }
+
+        $manualDisc = (int) ($request->discount ?? 0);
+        $totalDisc  = $promoDisc + $manualDisc;
+        $finalPrice = max(0, $price - $totalDisc);
 
         Booking::create([
             'customer_id'  => $request->customer_id,
@@ -86,7 +120,8 @@ class BookingController extends Controller
             'order_source' => $request->order_source,
             'scheduled_at' => $request->scheduled_at,
             'price'        => $price,
-            'discount'     => $discount,
+            'promo_id'     => $promoId,
+            'discount'     => $totalDisc,
             'final_price'  => $finalPrice,
             'status'       => 'scheduled',
             'notes'        => $request->notes,
@@ -108,16 +143,15 @@ class BookingController extends Controller
             'notes'        => $request->notes,
         ]);
 
-        // Jika status completed → buat komisi (jika belum ada)
         if ($booking->status === 'completed' && !$booking->commission()->exists()) {
             $percent = $booking->therapist->commission_percent;
             $amount  = ($booking->price * $percent) / 100;
 
             Commission::create([
-                'booking_id'        => $booking->id,
-                'therapist_id'      => $booking->therapist_id,
-                'commission_percent'=> $percent,
-                'commission_amount' => $amount,
+                'booking_id'         => $booking->id,
+                'therapist_id'       => $booking->therapist_id,
+                'commission_percent' => $percent,
+                'commission_amount'  => $amount,
             ]);
         }
 

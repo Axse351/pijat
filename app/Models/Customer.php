@@ -10,18 +10,18 @@ class Customer extends Model
     use HasFactory;
     protected $table = 'customers';
     protected $guarded = ['id'];
-      public function bookings()
+    public function bookings()
     {
         return $this->hasMany(Booking::class);
     }
 
     public function user()
-{
-    return $this->belongsTo(User::class);
-}
+    {
+        return $this->belongsTo(User::class);
+    }
 
-public function memberships()
-{
-    return $this->hasMany(CustomerMembership::class);
-}
+    public function memberships()
+    {
+        return $this->hasMany(CustomerMembership::class);
+    }
 }
