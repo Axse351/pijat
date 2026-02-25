@@ -52,7 +52,8 @@
                                             request()->routeIs('admin.therapists.*') ||
                                             request()->routeIs('admin.customers.*') ||
                                             request()->routeIs('admin.memberships.*') ||
-                                            request()->routeIs('admin.customer-memberships.*')
+                                            request()->routeIs('admin.customer-memberships.*') ||
+                                            request()->routeIs('admin.promos.*')
                                                 ? 'true'
                                                 : 'false' }} ?
                                             'border-indigo-500 text-gray-900 dark:text-gray-100' :
@@ -309,16 +310,12 @@
                                                             Membership
                                                         </a>
 
-                                                        {{-- Customer Membership --}}
-                                                        @if (isset($customer))
-                                                            <a
-                                                                href="{{ route('admin.customers.membership.index', $customer->id) }}">
-                                                                <div
-                                                                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">
-                                                                    Customer Membership
-                                                                </div>
-                                                            </a>
-                                                        @endif
+                                                        {{-- Promo --}}
+<a href="{{ route('admin.promos.index') }}"
+    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600
+    {{ request()->routeIs('admin.promos.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+    Promo
+</a>
 
                                                     </div>
                                                 </div>
@@ -417,6 +414,9 @@
                                 <x-responsive-nav-link :href="route('admin.memberships.index')" :active="request()->routeIs('admin.memberships.*')">
                                     Membership
                                 </x-responsive-nav-link>
+                                <x-responsive-nav-link :href="route('admin.memberships.index')" :active="request()->routeIs('admin.memberships.*')">
+    Membership
+</x-responsive-nav-link>
                             @endif
                         </div>
                     </div>
