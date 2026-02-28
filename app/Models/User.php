@@ -22,6 +22,9 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'face_embedding',
+        'face_registered_at',
+        'face_liveness_enabled',
     ];
 
     /**
@@ -32,6 +35,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'face_embedding', // Jangan expose ke API
     ];
 
     /**
@@ -42,19 +46,59 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'face_registered_at' => 'datetime',
+        'face_liveness_enabled' => 'boolean',
     ];
+
+    /**
+     * Cek apakah user adalah admin
+     */
     public function isAdmin()
-{
-    return $this->role === 'admin';
-}
+    {
+        return $this->role === 'admin';
+    }
 
-public function isUser()
-{
-    return $this->role === 'user';
-}
+    /**
+     * Cek apakah user adalah user biasa
+     */
+    public function isUser()
+    {
+        return $this->role === 'user';
+    }
 
-public function customer()
-{
-    return $this->hasOne(Customer::class);
-}
+    /**
+     * Relasi dengan Customer
+     */
+    public function customer()
+    {
+        return $this->hasOne(Customer::class);
+    }
+
+    /**
+     * Cek apakah user sudah registrasi wajah
+     */
+    public function hasFaceRegistered(): bool
+    {
+        return !is_null($this->face_embedding);
+    }
+
+    /**
+     * Cek apakah face login aktif
+     */
+    public function isFaceLoginEnabled(): bool
+    {
+        return $this->face_liveness_enabled && $this->hasFaceRegistered();
+    }
+
+    /**
+     * Reset face data - gunakan jika user ingin mendaftar ulang wajahnya
+     */
+    public function resetFaceData(): void
+    {
+        $this->update([
+            'face_embedding' => null,
+            'face_registered_at' => null,
+            'face_liveness_enabled' => false,
+        ]);
+    }
 }

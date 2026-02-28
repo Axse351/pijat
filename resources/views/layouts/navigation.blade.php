@@ -53,7 +53,8 @@
                                             request()->routeIs('admin.customers.*') ||
                                             request()->routeIs('admin.memberships.*') ||
                                             request()->routeIs('admin.customer-memberships.*') ||
-                                            request()->routeIs('admin.promos.*')
+                                            request()->routeIs('admin.promos.*') ||
+                                            request()->routeIs('admin.barang.*')
                                                 ? 'true'
                                                 : 'false' }} ?
                                             'border-indigo-500 text-gray-900 dark:text-gray-100' :
@@ -105,6 +106,13 @@
                                             class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600
                                                   {{ request()->routeIs('admin.promos.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
                                             Promo
+                                        </a>
+
+                                        {{-- Barang --}}
+                                        <a href="{{ route('admin.barang.index') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600
+                                                  {{ request()->routeIs('admin.barang.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+                                            Barang
                                         </a>
 
                                         {{-- Customer Membership (kontekstual) --}}
@@ -215,6 +223,10 @@
 
                     <x-responsive-nav-link :href="route('admin.promos.index')" :active="request()->routeIs('admin.promos.*')">
                         Promo
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('admin.barang.index')" :active="request()->routeIs('admin.barang.*')">
+                        Barang
                     </x-responsive-nav-link>
                 @endif
             @endauth

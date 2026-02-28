@@ -41,6 +41,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('payments',   \App\Http\Controllers\Admin\PaymentController::class);
         Route::resource('memberships', \App\Http\Controllers\Admin\MembershipController::class);
         Route::resource('promos', \App\Http\Controllers\Admin\PromoController::class);
+        Route::resource('barang', \App\Http\Controllers\BarangController::class);
 
         // ================= CUSTOMER MEMBERSHIP (NESTED) =================
         Route::prefix('customers/{customer}/memberships')
