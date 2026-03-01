@@ -38,6 +38,11 @@
                                 Pembayaran
                             </x-nav-link>
 
+                            {{-- KEHADIRAN --}}
+                            <x-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
+                                Kehadiran
+                            </x-nav-link>
+
                             {{-- MASTER DATA DROPDOWN --}}
                             <div class="hidden sm:flex sm:items-center" x-data="{ openMaster: false }"
                                 @click.outside="openMaster = false">
@@ -199,6 +204,10 @@
 
                     <x-responsive-nav-link :href="route('admin.payments.index')" :active="request()->routeIs('admin.payments.*')">
                         Pembayaran
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
+                        Kehadiran
                     </x-responsive-nav-link>
 
                     <div class="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">
