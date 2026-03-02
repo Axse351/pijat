@@ -11,179 +11,92 @@ use Illuminate\Support\Facades\DB;
 
 class TherapistFaceController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE - SHOW REGISTER FACE PAGE
-    |--------------------------------------------------------------------------
-    */
-
     public function create(Therapist $therapist)
     {
-        // Ambil existing face data jika ada
         $faceData = $therapist->faceData;
-
         return view('admin.attendances.register-face', compact('therapist', 'faceData'));
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | STORE - SAVE FACE DATA
-    |--------------------------------------------------------------------------
-    */
 
     public function store(Request $request, Therapist $therapist)
     {
         $request->validate([
-            'image' => 'required|image|max:5120', // Max 5MB
-            'embeddings' => 'required|array'
+            'image'      => 'required|image|max:5120',
+            'embeddings' => 'nullable',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Hapus image lama jika ada
-            if ($therapist->faceData && $therapist->faceData->reference_image) {
+            // Hapus image lama
+            if ($therapist->faceData?->reference_image) {
                 Storage::disk('public')->delete($therapist->faceData->reference_image);
             }
 
-            // Simpan image baru
             $path = $request->file('image')->store('faces/reference', 'public');
 
-            // Update atau create face data
+            // Decode embeddings dari JSON string → array
+            $embeddings = $request->embeddings;
+            if (is_string($embeddings)) {
+                $embeddings = json_decode($embeddings, true) ?? [];
+            }
+            if (!is_array($embeddings)) {
+                $embeddings = [];
+            }
+
             $therapist->faceData()->updateOrCreate(
                 ['therapist_id' => $therapist->id],
                 [
-                    'face_embeddings' => $request->embeddings,
+                    'face_embeddings' => $embeddings,  // Eloquent akan cast ke JSON otomatis
                     'reference_image' => $path,
-                    'samples_count' => count($request->embeddings),
-                    'status' => 'pending' // Perlu verifikasi admin
+                    'samples_count'   => count($embeddings),
+                    'status'          => 'pending',
                 ]
             );
 
             DB::commit();
-
             return back()->with('success', 'Data wajah berhasil disimpan. Menunggu verifikasi admin.');
-
         } catch (\Exception $e) {
             DB::rollBack();
-
-            // Hapus file yang sudah diupload jika ada error
-            if (isset($path)) {
-                Storage::disk('public')->delete($path);
-            }
-
-            return back()->with('error', 'Gagal menyimpan data wajah: ' . $e->getMessage());
+            if (isset($path)) Storage::disk('public')->delete($path);
+            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VERIFY - VERIFY FACE DATA (ADMIN ONLY)
-    |--------------------------------------------------------------------------
-    */
 
     public function verify(Therapist $therapist)
     {
         try {
             $faceData = $therapist->faceData;
-
-            if (!$faceData) {
-                return back()->with('error', 'Data wajah tidak ditemukan.');
-            }
-
-            // Update status menjadi verified
-            $faceData->update([
-                'status' => 'verified'
-            ]);
-
+            if (!$faceData) return back()->with('error', 'Data wajah tidak ditemukan.');
+            $faceData->update(['status' => 'verified']);
             return back()->with('success', 'Wajah ' . $therapist->name . ' berhasil diverifikasi.');
-
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memverifikasi wajah: ' . $e->getMessage());
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
         }
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REJECT - REJECT FACE DATA (ADMIN)
-    |--------------------------------------------------------------------------
-    */
 
     public function reject(Therapist $therapist, Request $request)
     {
-        $request->validate([
-            'reason' => 'required|string|max:255'
-        ]);
-
+        $request->validate(['reason' => 'required|string|max:255']);
         try {
             $faceData = $therapist->faceData;
-
-            if (!$faceData) {
-                return back()->with('error', 'Data wajah tidak ditemukan.');
-            }
-
-            // Update status menjadi rejected dan simpan alasan
-            $faceData->update([
-                'status' => 'rejected',
-                'rejection_reason' => $request->reason
-            ]);
-
-            return back()->with('success', 'Wajah ditolak. Therapist harus mendaftar ulang.');
-
+            if (!$faceData) return back()->with('error', 'Data wajah tidak ditemukan.');
+            $faceData->update(['status' => 'rejected', 'rejection_reason' => $request->reason]);
+            return back()->with('success', 'Wajah ditolak.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menolak wajah: ' . $e->getMessage());
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
         }
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DESTROY - DELETE FACE DATA
-    |--------------------------------------------------------------------------
-    */
 
     public function destroy(Therapist $therapist)
     {
         try {
             $faceData = $therapist->faceData;
-
-            if (!$faceData) {
-                return back()->with('error', 'Data wajah tidak ditemukan.');
-            }
-
-            // Hapus file image dari storage
-            if ($faceData->reference_image) {
-                Storage::disk('public')->delete($faceData->reference_image);
-            }
-
-            // Hapus record dari database
+            if (!$faceData) return back()->with('error', 'Data wajah tidak ditemukan.');
+            if ($faceData->reference_image) Storage::disk('public')->delete($faceData->reference_image);
             $faceData->delete();
-
             return back()->with('success', 'Data wajah berhasil dihapus.');
-
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus data wajah: ' . $e->getMessage());
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
         }
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHOW - SHOW FACE DATA DETAIL (Optional)
-    |--------------------------------------------------------------------------
-    */
-
-    public function show(Therapist $therapist)
-    {
-        $faceData = $therapist->faceData;
-
-        if (!$faceData) {
-            return back()->with('error', 'Data wajah tidak ditemukan.');
-        }
-
-        return view('admin.attendances.face-detail', compact('therapist', 'faceData'));
     }
 }

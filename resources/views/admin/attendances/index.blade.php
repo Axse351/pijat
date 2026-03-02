@@ -20,7 +20,8 @@
             @endif
 
             @if (session('success'))
-                <div class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div
+                    class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                     <p class="text-green-700 dark:text-green-300">{{ session('success') }}</p>
                 </div>
             @endif
@@ -51,7 +52,9 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 @forelse ($therapists as $index => $therapist)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                        <td class="px-4 py-3">{{ ($therapists->currentPage() - 1) * $therapists->perPage() + $index + 1 }}</td>
+                                        <td class="px-4 py-3">
+                                            {{ ($therapists->currentPage() - 1) * $therapists->perPage() + $index + 1 }}
+                                        </td>
 
                                         <!-- Nama Terapis -->
                                         <td class="px-4 py-3 font-medium">
@@ -66,23 +69,32 @@
                                         <!-- Status Wajah -->
                                         <td class="px-4 py-3 text-center">
                                             @if ($therapist->faceData?->isVerified())
-                                                <span class="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-semibold">
+                                                <span
+                                                    class="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-semibold">
                                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        <path fill-rule="evenodd"
+                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                            clip-rule="evenodd" />
                                                     </svg>
                                                     {{ __('Terverifikasi') }}
                                                 </span>
                                             @elseif ($therapist->faceData?->isPending())
-                                                <span class="inline-flex items-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full text-xs font-semibold">
+                                                <span
+                                                    class="inline-flex items-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full text-xs font-semibold">
                                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                        <path fill-rule="evenodd"
+                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                            clip-rule="evenodd" />
                                                     </svg>
                                                     {{ __('Menunggu Verifikasi') }}
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-semibold">
+                                                <span
+                                                    class="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-semibold">
                                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        <path fill-rule="evenodd"
+                                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                            clip-rule="evenodd" />
                                                     </svg>
                                                     {{ __('Belum Terdaftar') }}
                                                 </span>
@@ -97,15 +109,18 @@
 
                                             @if ($todayAttendance)
                                                 @if ($todayAttendance->isCheckedOut())
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                                                    <span
+                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                                                         ✓ {{ $todayAttendance->getStatusLabel() }}
                                                     </span>
                                                     <br>
                                                     <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                        {{ __('Keluar:') }} {{ $todayAttendance->getCheckOutTimeFormatted() }}
+                                                        {{ __('Keluar:') }}
+                                                        {{ $todayAttendance->getCheckOutTimeFormatted() }}
                                                     </span>
                                                 @elseif ($todayAttendance->isCheckedIn())
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                                                    <span
+                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                                                         ⏱ {{ __('Check-in') }}
                                                     </span>
                                                     <br>
@@ -113,12 +128,14 @@
                                                         {{ $todayAttendance->getCheckInTimeFormatted() }}
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                                    <span
+                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
                                                         ✗ {{ $todayAttendance->getStatusLabel() }}
                                                     </span>
                                                 @endif
                                             @else
-                                                <span class="text-gray-500 dark:text-gray-400">{{ __('-') }}</span>
+                                                <span
+                                                    class="text-gray-500 dark:text-gray-400">{{ __('-') }}</span>
                                             @endif
                                         </td>
 
@@ -127,14 +144,16 @@
                                             <div class="flex justify-center gap-2 flex-wrap">
                                                 <!-- Register/Update Face Button -->
                                                 <a href="{{ route('admin.therapist-face.register', $therapist->id) }}"
-                                                   class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-semibold transition"
-                                                   title="{{ __('Daftar/Perbarui Wajah') }}">
+                                                    class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-semibold transition"
+                                                    title="{{ __('Daftar/Perbarui Wajah') }}">
                                                     📸 {{ __('Wajah') }}
                                                 </a>
 
                                                 <!-- Verify Button (only for pending) -->
                                                 @if ($therapist->faceData?->isPending())
-                                                    <form action="{{ route('admin.therapist-face.verify', $therapist->id) }}" method="POST" style="display: inline;">
+                                                    <form
+                                                        action="{{ route('admin.therapist-face.verify', $therapist->id) }}"
+                                                        method="POST" style="display: inline;">
                                                         @csrf
                                                         <button type="submit"
                                                             class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold transition"
@@ -146,13 +165,16 @@
 
                                                 <!-- Check-in Button -->
                                                 @php
-                                                    $canCheckIn = $therapist->hasFaceVerified() && !$therapist->isCheckedInToday();
+                                                    $canCheckIn =
+                                                        $therapist->hasFaceVerified() &&
+                                                        !$therapist->isCheckedInToday();
                                                 @endphp
 
                                                 @if ($canCheckIn)
-                                                    <a href="{{ route('attendance.check-in-camera', $therapist->id) }}"
-                                                       class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs font-semibold transition"
-                                                       title="{{ __('Check-in dengan Kamera') }}">
+                                                    {{-- FIXED: gunakan prefix admin. --}}
+                                                    <a href="{{ route('admin.attendance.check-in-camera', $therapist->id) }}"
+                                                        class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs font-semibold transition"
+                                                        title="{{ __('Check-in dengan Kamera') }}">
                                                         📷 {{ __('Check-in') }}
                                                     </a>
                                                 @else
@@ -166,13 +188,18 @@
                                                 <!-- Check-out Button -->
                                                 @php
                                                     $todayAttendance = $therapist->attendances->first();
-                                                    $canCheckOut = $therapist->hasFaceVerified() && $todayAttendance && $todayAttendance->check_in_at && !$todayAttendance->check_out_at;
+                                                    $canCheckOut =
+                                                        $therapist->hasFaceVerified() &&
+                                                        $todayAttendance &&
+                                                        $todayAttendance->check_in_at &&
+                                                        !$todayAttendance->check_out_at;
                                                 @endphp
 
                                                 @if ($canCheckOut)
-                                                    <a href="{{ route('attendance.check-out-camera', $therapist->id) }}"
-                                                       class="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-semibold transition"
-                                                       title="{{ __('Check-out dengan Kamera') }}">
+                                                    {{-- FIXED: gunakan prefix admin. --}}
+                                                    <a href="{{ route('admin.attendance.check-out-camera', $therapist->id) }}"
+                                                        class="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-semibold transition"
+                                                        title="{{ __('Check-out dengan Kamera') }}">
                                                         📷 {{ __('Check-out') }}
                                                     </a>
                                                 @else
@@ -186,15 +213,18 @@
                                                 <!-- History Button -->
                                                 @if ($therapist->faceData?->isVerified())
                                                     <a href="{{ route('admin.attendance.history', $therapist->id) }}"
-                                                       class="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded text-xs font-semibold transition"
-                                                       title="{{ __('Lihat Riwayat Kehadiran') }}">
+                                                        class="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded text-xs font-semibold transition"
+                                                        title="{{ __('Lihat Riwayat Kehadiran') }}">
                                                         📋 {{ __('Riwayat') }}
                                                     </a>
                                                 @endif
 
                                                 <!-- Delete Face Button -->
                                                 @if ($therapist->faceData)
-                                                    <form action="{{ route('admin.therapist-face.destroy', $therapist->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('{{ __('Hapus data wajah ini?') }}');">
+                                                    <form
+                                                        action="{{ route('admin.therapist-face.destroy', $therapist->id) }}"
+                                                        method="POST" style="display: inline;"
+                                                        onsubmit="return confirm('{{ __('Hapus data wajah ini?') }}');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit"
@@ -209,10 +239,14 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="6"
+                                            class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                             <div class="flex flex-col items-center justify-center">
-                                                <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3.914a.5.5 0 01-.5-.5V5.414a.5.5 0 01.5-.5h2.172a.5.5 0 00.353-.147l2.828-2.828a.5.5 0 01.707 0l2.828 2.828a.5.5 0 00.353.147h2.172a.5.5 0 01.5.5v15.086a.5.5 0 01-.5.5z" />
+                                                <svg class="w-16 h-16 mb-4 opacity-30" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 4.354a4 4 0 110 5.292M15 21H3.914a.5.5 0 01-.5-.5V5.414a.5.5 0 01.5-.5h2.172a.5.5 0 00.353-.147l2.828-2.828a.5.5 0 01.707 0l2.828 2.828a.5.5 0 00.353.147h2.172a.5.5 0 01.5.5v15.086a.5.5 0 01-.5.5z" />
                                                 </svg>
                                                 <p class="text-sm">{{ __('Tidak ada data terapis') }}</p>
                                             </div>
@@ -265,13 +299,14 @@
     </div>
 
     <style>
-        /* Styling untuk status badges */
         .badge-present {
             background-color: #10b981;
         }
+
         .badge-late {
             background-color: #f59e0b;
         }
+
         .badge-absent {
             background-color: #ef4444;
         }

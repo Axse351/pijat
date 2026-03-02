@@ -13,281 +13,246 @@ use Carbon\Carbon;
 
 class TherapistAttendanceController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | SETTINGS
-    |--------------------------------------------------------------------------
-    */
-
-    // Threshold minimal agar dianggap wajah cocok
     private $confidenceThreshold = 0.75;
 
-
     /*
     |--------------------------------------------------------------------------
-    | INDEX - LIST ALL THERAPISTS WITH ATTENDANCE STATUS
+    | INDEX
     |--------------------------------------------------------------------------
     */
-
     public function index()
     {
         $today = Carbon::today();
 
-        // Ambil semua therapist dengan relasi attendance hari ini dan face data
         $therapists = Therapist::with([
-            'attendances' => function ($query) use ($today) {
-                $query->whereDate('attendance_date', $today);
-            },
+            'attendances' => fn($q) => $q->whereDate('attendance_date', $today),
             'faceData'
         ])->paginate(15);
 
         return view('admin.attendances.index', compact('therapists', 'today'));
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | REGISTER FACE (Admin) - DEPRECATED
+    | SHOW CHECK-IN CAMERA PAGE
+    | Memuat semua embeddings terapis yang sudah verified untuk face matching
     |--------------------------------------------------------------------------
     */
-
-    // Method ini sekarang ada di TherapistFaceController
-    // Kept here untuk backward compatibility jika diperlukan
-
-    public function registerFace(Request $request, Therapist $therapist)
+    public function showCheckInCamera()
     {
-        $request->validate([
-            'image' => 'required|image',
-            'embeddings' => 'required|array'
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            // Simpan foto
-            $path = $request->file('image')->store('faces/reference', 'public');
-
-            TherapistFaceData::updateOrCreate(
-                ['therapist_id' => $therapist->id],
-                [
-                    'face_embeddings' => $request->embeddings,
-                    'reference_image' => $path,
-                    'samples_count' => count($request->embeddings),
-                    'status' => 'verified'
-                ]
-            );
-
-            DB::commit();
-
-            return back()->with('success', 'Wajah berhasil diregistrasi');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
-        }
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CHECK IN
-    |--------------------------------------------------------------------------
-    */
-
-    public function checkIn(Request $request, Therapist $therapist)
-    {
-        $request->validate([
-            'image' => 'required|image',
-            'confidence' => 'required|numeric'
-        ]);
-
-        // Cek apakah therapist memiliki data wajah yang verified
-        $faceData = $therapist->faceData;
-
-        if (!$faceData || !$faceData->isVerified()) {
-            return back()->with('error', 'Wajah belum diverifikasi. Silakan daftar wajah terlebih dahulu.');
-        }
-
-        // Cek confidence level
-        if ($request->confidence < $this->confidenceThreshold) {
-            return back()->with('error', 'Wajah tidak cocok (confidence: ' . round($request->confidence, 2) . '%). Minimum: ' . $this->confidenceThreshold);
-        }
-
         $today = Carbon::today();
 
-        // Cek apakah sudah check-in hari ini
-        $existingAttendance = TherapistAttendance::where('therapist_id', $therapist->id)
+        // Ambil semua terapis dengan wajah verified
+        $therapists = Therapist::with([
+            'faceData'    => fn($q) => $q->where('status', 'verified'),
+            'attendances' => fn($q) => $q->whereDate('attendance_date', $today),
+        ])->get();
+
+        // Build array embeddings untuk dikirim ke JS
+        // Format: [{ id, name, embeddings: [float...] }, ...]
+        $faceDescriptors = $therapists
+            ->filter(fn($t) => $t->faceData && $t->faceData->face_embeddings)
+            ->map(function ($t) {
+                $embeddings = $t->faceData->face_embeddings;
+
+                // face_embeddings bisa disimpan sebagai JSON string atau array
+                if (is_string($embeddings)) {
+                    $embeddings = json_decode($embeddings, true) ?? [];
+                }
+
+                return [
+                    'id'         => $t->id,
+                    'name'       => $t->name,
+                    'embeddings' => $embeddings,
+                ];
+            })
+            ->values();
+
+        return view('admin.attendances.check-in-camera', compact('therapists', 'faceDescriptors'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW CHECK-OUT CAMERA PAGE
+    |--------------------------------------------------------------------------
+    */
+    public function showCheckOutCamera()
+    {
+        $today = Carbon::today();
+
+        $therapists = Therapist::with([
+            'faceData'    => fn($q) => $q->where('status', 'verified'),
+            'attendances' => fn($q) => $q->whereDate('attendance_date', $today),
+        ])->get();
+
+        $faceDescriptors = $therapists
+            ->filter(fn($t) => $t->faceData && $t->faceData->face_embeddings)
+            ->map(function ($t) {
+                $embeddings = $t->faceData->face_embeddings;
+                if (is_string($embeddings)) {
+                    $embeddings = json_decode($embeddings, true) ?? [];
+                }
+                return [
+                    'id'         => $t->id,
+                    'name'       => $t->name,
+                    'embeddings' => $embeddings,
+                ];
+            })
+            ->values();
+
+        return view('admin.attendances.check-out-camera', compact('therapists', 'faceDescriptors'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK-IN via AJAX (dipanggil dari face recognition JS)
+    |--------------------------------------------------------------------------
+    */
+    public function checkInAjax(Request $request)
+    {
+        $request->validate([
+            'therapist_id' => 'required|exists:therapists,id',
+            'image'        => 'required|image|max:5120',
+            'confidence'   => 'nullable|numeric',
+        ]);
+
+        $therapist = Therapist::findOrFail($request->therapist_id);
+        $today     = Carbon::today();
+
+        // Cek sudah check-in hari ini
+        $existing = TherapistAttendance::where('therapist_id', $therapist->id)
             ->whereDate('attendance_date', $today)
+            ->whereNotNull('check_in_at')
             ->first();
 
-        if ($existingAttendance && $existingAttendance->check_in_at) {
-            return back()->with('error', 'Anda sudah check-in pada ' . $existingAttendance->check_in_at->format('H:i'));
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => $therapist->name . ' sudah check-in pada ' . $existing->check_in_at->format('H:i'),
+            ]);
         }
 
         try {
             DB::beginTransaction();
 
-            // Simpan image check-in
             $imagePath = $request->file('image')->store('faces/checkin', 'public');
+            $status    = now()->format('H:i') > '09:00' ? 'late' : 'present';
 
-            // Tentukan status: late jika setelah jam 09:00
-            $status = now()->format('H:i') > '09:00' ? 'late' : 'present';
-
-            // Create atau update attendance untuk hari ini
-            $attendance = TherapistAttendance::updateOrCreate(
+            TherapistAttendance::updateOrCreate(
+                ['therapist_id' => $therapist->id, 'attendance_date' => $today],
                 [
-                    'therapist_id' => $therapist->id,
-                    'attendance_date' => $today
-                ],
-                [
-                    'check_in_at' => now(),
-                    'check_in_image' => $imagePath,
-                    'check_in_confidence' => $request->confidence,
-                    'status' => $status,
-                    'check_out_at' => null,
+                    'check_in_at'         => now(),
+                    'check_in_image'      => $imagePath,
+                    'check_in_confidence' => $request->confidence ?? 1.0,
+                    'status'              => $status,
+                    'check_out_at'        => null,
                 ]
             );
 
             DB::commit();
 
-            $message = $status === 'late'
-                ? 'Check-in berhasil (Status: TERLAMBAT)'
-                : 'Check-in berhasil (Status: HADIR)';
-
-            return back()->with('success', $message);
-
+            return response()->json([
+                'success' => true,
+                'time'    => now()->format('H:i'),
+                'status'  => $status,
+                'message' => 'Check-in berhasil',
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal check-in: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()]);
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | CHECK OUT
+    | CHECK-OUT via AJAX
     |--------------------------------------------------------------------------
     */
-
-    public function checkOut(Request $request, Therapist $therapist)
+    public function checkOutAjax(Request $request)
     {
         $request->validate([
-            'image' => 'required|image',
-            'confidence' => 'required|numeric'
+            'therapist_id' => 'required|exists:therapists,id',
+            'image'        => 'required|image|max:5120',
+            'confidence'   => 'nullable|numeric',
         ]);
 
-        // Cek apakah therapist memiliki data wajah yang verified
-        $faceData = $therapist->faceData;
+        $therapist = Therapist::findOrFail($request->therapist_id);
+        $today     = Carbon::today();
 
-        if (!$faceData || !$faceData->isVerified()) {
-            return back()->with('error', 'Wajah belum diverifikasi.');
-        }
-
-        // Cek confidence level
-        if ($request->confidence < $this->confidenceThreshold) {
-            return back()->with('error', 'Wajah tidak cocok. Confidence terlalu rendah.');
-        }
-
-        $today = Carbon::today();
-
-        // Ambil attendance hari ini
         $attendance = TherapistAttendance::where('therapist_id', $therapist->id)
             ->whereDate('attendance_date', $today)
             ->first();
 
-        // Validasi kondisi check-out
-        if (!$attendance) {
-            return back()->with('error', 'Data kehadiran hari ini tidak ditemukan. Silakan check-in terlebih dahulu.');
-        }
-
-        if (!$attendance->check_in_at) {
-            return back()->with('error', 'Anda belum check-in hari ini.');
+        if (!$attendance || !$attendance->check_in_at) {
+            return response()->json(['success' => false, 'message' => $therapist->name . ' belum check-in hari ini.']);
         }
 
         if ($attendance->check_out_at) {
-            return back()->with('error', 'Anda sudah check-out pada ' . $attendance->check_out_at->format('H:i'));
+            return response()->json(['success' => false, 'message' => $therapist->name . ' sudah check-out pada ' . $attendance->check_out_at->format('H:i')]);
         }
 
         try {
             DB::beginTransaction();
 
-            // Simpan image check-out
             $imagePath = $request->file('image')->store('faces/checkout', 'public');
 
-            // Update attendance dengan check-out
             $attendance->update([
-                'check_out_at' => now(),
-                'check_out_image' => $imagePath,
-                'check_out_confidence' => $request->confidence,
+                'check_out_at'         => now(),
+                'check_out_image'      => $imagePath,
+                'check_out_confidence' => $request->confidence ?? 1.0,
             ]);
 
             DB::commit();
 
-            return back()->with('success', 'Check-out berhasil pada ' . now()->format('H:i'));
+            // Hitung durasi kerja
+            $hours    = $attendance->check_in_at->diffInHours(now());
+            $minutes  = $attendance->check_in_at->diff(now())->i;
+            $duration = $hours . ' jam ' . $minutes . ' menit';
 
+            return response()->json([
+                'success'  => true,
+                'time'     => now()->format('H:i'),
+                'duration' => $duration,
+                'message'  => 'Check-out berhasil',
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal check-out: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()]);
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | HISTORY - SHOW ATTENDANCE HISTORY
+    | HISTORY
     |--------------------------------------------------------------------------
     */
-
     public function history(Therapist $therapist)
     {
-        // Ambil history kehadiran dengan pagination
         $attendances = TherapistAttendance::where('therapist_id', $therapist->id)
             ->latest('attendance_date')
             ->paginate(20);
 
-        // Hitung statistik
         $stats = [
-            'total_hadir' => TherapistAttendance::where('therapist_id', $therapist->id)
-                ->where('status', 'present')
-                ->count(),
-            'total_terlambat' => TherapistAttendance::where('therapist_id', $therapist->id)
-                ->where('status', 'late')
-                ->count(),
-            'total_absent' => TherapistAttendance::where('therapist_id', $therapist->id)
-                ->where('status', 'absent')
-                ->count(),
+            'total_hadir'     => TherapistAttendance::where('therapist_id', $therapist->id)->where('status', 'present')->count(),
+            'total_terlambat' => TherapistAttendance::where('therapist_id', $therapist->id)->where('status', 'late')->count(),
+            'total_absent'    => TherapistAttendance::where('therapist_id', $therapist->id)->where('status', 'absent')->count(),
         ];
 
         return view('admin.attendances.history', compact('therapist', 'attendances', 'stats'));
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | HELPER METHODS (Optional)
+    | DEPRECATED - kept for backward compat
     |--------------------------------------------------------------------------
     */
-
-    /**
-     * Ambil attendance terakhir therapist
-     */
-    private function getLatestAttendance(Therapist $therapist)
+    public function checkIn(Request $request, Therapist $therapist)
     {
-        return TherapistAttendance::where('therapist_id', $therapist->id)
-            ->latest('created_at')
-            ->first();
+        return redirect()->route('admin.attendance.check-in-camera');
     }
 
-    /**
-     * Hitung durasi kerja
-     */
-    public function calculateWorkDuration(TherapistAttendance $attendance)
+    public function checkOut(Request $request, Therapist $therapist)
     {
-        if (!$attendance->check_in_at || !$attendance->check_out_at) {
-            return null;
-        }
-
-        $duration = $attendance->check_out_at->diffInHours($attendance->check_in_at);
-        return $duration;
+        return redirect()->route('admin.attendance.check-out-camera');
     }
 }
