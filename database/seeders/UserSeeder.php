@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
-            'face_liveness_enabled' => true, // Aktifkan face login
+
         ]);
 
         // User biasa
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
             'email' => 'user@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'user',
-            'face_liveness_enabled' => true, // Aktifkan face login
+
         ]);
     }
 }

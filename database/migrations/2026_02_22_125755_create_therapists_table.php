@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('therapists', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->decimal('commission_percent', 5, 2)->default(25); // default 25%
-    $table->boolean('is_active')->default(true);
-    $table->timestamps();
-});
+        Schema::create('therapists', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('specialty')->nullable();
+            $table->string('phone')->nullable();
+            $table->decimal('commission_percent', 5, 2)->default(25);
+            $table->string('photo')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**

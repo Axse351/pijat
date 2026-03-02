@@ -13,7 +13,7 @@ class Therapist extends Model
         'name',
         'email',
         'phone',
-        'specialization',
+        'specialty',
         'status',
         // tambah field lainnya sesuai kebutuhan
     ];

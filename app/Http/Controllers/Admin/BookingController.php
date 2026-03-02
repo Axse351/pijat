@@ -35,47 +35,47 @@ class BookingController extends Controller
 
     public function calendarData(Request $request)
     {
-        $date     = $request->get('date', now()->toDateString());
-        $today    = now()->toDateString();
-        $tomorrow = now()->addDay()->toDateString();
+        $date = $request->input('date', today()->toDateString());
 
-        $bookings = Booking::with(['customer', 'therapist', 'service'])
+        $bookings = Booking::with(['customer', 'service', 'therapist'])
             ->whereDate('scheduled_at', $date)
-            ->whereIn('status', ['scheduled', 'ongoing', 'completed', 'cancelled'])
             ->get()
-            ->map(function ($b) use ($date, $today, $tomorrow) {
+            ->map(function ($b) {
+                $scheduledDate = Carbon::parse($b->scheduled_at);
+                $today         = Carbon::today();
+                $tomorrow      = Carbon::tomorrow();
+                $isToday       = $scheduledDate->isSameDay($today);
+                $isTomorrow    = $scheduledDate->isSameDay($tomorrow);
+
                 $waUrl = null;
-
-                // Tampilkan tombol WA hanya untuk booking H-0 atau H-1 yang masih scheduled
-                $isRemindable = in_array($date, [$today, $tomorrow]) && $b->status === 'scheduled';
-                $phone        = $b->customer->phone ?? null;
-
-                if ($isRemindable && $phone) {
-                    $phone = preg_replace('/\D/', '', $phone);
-                    if (str_starts_with($phone, '0')) {
-                        $phone = '62' . substr($phone, 1);
-                    }
-                    $jadwal  = Carbon::parse($b->scheduled_at)->locale('id')->translatedFormat('l, d F Y \p\u\k\u\l H:i');
-                    $msg     = urlencode(
+                if (($isToday || $isTomorrow) && $b->status === 'scheduled' && !empty($b->customer?->phone)) {
+                    $phone = preg_replace('/\D/', '', $b->customer->phone);
+                    if (str_starts_with($phone, '0')) $phone = '62' . substr($phone, 1);
+                    $jadwalFormatted = $scheduledDate->translatedFormat('l, d F Y \p\u\k\u\l H:i');
+                    $rescheduleNote  = $b->is_rescheduled && $b->original_scheduled_at
+                        ? "\n⚠️ *Jadwal diubah* dari " . Carbon::parse($b->original_scheduled_at)->translatedFormat('d F Y H:i') . "\n"
+                        : '';
+                    $waMsg = urlencode(
                         "Halo {$b->customer->name}, kami ingin mengingatkan booking Anda:\n\n"
                             . "📋 Layanan : {$b->service->name}\n"
                             . "👤 Terapis : {$b->therapist->name}\n"
-                            . "🗓 Jadwal  : {$jadwal}\n\n"
-                            . "Mohon hadir tepat waktu. Terima kasih! 🙏"
+                            . "🗓 Jadwal  : {$jadwalFormatted}\n"
+                            . $rescheduleNote
+                            . "\nMohon hadir tepat waktu. Terima kasih! 🙏"
                     );
-                    $waUrl = "https://wa.me/{$phone}?text={$msg}";
+                    $waUrl = "https://wa.me/{$phone}?text={$waMsg}";
                 }
 
                 return [
-                    'id'            => $b->id,
-                    'therapist_id'  => $b->therapist_id,
-                    'hour'          => (int) Carbon::parse($b->scheduled_at)->format('H'),
-                    'status'        => $b->status,
-                    'customer_name' => $b->customer->name ?? '—',
-                    'service_name'  => $b->service->name  ?? '—',
-                    'final_price'   => $b->final_price,
-                    'edit_url'      => route('admin.bookings.edit', $b->id),
-                    'wa_url'        => $waUrl,
+                    'id'              => $b->id,
+                    'therapist_id'    => $b->therapist_id,
+                    'hour'            => $scheduledDate->hour,
+                    'customer_name'   => $b->customer?->name ?? '—',
+                    'service_name'    => $b->service?->name ?? '—',
+                    'status'          => $b->status,
+                    'is_rescheduled'  => (bool) $b->is_rescheduled,
+                    'wa_url'          => $waUrl,
+                    'edit_url'        => route('admin.bookings.edit', $b->id),
                 ];
             });
 
@@ -94,68 +94,117 @@ class BookingController extends Controller
 
     public function store(Request $request)
     {
-        $service   = Service::findOrFail($request->service_id);
-        $price     = $service->price;
-        $promoDisc = 0;
-        $promoId   = $request->promo_id ?: null;
-
-        // Hitung diskon dari promo (kolom `discount` = persentase)
-        if ($promoId) {
-            $promo = Promo::where('id', $promoId)->where('status', 'aktif')->first();
-            if ($promo) {
-                $promoDisc = round($price * $promo->discount / 100);
-            } else {
-                $promoId = null;
-            }
-        }
-
-        $manualDisc = (int) ($request->discount ?? 0);
-        $totalDisc  = $promoDisc + $manualDisc;
-        $finalPrice = max(0, $price - $totalDisc);
-
-        Booking::create([
-            'customer_id'  => $request->customer_id,
-            'therapist_id' => $request->therapist_id,
-            'service_id'   => $request->service_id,
-            'order_source' => $request->order_source,
-            'scheduled_at' => $request->scheduled_at,
-            'price'        => $price,
-            'promo_id'     => $promoId,
-            'discount'     => $totalDisc,
-            'final_price'  => $finalPrice,
-            'status'       => 'scheduled',
-            'notes'        => $request->notes,
+        $validated = $request->validate([
+            'customer_id'  => 'required|exists:customers,id',
+            'therapist_id' => 'required|exists:therapists,id',
+            'service_id'   => 'required|exists:services,id',
+            'scheduled_at' => 'required|date',
+            'order_source' => 'nullable|in:walkin,wa,web',
+            'discount'     => 'nullable|numeric|min:0',
+            'promo_id'     => 'nullable|exists:promos,id',
+            'notes'        => 'nullable|string|max:500',
         ]);
 
-        return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil dibuat.');
+        $service    = Service::findOrFail($validated['service_id']);
+        $discount   = $validated['discount'] ?? 0;
+        $finalPrice = max(0, $service->price - $discount);
+        $hasPromo   = !empty($validated['promo_id']);
+
+        // Validasi: total 0 hanya boleh jika ada promo
+        if ($finalPrice === 0 && $service->price > 0 && !$hasPromo) {
+            return back()
+                ->withErrors(['discount' => 'Total tidak boleh Rp 0 kecuali menggunakan promo.'])
+                ->withInput();
+        }
+
+        Booking::create([
+            'customer_id'            => $validated['customer_id'],
+            'therapist_id'           => $validated['therapist_id'],
+            'service_id'             => $validated['service_id'],
+            'scheduled_at'           => $validated['scheduled_at'],
+            'original_scheduled_at'  => $validated['scheduled_at'],
+            'is_rescheduled'         => false,
+            'order_source'           => $validated['order_source'] ?? 'walkin',
+            'discount'               => $discount,
+            'final_price'            => $finalPrice,
+            'promo_id'               => $validated['promo_id'] ?? null,
+            'notes'                  => $validated['notes'] ?? null,
+            'status'                 => 'scheduled',
+        ]);
+
+        return redirect()->route('admin.bookings.index')
+            ->with('success', 'Booking berhasil dibuat.');
     }
 
     public function edit(Booking $booking)
     {
-        return view('admin.bookings.edit', compact('booking'));
+        $customers  = Customer::all();
+        $therapists = Therapist::where('is_active', 1)->get();
+        $services   = Service::all();
+        $promos     = Promo::where('status', 'aktif')->get();
+
+        return view('admin.bookings.edit', compact('booking', 'customers', 'therapists', 'services', 'promos'));
     }
 
     public function update(Request $request, Booking $booking)
     {
-        $booking->update([
-            'scheduled_at' => $request->scheduled_at ?? $booking->scheduled_at,
-            'status'       => $request->status,
-            'notes'        => $request->notes,
+        $validated = $request->validate([
+            'customer_id'    => 'required|exists:customers,id',
+            'therapist_id'   => 'required|exists:therapists,id',
+            'service_id'     => 'required|exists:services,id',
+            'scheduled_at'   => 'required|date',
+            'order_source'   => 'nullable|in:walkin,wa,web',
+            'status'         => 'nullable|in:scheduled,ongoing,completed,cancelled',
+            'discount'       => 'nullable|numeric|min:0',
+            'promo_id'       => 'nullable|exists:promos,id',
+            'notes'          => 'nullable|string|max:500',
+            'is_rescheduled' => 'nullable|boolean',
         ]);
 
-        if ($booking->status === 'completed' && !$booking->commission()->exists()) {
-            $percent = $booking->therapist->commission_percent;
-            $amount  = ($booking->price * $percent) / 100;
+        $service    = Service::findOrFail($validated['service_id']);
+        $discount   = $validated['discount'] ?? 0;
+        $finalPrice = max(0, $service->price - $discount);
+        $hasPromo   = !empty($validated['promo_id']);
 
-            Commission::create([
-                'booking_id'         => $booking->id,
-                'therapist_id'       => $booking->therapist_id,
-                'commission_percent' => $percent,
-                'commission_amount'  => $amount,
-            ]);
+        // Validasi: total 0 hanya boleh jika ada promo
+        if ($finalPrice === 0 && $service->price > 0 && !$hasPromo) {
+            return back()
+                ->withErrors(['discount' => 'Total tidak boleh Rp 0 kecuali menggunakan promo.'])
+                ->withInput();
         }
 
-        return redirect()->route('admin.bookings.index')->with('success', 'Booking diperbarui.');
+        // Deteksi reschedule: jadwal berubah dari yang tersimpan
+        $oldScheduled    = $booking->scheduled_at;
+        $newScheduled    = $validated['scheduled_at'];
+        $dateChanged     = Carbon::parse($oldScheduled)->ne(Carbon::parse($newScheduled));
+        $isRescheduled   = $dateChanged && $request->boolean('is_rescheduled');
+
+        // Simpan original_scheduled_at hanya sekali (pertama kali booking dibuat)
+        // Jika sudah ada dan sudah pernah reschedule, jangan timpa lagi
+        $originalScheduledAt = $booking->original_scheduled_at ?? $booking->scheduled_at;
+
+        $booking->update([
+            'customer_id'           => $validated['customer_id'],
+            'therapist_id'          => $validated['therapist_id'],
+            'service_id'            => $validated['service_id'],
+            'scheduled_at'          => $newScheduled,
+            'original_scheduled_at' => $originalScheduledAt,
+            'is_rescheduled'        => $isRescheduled || $booking->is_rescheduled,
+            'order_source'          => $validated['order_source'] ?? $booking->order_source,
+            'status'                => $validated['status'] ?? $booking->status,
+            'discount'              => $discount,
+            'final_price'           => $finalPrice,
+            'promo_id'              => $validated['promo_id'] ?? null,
+            'notes'                 => $validated['notes'] ?? $booking->notes,
+        ]);
+
+        $message = 'Booking berhasil diperbarui.';
+        if ($isRescheduled) {
+            $message .= ' Jadwal telah diubah dan ditandai.';
+        }
+
+        return redirect()->route('admin.bookings.index')
+            ->with('success', $message);
     }
 
     public function destroy(Booking $booking)

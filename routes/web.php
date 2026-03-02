@@ -4,13 +4,25 @@ use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\TherapistFaceController;
 use App\Http\Controllers\Admin\TherapistAttendanceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicBookingController;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================
-// ROOT & DASHBOARD
+// ROOT — Welcome/Landing Page (tanpa auth)
 // ============================================================================
 
-Route::get('/', fn() => redirect()->route('login'));
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+
+// ============================================================================
+// PUBLIC BOOKING (tanpa auth)
+// ============================================================================
+
+Route::post('/booking', [PublicBookingController::class, 'store'])->name('public.booking.store');
+
+// ============================================================================
+// DASHBOARD (redirect setelah login)
+// ============================================================================
 
 Route::middleware('auth')->get('/dashboard', function () {
     return auth()->user()->role === 'admin'
@@ -56,7 +68,6 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/therapists/{therapist}/attendance/history',          [TherapistAttendanceController::class, 'history'])->name('attendance.history');
 
         // ---- Attendance: halaman kamera (GET) ----
-        // Tidak pakai {therapist} karena sistem auto-detect dari kamera
         Route::get('/attendance/check-in',  [TherapistAttendanceController::class, 'showCheckInCamera'])->name('attendance.check-in-camera');
         Route::get('/attendance/check-out', [TherapistAttendanceController::class, 'showCheckOutCamera'])->name('attendance.check-out-camera');
 
