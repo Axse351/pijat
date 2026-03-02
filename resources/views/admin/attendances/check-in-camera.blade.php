@@ -22,20 +22,26 @@
             </div>
 
             <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
-
-                <!-- Kamera + overlay -->
                 <div class="flex flex-col items-center gap-4">
+
+                    <!-- Kamera -->
                     <div class="relative w-full max-w-lg bg-black rounded-2xl overflow-hidden" style="aspect-ratio:4/3">
                         <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
                         <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
 
-                        <!-- Blink progress indicator -->
+                        <!-- DEBUG panel: tampilkan EAR real-time -->
+                        <div id="debugBox"
+                            class="absolute top-2 left-2 bg-black/75 text-white text-xs font-mono px-3 py-2 rounded-lg leading-6">
+                            EAR: <span id="earVal" class="text-yellow-300 font-bold">-</span><br>
+                            Threshold: <span id="threshVal" class="text-cyan-300">0.22</span><br>
+                            Mata: <span id="eyeStateVal">-</span>
+                        </div>
+
                         <div id="blinkIndicator"
                             class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm font-semibold px-4 py-2 rounded-full">
                             👁️ Kedipkan mata untuk konfirmasi...
                         </div>
 
-                        <!-- Success overlay -->
                         <div id="successOverlay"
                             class="hidden absolute inset-0 bg-green-500/80 flex flex-col items-center justify-center text-white">
                             <div class="text-6xl mb-3">✅</div>
@@ -44,7 +50,6 @@
                             <p id="successStatus" class="text-base mt-1 font-semibold"></p>
                         </div>
 
-                        <!-- Error overlay -->
                         <div id="errorOverlay"
                             class="hidden absolute inset-0 bg-red-500/80 flex flex-col items-center justify-center text-white">
                             <div class="text-6xl mb-3">❌</div>
@@ -57,18 +62,39 @@
                         </div>
                     </div>
 
-                    <!-- Blink progress bar -->
+                    <!-- Blink progress -->
                     <div id="blinkProgressBox" class="hidden w-full max-w-lg">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Progress kedipan: <span
-                                id="blinkCount">0</span>/2</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                            Progress kedipan: <span id="blinkCount">0</span>/2
+                        </p>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                             <div id="blinkBar" class="bg-blue-500 h-3 rounded-full transition-all duration-300"
                                 style="width:0%"></div>
                         </div>
                     </div>
+
+                    <!-- Threshold slider -->
+                    <div
+                        class="w-full max-w-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                        <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                            🔧 Kalibrasi Deteksi Kedipan
+                        </p>
+                        <div class="flex items-center gap-3 mb-2">
+                            <label class="text-xs text-gray-600 dark:text-gray-400 w-28 shrink-0">EAR Threshold:</label>
+                            <input type="range" id="threshSlider" min="0.10" max="0.40" step="0.01"
+                                value="0.22" class="flex-1 accent-blue-600">
+                            <span id="threshDisplay"
+                                class="text-xs font-mono font-bold w-10 text-center text-blue-600">0.22</span>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            💡 <strong>Cara kalibrasi:</strong> Lihat nilai EAR di sudut kiri atas video.
+                            Catat nilai saat mata <strong>terbuka</strong> dan saat <strong>menutup penuh</strong>.
+                            Set threshold di tengah kedua nilai itu.
+                        </p>
+                    </div>
+
                 </div>
 
-                <!-- Tombol manual fallback -->
                 <div class="mt-4 text-center">
                     <a href="{{ route('admin.attendances.index') }}"
                         class="px-6 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 text-gray-800 dark:text-gray-100 font-semibold rounded-lg transition inline-block">
@@ -77,7 +103,7 @@
                 </div>
             </div>
 
-            <!-- Daftar semua terapis yang belum check-in hari ini -->
+            <!-- Tabel status -->
             <div class="mt-6 bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">📋 Status Hari Ini</h3>
                 <div class="overflow-x-auto">
@@ -89,12 +115,12 @@
                                 <th class="px-3 py-2 text-center">Jam Masuk</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="attendanceTable">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach ($therapists as $t)
+                                @php $att = $t->attendances->first(); @endphp
                                 <tr id="row-{{ $t->id }}">
                                     <td class="px-3 py-2 font-medium">{{ $t->name }}</td>
                                     <td class="px-3 py-2 text-center">
-                                        @php $att = $t->attendances->first(); @endphp
                                         @if ($att && $att->check_in_at)
                                             <span
                                                 class="px-2 py-1 rounded-full text-xs font-semibold
@@ -120,9 +146,7 @@
         </div>
     </div>
 
-    {{-- Embeddings semua terapis dipass dari controller --}}
     <script>
-        // Data wajah semua terapis yang sudah verified
         const THERAPIST_DESCRIPTORS = @json($faceDescriptors);
         const CHECKIN_URL = "{{ route('admin.attendance.check-in-ajax') }}";
         const CSRF_TOKEN = "{{ csrf_token() }}";
@@ -141,15 +165,30 @@
             const blinkCountEl = document.getElementById('blinkCount');
             const successOverlay = document.getElementById('successOverlay');
             const errorOverlay = document.getElementById('errorOverlay');
+            const earValEl = document.getElementById('earVal');
+            const eyeStateEl = document.getElementById('eyeStateVal');
+            const threshSlider = document.getElementById('threshSlider');
+            const threshDisplay = document.getElementById('threshDisplay');
+            const threshValEl = document.getElementById('threshVal');
 
             const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+            const BLINKS_NEEDED = 2;
+            let EAR_THRESHOLD = 0.22;
 
-            // ── 1. Load models ──
-            setStatus('⏳ Memuat model...', 'Harap tunggu beberapa detik', 'blue');
+            // Update threshold dari slider
+            threshSlider.addEventListener('input', () => {
+                EAR_THRESHOLD = parseFloat(threshSlider.value);
+                threshDisplay.textContent = EAR_THRESHOLD.toFixed(2);
+                threshValEl.textContent = EAR_THRESHOLD.toFixed(2);
+            });
+
+            // ── Load models ──
+            setStatus('⏳ Memuat model...', 'Harap tunggu', 'blue');
             try {
                 await Promise.all([
                     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(
+                    MODEL_URL), // 68-point lebih akurat untuk EAR
                     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
                 ]);
             } catch (e) {
@@ -157,34 +196,31 @@
                 return;
             }
 
-            // ── 2. Build LabeledFaceDescriptors dari data terapis ──
-            const labeledDescriptors = [];
+            // ── Build face matcher ──
+            const labeled = [];
             for (const t of THERAPIST_DESCRIPTORS) {
                 if (!t.embeddings || t.embeddings.length === 0) continue;
                 try {
-                    const descriptor = new Float32Array(t.embeddings);
-                    labeledDescriptors.push(
-                        new faceapi.LabeledFaceDescriptors(
-                            JSON.stringify({
-                                id: t.id,
-                                name: t.name
-                            }),
-                            [descriptor]
-                        )
-                    );
+                    labeled.push(new faceapi.LabeledFaceDescriptors(
+                        JSON.stringify({
+                            id: t.id,
+                            name: t.name
+                        }),
+                        [new Float32Array(t.embeddings)]
+                    ));
                 } catch (e) {
                     console.warn('Skip', t.name, e);
                 }
             }
 
-            if (labeledDescriptors.length === 0) {
+            if (labeled.length === 0) {
                 setStatus('⚠️ Tidak ada wajah terdaftar', 'Daftarkan wajah terapis terlebih dahulu', 'yellow');
                 return;
             }
 
-            const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5); // threshold 0.5 (lebih ketat)
+            const faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
 
-            // ── 3. Start kamera ──
+            // ── Kamera ──
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
@@ -202,36 +238,36 @@
             await new Promise(r => video.addEventListener('playing', r, {
                 once: true
             }));
-            setStatus('👁️ Siap mendeteksi wajah', 'Silakan berdiri di depan kamera', 'blue');
+            setStatus('👁️ Siap mendeteksi wajah', 'Posisikan wajah ke kamera', 'blue');
 
-            // ── 4. Detection state ──
-            const ctx = overlay.getContext('2d');
-            let isProcessing = false; // sedang proses blink / submit
-            let blinkState = null; // { therapistId, name, blinkCount, lastEAR, cooldown }
-            let cooldownTimer = null;
+            // ── EAR helpers ──
+            function ptDist(a, b) {
+                return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+            }
 
-            // EAR = Eye Aspect Ratio untuk deteksi kedipan
-            function eyeAspectRatio(landmarks, leftEye, rightEye) {
+            function eyeEAR(pts, indices) {
+                // indices: [p1, p2, p3, p4, p5, p6]
+                // p1-p4: horizontal   p2-p6, p3-p5: vertical
+                const [p1, p2, p3, p4, p5, p6] = indices.map(i => pts[i]);
+                return (ptDist(p2, p6) + ptDist(p3, p5)) / (2.0 * ptDist(p1, p4));
+            }
+
+            function getEAR(landmarks) {
                 const pts = landmarks.positions;
-
-                function ear(indices) {
-                    const [p1, p2, p3, p4, p5, p6] = indices.map(i => pts[i]);
-                    const A = Math.hypot(p2.x - p6.x, p2.y - p6.y);
-                    const B = Math.hypot(p3.x - p5.x, p3.y - p5.y);
-                    const C = Math.hypot(p1.x - p4.x, p1.y - p4.y);
-                    return (A + B) / (2.0 * C);
-                }
-                // Landmark indices face-api: mata kiri 36-41, kanan 42-47
-                const earL = ear([36, 37, 38, 41, 40, 39]);
-                const earR = ear([42, 43, 44, 47, 46, 45]);
+                // face-api 68-point: left eye 36-41, right eye 42-47
+                const earL = eyeEAR(pts, [36, 37, 38, 39, 40, 41]);
+                const earR = eyeEAR(pts, [42, 43, 44, 45, 46, 47]);
                 return (earL + earR) / 2.0;
             }
 
-            const EAR_THRESHOLD = 0.22; // di bawah ini = mata menutup
-            const BLINKS_NEEDED = 2; // butuh 2 kedipan
+            // ── State ──
+            const ctx = overlay.getContext('2d');
+            let isProcessing = false;
+            let blinkState = null;
             let eyeOpen = true;
+            let earBuf = []; // smoothing buffer
 
-            // ── 5. Main detection loop ──
+            // ── Loop utama ──
             setInterval(async () => {
                 if (isProcessing) return;
 
@@ -241,179 +277,193 @@
 
                 const det = await faceapi
                     .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({
-                        inputSize: 320,
-                        scoreThreshold: 0.5
+                        inputSize: 416,
+                        scoreThreshold: 0.4
                     }))
-                    .withFaceLandmarks(true)
+                    .withFaceLandmarks() // 68-point
                     .withFaceDescriptor();
 
                 if (!det) {
+                    earValEl.textContent = '-';
+                    eyeStateEl.textContent = '-';
                     if (!blinkState) setStatus('👁️ Siap mendeteksi wajah',
                         'Posisikan wajah ke kamera', 'blue');
                     return;
                 }
 
-                // Gambar box
+                // Gambar box wajah
                 const box = det.detection.box;
                 const match = faceMatcher.findBestMatch(det.descriptor);
-
-                // Gambar kotak warna berdasarkan status
                 const isKnown = match.label !== 'unknown';
+
                 ctx.strokeStyle = isKnown ? '#22c55e' : '#ef4444';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-                // Label nama
                 ctx.fillStyle = isKnown ? '#22c55e' : '#ef4444';
                 ctx.font = 'bold 14px sans-serif';
-                const info = isKnown ?
-                    JSON.parse(match.label).name + ' (' + Math.round((1 - match.distance) * 100) +
-                    '%)' :
-                    'Tidak dikenal';
-                ctx.fillText(info, box.x, box.y > 20 ? box.y - 6 : box.y + box.height + 16);
+                ctx.fillText(
+                    isKnown ? JSON.parse(match.label).name + ' (' + Math.round((1 - match
+                        .distance) * 100) + '%)' : 'Tidak dikenal',
+                    box.x, box.y > 20 ? box.y - 6 : box.y + box.height + 16
+                );
+
+                // Gambar outline mata (visual debug)
+                const pts = det.landmarks.positions;
+                [
+                    [36, 37, 38, 39, 40, 41],
+                    [42, 43, 44, 45, 46, 47]
+                ].forEach(eye => {
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#93c5fd';
+                    ctx.lineWidth = 1.5;
+                    eye.forEach((idx, i) => i === 0 ?
+                        ctx.moveTo(pts[idx].x, pts[idx].y) :
+                        ctx.lineTo(pts[idx].x, pts[idx].y)
+                    );
+                    ctx.closePath();
+                    ctx.stroke();
+                });
+
+                // Hitung EAR + smoothing 4-frame
+                const rawEAR = getEAR(det.landmarks);
+                earBuf.push(rawEAR);
+                if (earBuf.length > 4) earBuf.shift();
+                const ear = earBuf.reduce((a, b) => a + b, 0) / earBuf.length;
+
+                // Update debug UI
+                earValEl.textContent = ear.toFixed(3);
+                eyeStateEl.textContent = ear < EAR_THRESHOLD ? '😑 MENUTUP' : '👁️ TERBUKA';
+                eyeStateEl.style.color = ear < EAR_THRESHOLD ? '#fbbf24' : '#86efac';
 
                 if (!isKnown) {
                     blinkState = null;
                     blinkProgressBox.classList.add('hidden');
                     blinkIndicator.classList.add('hidden');
-                    setStatus('❓ Wajah tidak dikenal',
-                        'Wajah tidak cocok dengan data yang terdaftar', 'red');
+                    setStatus('❓ Wajah tidak dikenal', 'Wajah tidak cocok dengan data terdaftar',
+                        'red');
                     return;
                 }
 
-                const therapistInfo = JSON.parse(match.label);
+                const info = JSON.parse(match.label);
 
-                // ── 6. Liveness: deteksi kedipan ──
-                const ear = eyeAspectRatio(det.landmarks, null, null);
-
-                if (!blinkState || blinkState.id !== therapistInfo.id) {
-                    // Wajah baru terdeteksi — reset state
+                // Reset state jika terapis berbeda
+                if (!blinkState || blinkState.id !== info.id) {
                     blinkState = {
-                        id: therapistInfo.id,
-                        name: therapistInfo.name,
+                        id: info.id,
+                        name: info.name,
                         blinkCount: 0
                     };
+                    eyeOpen = (ear >= EAR_THRESHOLD); // init sesuai kondisi sekarang
+                    earBuf = [];
                     blinkProgressBox.classList.remove('hidden');
                     blinkIndicator.classList.remove('hidden');
-                    eyeOpen = true;
                     updateBlinkUI(0);
-                    setStatus('✅ ' + therapistInfo.name + ' terdeteksi!', '👁️ Kedipkan mata ' +
-                        BLINKS_NEEDED + 'x untuk absen', 'green');
+                    setStatus('✅ ' + info.name + ' terdeteksi!',
+                        '👁️ Kedipkan mata ' + BLINKS_NEEDED + 'x untuk absen', 'green');
                 }
 
-                // Deteksi kedipan: EAR turun (menutup) lalu naik (membuka)
+                // Deteksi transisi terbuka→tutup→terbuka = 1 kedipan
                 if (ear < EAR_THRESHOLD && eyeOpen) {
-                    eyeOpen = false; // mata baru menutup
+                    eyeOpen = false; // mata mulai menutup
                 } else if (ear >= EAR_THRESHOLD && !eyeOpen) {
-                    eyeOpen = true; // mata baru membuka = 1 kedipan
+                    eyeOpen = true; // mata terbuka lagi = 1 kedipan
                     blinkState.blinkCount++;
                     updateBlinkUI(blinkState.blinkCount);
+                    console.log('BLINK #' + blinkState.blinkCount + ' | EAR=' + ear.toFixed(3) +
+                        ' | threshold=' + EAR_THRESHOLD);
 
                     if (blinkState.blinkCount >= BLINKS_NEEDED) {
-                        // ── 7. Submit check-in ──
                         isProcessing = true;
                         blinkIndicator.classList.add('hidden');
                         setStatus('⏳ Menyimpan absensi...', '', 'blue');
-                        await submitCheckIn(det, therapistInfo);
+                        await doCheckIn(det, info);
                     }
                 }
 
-            }, 200); // cek 5x per detik
+            }, 150);
 
-            // ── Helper: update blink progress bar ──
             function updateBlinkUI(count) {
                 blinkCountEl.textContent = count;
                 blinkBar.style.width = Math.min((count / BLINKS_NEEDED) * 100, 100) + '%';
             }
 
-            // ── Helper: submit check-in via AJAX ──
-            async function submitCheckIn(det, therapistInfo) {
+            async function doCheckIn(det, info) {
                 try {
-                    // Ambil snapshot
                     const snap = document.createElement('canvas');
                     snap.width = video.videoWidth;
                     snap.height = video.videoHeight;
                     snap.getContext('2d').drawImage(video, 0, 0);
-
                     const blob = await new Promise(r => snap.toBlob(r, 'image/jpeg', 0.9));
 
-                    const formData = new FormData();
-                    formData.append('_token', CSRF_TOKEN);
-                    formData.append('therapist_id', therapistInfo.id);
-                    formData.append('confidence', (1 - det.detection.score).toFixed(4));
-                    formData.append('image', blob, 'checkin.jpg');
+                    const fd = new FormData();
+                    fd.append('_token', CSRF_TOKEN);
+                    fd.append('therapist_id', info.id);
+                    fd.append('confidence', (1 - det.detection.score).toFixed(4));
+                    fd.append('image', blob, 'checkin.jpg');
 
                     const res = await fetch(CHECKIN_URL, {
                         method: 'POST',
-                        body: formData
+                        body: fd
                     });
                     const data = await res.json();
 
                     if (data.success) {
-                        showSuccess(therapistInfo.name, data.time, data.status);
-                        updateTableRow(therapistInfo.id, data.status, data.time);
+                        document.getElementById('successName').textContent = '✅ ' + info.name;
+                        document.getElementById('successTime').textContent = 'Jam masuk: ' + data.time;
+                        document.getElementById('successStatus').textContent = data.status === 'late' ?
+                            '⏰ TERLAMBAT' : '🟢 HADIR';
+                        successOverlay.classList.remove('hidden');
+                        updateRow(info.id, data.status, data.time);
+                        setStatus('✅ Check-in berhasil!', info.name + ' — ' + data.time, 'green');
                     } else {
-                        showError(data.message);
+                        document.getElementById('errorMsg').textContent = data.message;
+                        errorOverlay.classList.remove('hidden');
+                        setStatus('❌ ' + data.message, '', 'red');
                     }
-
                 } catch (e) {
-                    showError('Gagal mengirim data: ' + e.message);
+                    document.getElementById('errorMsg').textContent = 'Error: ' + e.message;
+                    errorOverlay.classList.remove('hidden');
                 }
 
-                // Cooldown 5 detik sebelum bisa absen lagi
                 setTimeout(() => {
                     successOverlay.classList.add('hidden');
                     errorOverlay.classList.add('hidden');
                     blinkState = null;
+                    earBuf = [];
+                    isProcessing = false;
                     blinkProgressBox.classList.add('hidden');
                     blinkIndicator.classList.add('hidden');
                     updateBlinkUI(0);
-                    isProcessing = false;
-                    setStatus('👁️ Siap mendeteksi wajah', 'Silakan berdiri di depan kamera',
-                        'blue');
+                    setStatus('👁️ Siap mendeteksi wajah', 'Posisikan wajah ke kamera', 'blue');
                 }, 4000);
             }
 
-            function showSuccess(name, time, status) {
-                document.getElementById('successName').textContent = '✅ ' + name;
-                document.getElementById('successTime').textContent = 'Jam masuk: ' + time;
-                document.getElementById('successStatus').textContent = status === 'late' ? '⏰ TERLAMBAT' :
-                    '🟢 HADIR';
-                successOverlay.classList.remove('hidden');
-                setStatus('✅ Check-in berhasil!', name + ' — ' + time, 'green');
-            }
-
-            function showError(msg) {
-                document.getElementById('errorMsg').textContent = msg;
-                errorOverlay.classList.remove('hidden');
-                setStatus('❌ ' + msg, 'Silakan coba lagi', 'red');
-            }
-
-            function updateTableRow(id, status, time) {
-                const timeEl = document.getElementById('time-' + id);
-                if (timeEl) timeEl.textContent = time;
-                const row = document.getElementById('row-' + id);
-                if (row) {
-                    const statusCell = row.querySelector('td:nth-child(2)');
-                    if (statusCell) {
-                        const color = status === 'late' ? 'bg-yellow-100 text-yellow-700' :
+            function updateRow(id, status, time) {
+                const t = document.getElementById('time-' + id);
+                if (t) t.textContent = time;
+                const r = document.getElementById('row-' + id);
+                if (r) {
+                    const c = r.querySelector('td:nth-child(2)');
+                    if (c) {
+                        const col = status === 'late' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-green-100 text-green-700';
-                        const label = status === 'late' ? '⏰ Terlambat' : '✅ Hadir';
-                        statusCell.innerHTML =
-                            `<span class="px-2 py-1 rounded-full text-xs font-semibold ${color}">${label}</span>`;
+                        const lbl = status === 'late' ? '⏰ Terlambat' : '✅ Hadir';
+                        c.innerHTML =
+                            `<span class="px-2 py-1 rounded-full text-xs font-semibold ${col}">${lbl}</span>`;
                     }
                 }
             }
 
             function setStatus(text, sub, color) {
-                const colors = {
+                const p = {
                     blue: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200',
                     green: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-800 dark:text-green-200',
                     yellow: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200',
                     red: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-800 dark:text-red-200',
                 };
-                const bar = document.getElementById('statusBar');
-                bar.className = 'mb-4 p-4 border rounded-lg text-center ' + (colors[color] || colors.blue);
+                document.getElementById('statusBar').className = 'mb-4 p-4 border rounded-lg text-center ' + (p[
+                    color] || p.blue);
                 statusText.textContent = text;
                 statusSub.textContent = sub;
             }
