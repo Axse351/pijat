@@ -161,6 +161,30 @@
                             </p>
                         </div>
 
+                        {{-- Program --}}
+                        <div>
+                            <label
+                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Program</label>
+                            <select name="program_id" id="programSelect"
+                                class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Tanpa Program --</option>
+                                @foreach ($programs as $program)
+                                    <option value="{{ $program->id }}"
+                                        data-discount-type="{{ $program->discount_type }}"
+                                        data-discount-value="{{ $program->discount_value }}"
+                                        data-max-discount="{{ $program->max_discount ?? 0 }}"
+                                        @selected(old('program_id', $booking->program_id) == $program->id)>
+                                        {{ $program->nama_program }}
+                                        @if ($program->discount_type === 'percent')
+                                            — {{ $program->discount_value }}% off
+                                        @else
+                                            — Rp {{ number_format($program->discount_value, 0, ',', '.') }}
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         {{-- Promo --}}
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
@@ -191,29 +215,44 @@
                         <div>
                             <label
                                 class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Diskon
-                                (Rp)</label>
+                                Tambahan (Rp)</label>
                             <input type="number" name="discount" id="discountInput"
                                 value="{{ old('discount', $booking->discount ?? 0) }}" min="0"
                                 class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
                                 oninput="calcTotal()">
+                            <p class="text-xs text-gray-400 mt-1">Diskon manual tambahan di luar program dan promo.</p>
                         </div>
 
                         {{-- Price summary --}}
                         <div
-                            class="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-lg flex gap-6 items-center text-sm flex-wrap">
-                            <div>
-                                <div class="text-xs text-gray-400 mb-0.5">Harga Layanan</div>
-                                <div id="displayPrice" class="font-bold text-gray-700 dark:text-gray-200">Rp 0</div>
-                            </div>
-                            <div class="text-gray-300">−</div>
-                            <div>
-                                <div class="text-xs text-gray-400 mb-0.5">Diskon</div>
-                                <div id="displayDiscount" class="font-bold text-red-500">Rp 0</div>
-                            </div>
-                            <div class="text-gray-300">=</div>
-                            <div>
-                                <div class="text-xs text-gray-400 mb-0.5">Total</div>
-                                <div id="displayTotal" class="font-bold text-amber-600 text-base">Rp 0</div>
+                            class="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-lg space-y-2 text-sm flex-wrap">
+                            <div class="flex gap-6 items-center flex-wrap">
+                                <div>
+                                    <div class="text-xs text-gray-400 mb-0.5">Harga Layanan</div>
+                                    <div id="displayPrice" class="font-bold text-gray-700 dark:text-gray-200">Rp 0</div>
+                                </div>
+                                <div class="text-gray-300">−</div>
+                                <div>
+                                    <div class="text-xs text-gray-400 mb-0.5">Diskon Program</div>
+                                    <div id="displayProgramDisc" class="font-bold text-blue-600">Rp 0</div>
+                                    <div id="displayProgramLabel" class="text-xs text-gray-400 mt-0.5"></div>
+                                </div>
+                                <div class="text-gray-300">−</div>
+                                <div>
+                                    <div class="text-xs text-gray-400 mb-0.5">Diskon Promo</div>
+                                    <div id="displayPromoDisc" class="font-bold text-emerald-600">Rp 0</div>
+                                    <div id="displayPromoLabel" class="text-xs text-gray-400 mt-0.5"></div>
+                                </div>
+                                <div class="text-gray-300">−</div>
+                                <div>
+                                    <div class="text-xs text-gray-400 mb-0.5">Diskon Tambahan</div>
+                                    <div id="displayDiscount" class="font-bold text-red-500">Rp 0</div>
+                                </div>
+                                <div class="text-gray-300">=</div>
+                                <div>
+                                    <div class="text-xs text-gray-400 mb-0.5">Total</div>
+                                    <div id="displayTotal" class="font-bold text-amber-600 text-base">Rp 0</div>
+                                </div>
                             </div>
                         </div>
 
@@ -303,10 +342,21 @@
             @endforeach
         };
 
+        // Data semua program
+        const PROGRAMS = {
+            @foreach ($programs as $p)
+                "{{ $p->id }}": {
+                    discountType: "{{ $p->discount_type }}",
+                    discountValue: {{ $p->discount_value }},
+                    maxDiscount: {{ $p->max_discount ?? 0 }},
+                },
+            @endforeach
+        };
+
         // ── State ──
         let servicePrice = SERVICE_PRICE;
         let hasPromo = HAS_PROMO_INITIAL;
-        let dateConfirmed = false; // apakah user sudah konfirmasi reschedule
+        let dateConfirmed = false;
 
         const scheduledAtInput = document.getElementById('scheduledAtInput');
         const rescheduleModal = document.getElementById('rescheduleModal');
@@ -321,7 +371,6 @@
         scheduledAtInput.addEventListener('change', function() {
             const newVal = this.value;
 
-            // Jika dikembalikan ke jadwal asli
             if (newVal === CURRENT_DATETIME) {
                 rescheduleHint.classList.add('hidden');
                 rescheduleIcon.classList.add('hidden');
@@ -330,7 +379,6 @@
                 return;
             }
 
-            // Jika berbeda dari jadwal sekarang → tampilkan modal konfirmasi
             const fmtDate = d => new Date(d).toLocaleDateString('id-ID', {
                 weekday: 'long',
                 day: 'numeric',
@@ -344,7 +392,6 @@
             document.getElementById('rNewDate').textContent = fmtDate(newVal);
             rescheduleModal.classList.remove('hidden');
 
-            // Konfirmasi
             document.getElementById('rConfirmBtn').onclick = function() {
                 rescheduleModal.classList.add('hidden');
                 isRescheduledFlag.value = '1';
@@ -353,10 +400,9 @@
                 rescheduleIcon.classList.remove('hidden');
             };
 
-            // Batal — kembalikan nilai input
             document.getElementById('rCancelBtn').onclick = function() {
                 rescheduleModal.classList.add('hidden');
-                scheduledAtInput.value = CURRENT_DATETIME; // rollback
+                scheduledAtInput.value = CURRENT_DATETIME;
                 rescheduleHint.classList.add('hidden');
                 rescheduleIcon.classList.add('hidden');
                 isRescheduledFlag.value = '{{ $booking->is_rescheduled ? '1' : '0' }}';
@@ -383,14 +429,43 @@
             calcTotal();
         });
 
+        // ── Update program ──
+        document.getElementById('programSelect').addEventListener('change', function() {
+            calcTotal();
+        });
+
         // ── Kalkulasi total ──
         function calcTotal() {
-            const disc = parseInt(document.getElementById('discountInput').value) || 0;
-            const total = Math.max(0, servicePrice - disc);
+            const programSelect = document.getElementById('programSelect');
+            const manualDisc = parseInt(document.getElementById('discountInput').value) || 0;
+
+            let programDisc = 0;
+            let programLabel = '';
+
+            // Hitung diskon program
+            if (programSelect.value !== '') {
+                const programData = PROGRAMS[programSelect.value];
+                if (programData) {
+                    if (programData.discountType === 'percent') {
+                        programDisc = Math.round(servicePrice * programData.discountValue / 100);
+                        if (programData.maxDiscount > 0 && programDisc > programData.maxDiscount) {
+                            programDisc = programData.maxDiscount;
+                        }
+                        programLabel = programData.discountValue + '% dari harga layanan';
+                    } else {
+                        programDisc = Math.round(programData.discountValue);
+                        programLabel = 'Diskon tetap dari program';
+                    }
+                }
+            }
+
+            const total = Math.max(0, servicePrice - programDisc - manualDisc);
             const fmt = n => 'Rp ' + n.toLocaleString('id-ID');
 
             document.getElementById('displayPrice').textContent = fmt(servicePrice);
-            document.getElementById('displayDiscount').textContent = fmt(disc);
+            document.getElementById('displayProgramDisc').textContent = fmt(programDisc);
+            document.getElementById('displayProgramLabel').textContent = programLabel;
+            document.getElementById('displayDiscount').textContent = fmt(manualDisc);
             document.getElementById('displayTotal').textContent = fmt(total);
 
             const isInvalid = (total === 0 && servicePrice > 0 && !hasPromo);
@@ -400,8 +475,7 @@
 
         // ── Validasi submit ──
         document.getElementById('editForm').addEventListener('submit', function(e) {
-            const disc = parseInt(document.getElementById('discountInput').value) || 0;
-            const total = Math.max(0, servicePrice - disc);
+            const total = Math.max(0, servicePrice - parseInt(document.getElementById('discountInput').value || 0));
             if (total === 0 && servicePrice > 0 && !hasPromo) {
                 e.preventDefault();
                 document.getElementById('zeroPriceWarning').classList.remove('hidden');

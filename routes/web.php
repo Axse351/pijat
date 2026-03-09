@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\TherapistFaceController;
 use App\Http\Controllers\Admin\TherapistAttendanceController;
+use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\WelcomeController;
@@ -55,7 +56,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('payments',    \App\Http\Controllers\Admin\PaymentController::class);
         Route::resource('memberships', \App\Http\Controllers\Admin\MembershipController::class);
         Route::resource('promos',      \App\Http\Controllers\Admin\PromoController::class);
+        Route::resource('programs',    \App\Http\Controllers\Admin\ProgramController::class);
         Route::resource('barang',      \App\Http\Controllers\BarangController::class);
+
+        // ---- Program Toggle Active ----
+        Route::patch('/programs/{program}/toggle-active', [ProgramController::class, 'toggleActive'])->name('programs.toggle-active');
 
         // ---- Therapist Face Registration ----
         Route::get('/therapists/{therapist}/face/register', [TherapistFaceController::class, 'create'])->name('therapist-face.register');

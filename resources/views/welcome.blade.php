@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Serenity Spa — Wellness & Terapi</title>
+    <title>Koichi Spa — Wellness & Terapi</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,7 +45,6 @@
             overflow-x: hidden;
         }
 
-        /* ─── RESET link default browser ─── */
         a {
             color: inherit;
             text-decoration: none;
@@ -120,7 +119,6 @@
             background: var(--terra-dark) !important;
         }
 
-        /* ─── HAMBURGER: hanya muncul di mobile ─── */
         .hamburger {
             display: none;
             flex-direction: column;
@@ -141,7 +139,6 @@
             transition: .3s;
         }
 
-        /* ─── MOBILE MENU: PAKSA HIDDEN, hanya tampil saat class .open ─── */
         .mobile-menu {
             display: none !important;
             position: fixed;
@@ -883,7 +880,7 @@
 
     {{-- NAVBAR --}}
     <nav class="navbar" id="mainNav">
-        <a href="#hero" class="navbar-logo">Serenity<span>Spa</span></a>
+        <a href="#hero" class="navbar-logo">Koichi<span>Spa</span></a>
         <ul class="navbar-links">
             <li><a href="#layanan">Layanan</a></li>
             <li><a href="#terapis">Terapis</a></li>
@@ -900,7 +897,7 @@
         </button>
     </nav>
 
-    {{-- MOBILE MENU — hidden by default via CSS display:none !important --}}
+    {{-- MOBILE MENU --}}
     <div class="mobile-menu" id="mobileMenu">
         <a href="#layanan" onclick="closeMenu()">Layanan</a>
         <a href="#terapis" onclick="closeMenu()">Terapis</a>
@@ -1187,7 +1184,7 @@
         <div class="footer-inner">
             <div class="footer-top">
                 <div>
-                    <div class="footer-brand">Serenity<span>Spa</span></div>
+                    <div class="footer-brand">Koichi<span>Spa</span></div>
                     <div class="footer-tagline">Wellness & Terapi Profesional. Hadir untuk memulihkan keseimbangan
                         tubuh dan pikiran Anda.</div>
                 </div>
@@ -1212,22 +1209,21 @@
                 <div class="footer-links">
                     <h4>Kontak</h4>
                     <ul>
-                        <li><a href="#">📍 Jl. Contoh No. 123</a></li>
-                        <li><a href="#">📞 0812-3456-7890</a></li>
-                        <li><a href="#">✉ hello@serenityspa.id</a></li>
+                        <li><a href="#">📍 Jl. Melati Raya No. 47, Cirebon</a></li>
+                        <li><a href="#">📞 0821-5567-3894</a></li>
+                        <li><a href="#">✉ hello@koichispa.id</a></li>
                         <li><a href="#">⏰ 09.00 – 21.00</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>© {{ date('Y') }} SerenitySpa. Hak cipta dilindungi.</span>
+                <span>© {{ date('Y') }} KoichiSpa. Hak cipta dilindungi.</span>
                 <span>Dibuat dengan ❤ untuk kesehatan Anda</span>
             </div>
         </div>
     </footer>
 
     <script>
-        // ── Navbar scroll ──────────────────────────────────────────────────
         const nav = document.getElementById('mainNav');
         window.addEventListener('scroll', () => {
             nav.classList.toggle('scrolled', window.scrollY > 30);
@@ -1235,7 +1231,6 @@
             passive: true
         });
 
-        // ── Mobile menu ────────────────────────────────────────────────────
         function toggleMenu() {
             const menu = document.getElementById('mobileMenu');
             const btn = document.getElementById('hamburger');
@@ -1247,7 +1242,7 @@
             document.getElementById('mobileMenu').classList.remove('open');
             document.getElementById('hamburger').setAttribute('aria-expanded', 'false');
         }
-        // Klik di luar menu → tutup
+
         document.addEventListener('click', function(e) {
             const menu = document.getElementById('mobileMenu');
             const btn = document.getElementById('hamburger');
@@ -1258,7 +1253,6 @@
             }
         });
 
-        // ── Fade-up scroll animation ───────────────────────────────────────
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, i) => {
                 if (entry.isIntersecting) {
@@ -1273,7 +1267,6 @@
         });
         document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-        // ── Smooth scroll dengan offset navbar 80px ───────────────────────
         document.querySelectorAll('a[href^="#"]').forEach(a => {
             a.addEventListener('click', function(e) {
                 const href = this.getAttribute('href');
@@ -1289,7 +1282,6 @@
             });
         });
 
-        // ── Auto scroll ke section booking jika baru submit ───────────────
         @if (session('booking_success'))
             window.addEventListener('load', () => {
                 const el = document.getElementById('booking');

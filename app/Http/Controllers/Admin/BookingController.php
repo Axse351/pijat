@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Therapist;
 use App\Models\Service;
 use App\Models\Promo;
+use App\Models\Program;
 use App\Models\Commission;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -16,7 +17,7 @@ class BookingController extends Controller
 {
     public function index()
     {
-        $bookings   = Booking::with(['customer', 'therapist', 'service'])->latest()->get();
+        $bookings   = Booking::with(['customer', 'therapist', 'service', 'program'])->latest()->get();
         $customers  = Customer::all();
         $therapists = Therapist::where('is_active', 1)->get();
         $services   = Service::all();
@@ -88,8 +89,9 @@ class BookingController extends Controller
         $therapists = Therapist::where('is_active', 1)->get();
         $services   = Service::all();
         $promos     = Promo::where('status', 'aktif')->get();
+        $programs   = Program::where('is_active', 1)->get();
 
-        return view('admin.bookings.create', compact('customers', 'therapists', 'services', 'promos'));
+        return view('admin.bookings.create', compact('customers', 'therapists', 'services', 'promos', 'programs'));
     }
 
     public function store(Request $request)
@@ -102,11 +104,52 @@ class BookingController extends Controller
             'order_source' => 'nullable|in:walkin,wa,web',
             'discount'     => 'nullable|numeric|min:0',
             'promo_id'     => 'nullable|exists:promos,id',
+            'program_id'   => 'nullable|exists:programs,id',
             'notes'        => 'nullable|string|max:500',
         ]);
 
         $service    = Service::findOrFail($validated['service_id']);
         $discount   = $validated['discount'] ?? 0;
+        $program    = null;
+
+        // Jika ada program, hitung discount dari program
+        if (!empty($validated['program_id'])) {
+            $program = Program::findOrFail($validated['program_id']);
+
+            // Validasi: program harus aktif dan dalam periode valid
+            if (!$program->is_active) {
+                return back()
+                    ->withErrors(['program_id' => 'Program tidak aktif.'])
+                    ->withInput();
+            }
+
+            // Check tanggal program
+            $now = Carbon::now();
+            if ($program->start_date && Carbon::parse($program->start_date)->isAfter($now)) {
+                return back()
+                    ->withErrors(['program_id' => 'Program belum dimulai.'])
+                    ->withInput();
+            }
+
+            if ($program->end_date && Carbon::parse($program->end_date)->isBefore($now)) {
+                return back()
+                    ->withErrors(['program_id' => 'Program sudah berakhir.'])
+                    ->withInput();
+            }
+
+            // Hitung discount dari program
+            if ($program->discount_type === 'percent') {
+                $programDisc = round($service->price * $program->discount_value / 100);
+                if ($program->max_discount && $programDisc > $program->max_discount) {
+                    $programDisc = $program->max_discount;
+                }
+            } else {
+                $programDisc = $program->discount_value;
+            }
+
+            $discount = $discount + $programDisc;
+        }
+
         $finalPrice = max(0, $service->price - $discount);
         $hasPromo   = !empty($validated['promo_id']);
 
@@ -128,6 +171,7 @@ class BookingController extends Controller
             'discount'               => $discount,
             'final_price'            => $finalPrice,
             'promo_id'               => $validated['promo_id'] ?? null,
+            'program_id'             => $validated['program_id'] ?? null,
             'notes'                  => $validated['notes'] ?? null,
             'status'                 => 'scheduled',
         ]);
@@ -142,8 +186,9 @@ class BookingController extends Controller
         $therapists = Therapist::where('is_active', 1)->get();
         $services   = Service::all();
         $promos     = Promo::where('status', 'aktif')->get();
+        $programs   = Program::where('is_active', 1)->get();
 
-        return view('admin.bookings.edit', compact('booking', 'customers', 'therapists', 'services', 'promos'));
+        return view('admin.bookings.edit', compact('booking', 'customers', 'therapists', 'services', 'promos', 'programs'));
     }
 
     public function update(Request $request, Booking $booking)
@@ -157,12 +202,39 @@ class BookingController extends Controller
             'status'         => 'nullable|in:scheduled,ongoing,completed,cancelled',
             'discount'       => 'nullable|numeric|min:0',
             'promo_id'       => 'nullable|exists:promos,id',
+            'program_id'     => 'nullable|exists:programs,id',
             'notes'          => 'nullable|string|max:500',
             'is_rescheduled' => 'nullable|boolean',
         ]);
 
         $service    = Service::findOrFail($validated['service_id']);
         $discount   = $validated['discount'] ?? 0;
+        $program    = null;
+
+        // Jika ada program, hitung discount dari program
+        if (!empty($validated['program_id'])) {
+            $program = Program::findOrFail($validated['program_id']);
+
+            // Validasi: program harus aktif
+            if (!$program->is_active) {
+                return back()
+                    ->withErrors(['program_id' => 'Program tidak aktif.'])
+                    ->withInput();
+            }
+
+            // Hitung discount dari program
+            if ($program->discount_type === 'percent') {
+                $programDisc = round($service->price * $program->discount_value / 100);
+                if ($program->max_discount && $programDisc > $program->max_discount) {
+                    $programDisc = $program->max_discount;
+                }
+            } else {
+                $programDisc = $program->discount_value;
+            }
+
+            $discount = $discount + $programDisc;
+        }
+
         $finalPrice = max(0, $service->price - $discount);
         $hasPromo   = !empty($validated['promo_id']);
 
@@ -195,6 +267,7 @@ class BookingController extends Controller
             'discount'              => $discount,
             'final_price'           => $finalPrice,
             'promo_id'              => $validated['promo_id'] ?? null,
+            'program_id'            => $validated['program_id'] ?? null,
             'notes'                 => $validated['notes'] ?? $booking->notes,
         ]);
 

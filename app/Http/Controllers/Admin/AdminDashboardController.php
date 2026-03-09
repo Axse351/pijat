@@ -3,88 +3,156 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Barang;
 use App\Models\Booking;
-use App\Models\Therapist;
-use App\Models\Service;
 use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Therapist;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $today     = Carbon::today();
-        $yesterday = Carbon::yesterday();
+        $now   = Carbon::now();
+        $today = $now->toDateString();
 
-        // ── Stats ──────────────────────────────────────────────────────
-        $todayBookings   = Booking::whereDate('scheduled_at', $today)->count();
-        $monthRevenue    = Booking::whereMonth('scheduled_at', $today->month)
-            ->whereYear('scheduled_at', $today->year)
-            ->where('status', 'completed')
+        // ── STAT CARDS ────────────────────────────────────────────────────
+        $todayBookings  = Booking::whereDate('scheduled_at', $today)->count();
+        $monthRevenue   = Booking::where('status', 'completed')
+            ->whereMonth('scheduled_at', $now->month)
+            ->whereYear('scheduled_at', $now->year)
             ->sum('final_price');
-        $totalTherapists = Therapist::where('is_active', 1)->count();
+        $todayRevenue   = Booking::where('status', 'completed')
+            ->whereDate('scheduled_at', $today)
+            ->sum('final_price');
+        $totalTherapists = Therapist::where('is_active', true)->count();
         $totalCustomers  = Customer::count();
 
-        // ── Recent bookings ────────────────────────────────────────────
+        // ── CHART HARIAN (per jam, hari ini vs kemarin) ───────────────────
+        $chartLabelsHarian = array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23));
+
+        $harianRaw = Booking::where('status', 'completed')
+            ->whereDate('scheduled_at', $today)
+            ->selectRaw('HOUR(scheduled_at) as jam, SUM(final_price) as total')
+            ->groupBy('jam')
+            ->pluck('total', 'jam');
+
+        $harianPrevRaw = Booking::where('status', 'completed')
+            ->whereDate('scheduled_at', $now->copy()->subDay()->toDateString())
+            ->selectRaw('HOUR(scheduled_at) as jam, SUM(final_price) as total')
+            ->groupBy('jam')
+            ->pluck('total', 'jam');
+
+        $chartHarian     = array_map(fn($h) => (int)($harianRaw[$h] ?? 0),     range(0, 23));
+        $chartHarianPrev = array_map(fn($h) => (int)($harianPrevRaw[$h] ?? 0), range(0, 23));
+
+        // ── CHART MINGGUAN (Sen–Min, minggu ini vs minggu lalu) ───────────
+        $startWeek     = $now->copy()->startOfWeek();
+        $startLastWeek = $now->copy()->subWeek()->startOfWeek();
+        $dayLabels     = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+        $mingguanRaw = Booking::where('status', 'completed')
+            ->whereBetween('scheduled_at', [$startWeek, $startWeek->copy()->endOfWeek()])
+            ->selectRaw('DAYOFWEEK(scheduled_at) as dow, SUM(final_price) as total')
+            ->groupBy('dow')
+            ->pluck('total', 'dow');
+
+        $mingguanPrevRaw = Booking::where('status', 'completed')
+            ->whereBetween('scheduled_at', [$startLastWeek, $startLastWeek->copy()->endOfWeek()])
+            ->selectRaw('DAYOFWEEK(scheduled_at) as dow, SUM(final_price) as total')
+            ->groupBy('dow')
+            ->pluck('total', 'dow');
+
+        // MySQL DAYOFWEEK: 1=Sun,2=Mon,...,7=Sat — mapping ke Mon(2)..Sun(1)
+        $dowMap = [2, 3, 4, 5, 6, 7, 1];
+        $chartMingguan       = array_map(fn($d) => (int)($mingguanRaw[$d] ?? 0),     $dowMap);
+        $chartMingguanPrev   = array_map(fn($d) => (int)($mingguanPrevRaw[$d] ?? 0), $dowMap);
+        $chartLabelsMingguan = $dayLabels;
+
+        // ── CHART BULANAN (Jan–Des, tahun ini vs tahun lalu) ──────────────
+        $chartLabelsBulanan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        $bulananRaw = Booking::where('status', 'completed')
+            ->whereYear('scheduled_at', $now->year)
+            ->selectRaw('MONTH(scheduled_at) as bln, SUM(final_price) as total')
+            ->groupBy('bln')
+            ->pluck('total', 'bln');
+
+        $bulananPrevRaw = Booking::where('status', 'completed')
+            ->whereYear('scheduled_at', $now->year - 1)
+            ->selectRaw('MONTH(scheduled_at) as bln, SUM(final_price) as total')
+            ->groupBy('bln')
+            ->pluck('total', 'bln');
+
+        $chartBulanan     = array_map(fn($m) => (int)($bulananRaw[$m] ?? 0),     range(1, 12));
+        $chartBulananPrev = array_map(fn($m) => (int)($bulananPrevRaw[$m] ?? 0), range(1, 12));
+
+        // ── STOK TERENDAH ─────────────────────────────────────────────────
+        // Model Barang menggunakan field: stok_awal, stok_masuk, stok_keluar,
+        // stok_minimum, nama_barang, kode_barang, satuan, kategori, status.
+        // Accessor kondisi_stok & stok_sistem sudah ada di model Barang.
+        $lowStockProducts = Barang::aktif()
+            ->whereRaw('(stok_awal + stok_masuk - stok_keluar) <= (IFNULL(stok_minimum, 5) * 2)')
+            ->orderByRaw('(stok_awal + stok_masuk - stok_keluar) ASC')
+            ->limit(6)
+            ->get();
+
+        // ── TABEL & WIDGET LAIN ───────────────────────────────────────────
         $recentBookings = Booking::with(['customer', 'service'])
-            ->latest()
-            ->take(6)
+            ->latest('scheduled_at')
+            ->limit(8)
             ->get();
 
-        // ── Unpaid bookings ────────────────────────────────────────────
         $unpaidBookings = Booking::with(['customer', 'service'])
+            ->where('status', 'scheduled')
             ->whereDoesntHave('payment')
-            ->where('status', 'completed')
-            ->latest()
-            ->take(5)
+            ->latest('scheduled_at')
+            ->limit(5)
             ->get();
 
-        // ── Top services ───────────────────────────────────────────────
         $topServices = Service::withCount('bookings')
             ->orderByDesc('bookings_count')
-            ->take(5)
+            ->limit(5)
             ->get();
 
-        // ── Therapists (for status card) ───────────────────────────────
-        $therapists = Therapist::where('is_active', 1)->take(6)->get();
+        $therapists = Therapist::where('is_active', true)->get();
 
-        // ── Terapis paling sedikit sesi KEMARIN → prioritas hari ini ──
-        //    Hitung booking completed/scheduled/ongoing kemarin per terapis.
-        //    Terapis aktif yang tidak punya booking kemarin tetap masuk (count = 0).
-        $therapistYesterdayCount = Booking::selectRaw('therapist_id, COUNT(*) as sesi_kemarin')
-            ->whereDate('scheduled_at', $yesterday)
-            ->whereIn('status', ['scheduled', 'ongoing', 'completed'])
-            ->groupBy('therapist_id')
-            ->pluck('sesi_kemarin', 'therapist_id');
-
-        // Gabungkan semua terapis aktif dengan jumlah sesi kemarin
-        $prioritasHariIni = Therapist::where('is_active', 1)
-            ->get()
-            ->map(function ($t) use ($therapistYesterdayCount) {
-                $t->sesi_kemarin = $therapistYesterdayCount->get($t->id, 0);
-                return $t;
-            })
-            ->sortBy('sesi_kemarin')   // paling sedikit → paling atas
-            ->take(6)
-            ->values();
-
-        // Jumlah sesi terapis hari ini (untuk info tambahan)
-        $therapistTodayCount = Booking::selectRaw('therapist_id, COUNT(*) as sesi_hari_ini')
-            ->whereDate('scheduled_at', $today)
-            ->whereIn('status', ['scheduled', 'ongoing', 'completed'])
-            ->groupBy('therapist_id')
-            ->pluck('sesi_hari_ini', 'therapist_id');
-
-        $prioritasHariIni = $prioritasHariIni->map(function ($t) use ($therapistTodayCount) {
-            $t->sesi_hari_ini = $therapistTodayCount->get($t->id, 0);
-            return $t;
-        });
+        // Prioritas terapis hari ini (sesi kemarin paling sedikit)
+        $prioritasHariIni = Therapist::where('is_active', true)
+            ->withCount([
+                'bookings as sesi_kemarin' => fn($q) =>
+                $q->whereDate('scheduled_at', $now->copy()->subDay()->toDateString()),
+                'bookings as sesi_hari_ini' => fn($q) =>
+                $q->whereDate('scheduled_at', $today),
+            ])
+            ->orderBy('sesi_kemarin', 'asc')
+            ->limit(6)
+            ->get();
 
         return view('admin.dashboard', compact(
+            // Stats
             'todayBookings',
             'monthRevenue',
+            'todayRevenue',
             'totalTherapists',
             'totalCustomers',
+            // Chart harian
+            'chartLabelsHarian',
+            'chartHarian',
+            'chartHarianPrev',
+            // Chart mingguan
+            'chartLabelsMingguan',
+            'chartMingguan',
+            'chartMingguanPrev',
+            // Chart bulanan
+            'chartLabelsBulanan',
+            'chartBulanan',
+            'chartBulananPrev',
+            // Stok
+            'lowStockProducts',
+            // Tabel
             'recentBookings',
             'unpaidBookings',
             'topServices',
