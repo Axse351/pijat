@@ -5,7 +5,7 @@
 @section('page-subtitle', \Carbon\Carbon::now()->translatedFormat('l\, d F Y'))
 
 @section('topbar-actions')
-    <a href="{{ route('kasir.payments.create') }}" class="btn-gold">+ Catat Pembayaran</a>
+    <a href="{{ route('admin.payments.create') }}" class="btn-gold">+ Catat Pembayaran</a>
 @endsection
 
 @section('content')
@@ -275,7 +275,7 @@
         <div class="card">
             <div class="card-header">
                 <span class="card-title">🗓️ Jadwal Hari Ini</span>
-                <a href="{{ route('kasir.bookings.index') }}" class="btn-outline"
+                <a href="{{ route('admin.bookings.index') }}" class="btn-outline"
                     style="padding:6px 14px;font-size:12px;">Lihat Semua</a>
             </div>
             <div class="card-body" style="padding:16px;max-height:380px;overflow-y:auto;">
@@ -443,7 +443,7 @@
         <div class="card">
             <div class="card-header">
                 <span class="card-title">⚠️ Belum Dibayar</span>
-                <a href="{{ route('kasir.payments.create') }}" class="btn-gold"
+                <a href="{{ route('admin.payments.create') }}" class="btn-gold"
                     style="font-size:12px;padding:7px 14px;">+ Catat Bayar</a>
             </div>
             <div class="card-body">
@@ -480,7 +480,7 @@
         <div class="card">
             <div class="card-header">
                 <span class="card-title">🧾 Pembayaran Terbaru</span>
-                <a href="{{ route('kasir.payments.index') }}" class="btn-outline"
+                <a href="{{ route('admin.payments.index') }}" class="btn-outline"
                     style="padding:6px 14px;font-size:12px;">Lihat Semua</a>
             </div>
             <div class="card-body">

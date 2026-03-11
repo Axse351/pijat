@@ -101,12 +101,8 @@ Route::middleware(['auth', 'role:kasir'])
     ->prefix('kasir')
     ->name('kasir.')
     ->group(function () {
-        Route::get('dashboard', fn() => view('kasir.dashboard'))->name('dashboard');
-
-        // Tambahkan route kasir lainnya di sini
-        // Contoh: akses booking & payment
-        // Route::resource('bookings', \App\Http\Controllers\Kasir\BookingController::class);
-        // Route::resource('payments', \App\Http\Controllers\Kasir\PaymentController::class);
+        Route::get('dashboard', [\App\Http\Controllers\Kasir\KasirDashboardController::class, 'index'])
+            ->name('dashboard');
     });
 
 
