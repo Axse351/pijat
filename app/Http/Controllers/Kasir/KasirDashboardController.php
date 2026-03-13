@@ -112,11 +112,12 @@ class KasirDashboardController extends Controller
             ->get();
 
         // ── METODE PEMBAYARAN HARI INI ────────────────────────────────────
+        // Kolom: method (enum: qris, cash), amount
         $paymentMethods = Payment::whereHas('booking', function ($q) use ($today) {
             $q->whereDate('scheduled_at', $today);
         })
-            ->selectRaw('payment_method, COUNT(*) as total, SUM(amount) as jumlah')
-            ->groupBy('payment_method')
+            ->selectRaw('method, COUNT(*) as total, SUM(amount) as jumlah')
+            ->groupBy('method')
             ->get();
 
         // ── STATUS BOOKING HARI INI (ringkasan) ──────────────────────────

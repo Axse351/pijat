@@ -9,16 +9,16 @@ use Symfony\Component\HttpFoundation\Response;
 class RoleMiddleware
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * Mendukung satu atau beberapa role:
+     *   role:admin
+     *   role:admin,kasir
      */
-    public function handle($request, Closure $next, $role)
-{
-    if (!auth()->check() || auth()->user()->role != $role) {
-        abort(403);
-    }
+    public function handle(Request $request, Closure $next, string ...$roles): Response
+    {
+        if (!$request->user() || !in_array($request->user()->role, $roles)) {
+            abort(403, 'Akses ditolak.');
+        }
 
-    return $next($request);
-}
+        return $next($request);
+    }
 }

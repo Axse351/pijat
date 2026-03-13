@@ -26,75 +26,80 @@ Route::post('/booking', [PublicBookingController::class, 'store'])->name('public
 // ============================================================================
 
 Route::middleware('auth')->get('/dashboard', function () {
-    return auth()->user()->role === 'admin'
-        ? redirect()->route('admin.dashboard')
-        : redirect()->route('user.dashboard');
+    return match (auth()->user()->role) {
+        'admin'  => redirect()->route('admin.dashboard'),
+        'kasir'  => redirect()->route('admin.dashboard'), // kasir pakai dashboard yang sama via admin.dashboard
+        default  => redirect()->route('user.dashboard'),
+    };
 })->name('dashboard');
 
 // ============================================================================
-// ADMIN ROUTES
+// ADMIN & KASIR ROUTES — prefix /admin, semua pakai nama admin.*
 // ============================================================================
 
-Route::middleware(['auth', 'role:admin'])
+Route::middleware(['auth', 'role:admin,kasir'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        // ---- Dashboard ----
-        Route::get('dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
-            ->name('dashboard');
+        // ── Dashboard ────────────────────────────────────────────────────
+        // Admin → AdminDashboardController, Kasir → KasirDashboardController
+        Route::get('dashboard', function () {
+            return auth()->user()->role === 'admin'
+                ? app(\App\Http\Controllers\Admin\AdminDashboardController::class)->index()
+                : app(\App\Http\Controllers\Kasir\KasirDashboardController::class)->index();
+        })->name('dashboard');
 
-        // ---- Booking ----
+        // ── Booking (admin + kasir) ───────────────────────────────────────
         Route::get('bookings/calendar',      [BookingController::class, 'calendar'])->name('bookings.calendar');
         Route::get('bookings/calendar-data', [BookingController::class, 'calendarData'])->name('bookings.calendar-data');
+        Route::resource('bookings', \App\Http\Controllers\Admin\BookingController::class);
 
-        // ---- Resource Routes ----
-        Route::resource('customers',   \App\Http\Controllers\Admin\CustomerController::class);
-        Route::resource('therapists',  \App\Http\Controllers\Admin\TherapistController::class);
-        Route::resource('services',    \App\Http\Controllers\Admin\ServiceController::class);
-        Route::resource('bookings',    \App\Http\Controllers\Admin\BookingController::class);
-        Route::resource('payments',    \App\Http\Controllers\Admin\PaymentController::class);
-        Route::resource('memberships', \App\Http\Controllers\Admin\MembershipController::class);
-        Route::resource('promos',      \App\Http\Controllers\Admin\PromoController::class);
-        Route::resource('programs',    \App\Http\Controllers\Admin\ProgramController::class);
-        Route::resource('barang',      \App\Http\Controllers\BarangController::class);
+        // ── Pembayaran (admin + kasir) ────────────────────────────────────
+        Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class);
 
-        // ---- Program Toggle Active ----
-        Route::patch('/programs/{program}/toggle-active', [ProgramController::class, 'toggleActive'])->name('programs.toggle-active');
+        // ── Kehadiran (admin + kasir) ─────────────────────────────────────
+        Route::get('/attendances',                               [TherapistAttendanceController::class, 'index'])->name('attendances.index');
+        Route::get('/therapists/{therapist}/attendance/history', [TherapistAttendanceController::class, 'history'])->name('attendance.history');
+        Route::get('/attendance/check-in',                       [TherapistAttendanceController::class, 'showCheckInCamera'])->name('attendance.check-in-camera');
+        Route::get('/attendance/check-out',                      [TherapistAttendanceController::class, 'showCheckOutCamera'])->name('attendance.check-out-camera');
+        Route::post('/attendance/check-in-ajax',                 [TherapistAttendanceController::class, 'checkInAjax'])->name('attendance.check-in-ajax');
+        Route::post('/attendance/check-out-ajax',                [TherapistAttendanceController::class, 'checkOutAjax'])->name('attendance.check-out-ajax');
 
-        // ---- Therapist Face Registration ----
-        Route::get('/therapists/{therapist}/face/register', [TherapistFaceController::class, 'create'])->name('therapist-face.register');
-        Route::post('/therapists/{therapist}/face',          [TherapistFaceController::class, 'store'])->name('therapist-face.store');
-        Route::post('/therapists/{therapist}/face/verify',   [TherapistFaceController::class, 'verify'])->name('therapist-face.verify');
-        Route::delete('/therapists/{therapist}/face',          [TherapistFaceController::class, 'destroy'])->name('therapist-face.destroy');
+        // ── Master Data (admin only) ──────────────────────────────────────
+        Route::middleware('role:admin')->group(function () {
 
-        // ---- Attendance: halaman utama & history ----
-        Route::get('/attendances',                                        [TherapistAttendanceController::class, 'index'])->name('attendances.index');
-        Route::get('/therapists/{therapist}/attendance/history',          [TherapistAttendanceController::class, 'history'])->name('attendance.history');
+            Route::resource('customers',   \App\Http\Controllers\Admin\CustomerController::class);
+            Route::resource('therapists',  \App\Http\Controllers\Admin\TherapistController::class);
+            Route::resource('services',    \App\Http\Controllers\Admin\ServiceController::class);
+            Route::resource('memberships', \App\Http\Controllers\Admin\MembershipController::class);
+            Route::resource('promos',      \App\Http\Controllers\Admin\PromoController::class);
+            Route::resource('programs',    \App\Http\Controllers\Admin\ProgramController::class);
+            Route::resource('barang',      \App\Http\Controllers\BarangController::class);
 
-        // ---- Attendance: halaman kamera (GET) ----
-        Route::get('/attendance/check-in',  [TherapistAttendanceController::class, 'showCheckInCamera'])->name('attendance.check-in-camera');
-        Route::get('/attendance/check-out', [TherapistAttendanceController::class, 'showCheckOutCamera'])->name('attendance.check-out-camera');
+            Route::patch('/programs/{program}/toggle-active', [ProgramController::class, 'toggleActive'])
+                ->name('programs.toggle-active');
 
-        // ---- Attendance: AJAX endpoint (POST dari face recognition JS) ----
-        Route::post('/attendance/check-in-ajax',  [TherapistAttendanceController::class, 'checkInAjax'])->name('attendance.check-in-ajax');
-        Route::post('/attendance/check-out-ajax', [TherapistAttendanceController::class, 'checkOutAjax'])->name('attendance.check-out-ajax');
+            Route::get('/therapists/{therapist}/face/register', [TherapistFaceController::class, 'create'])->name('therapist-face.register');
+            Route::post('/therapists/{therapist}/face',          [TherapistFaceController::class, 'store'])->name('therapist-face.store');
+            Route::post('/therapists/{therapist}/face/verify',   [TherapistFaceController::class, 'verify'])->name('therapist-face.verify');
+            Route::delete('/therapists/{therapist}/face',        [TherapistFaceController::class, 'destroy'])->name('therapist-face.destroy');
 
-        // ---- Customer Membership (Nested) ----
-        Route::prefix('customers/{customer}/memberships')
-            ->name('customers.membership.')
-            ->group(function () {
-                Route::get('/',                       [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'index'])->name('index');
-                Route::get('/create',                 [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'create'])->name('create');
-                Route::post('/',                       [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'store'])->name('store');
-                Route::get('/{customerMembership}/edit', [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'edit'])->name('edit');
-                Route::put('/{customerMembership}',   [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'update'])->name('update');
-                Route::delete('/{customerMembership}',   [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'destroy'])->name('destroy');
-            });
+            Route::prefix('customers/{customer}/memberships')
+                ->name('customers.membership.')
+                ->group(function () {
+                    Route::get('/',                          [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'index'])->name('index');
+                    Route::get('/create',                    [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'create'])->name('create');
+                    Route::post('/',                          [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'store'])->name('store');
+                    Route::get('/{customerMembership}/edit', [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'edit'])->name('edit');
+                    Route::put('/{customerMembership}',      [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'update'])->name('update');
+                    Route::delete('/{customerMembership}',   [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'destroy'])->name('destroy');
+                });
+        });
     });
 
 // ============================================================================
-// KASIR ROUTES
+// KASIR DASHBOARD — redirect ke admin.dashboard
 // ============================================================================
 
 Route::middleware(['auth', 'role:kasir'])
@@ -104,7 +109,6 @@ Route::middleware(['auth', 'role:kasir'])
         Route::get('dashboard', [\App\Http\Controllers\Kasir\KasirDashboardController::class, 'index'])
             ->name('dashboard');
     });
-
 
 // ============================================================================
 // USER ROUTES
