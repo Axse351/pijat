@@ -50,6 +50,9 @@ Route::middleware(['auth', 'role:admin,kasir'])
                 : app(\App\Http\Controllers\Kasir\KasirDashboardController::class)->index();
         })->name('dashboard');
 
+        // ── Laporan (admin + kasir) ───────────────────────────────────────
+        Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('laporan.index');
+
         // ── Booking (admin + kasir) ───────────────────────────────────────
         Route::get('bookings/calendar',      [BookingController::class, 'calendar'])->name('bookings.calendar');
         Route::get('bookings/calendar-data', [BookingController::class, 'calendarData'])->name('bookings.calendar-data');

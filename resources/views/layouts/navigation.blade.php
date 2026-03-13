@@ -44,6 +44,11 @@
                                 Kehadiran
                             </x-nav-link>
 
+                            {{-- LAPORAN --}}
+                            <x-nav-link :href="route('admin.laporan.index')" :active="request()->routeIs('admin.laporan.*')">
+                                Laporan
+                            </x-nav-link>
+
                             {{-- MASTER DATA DROPDOWN (admin only) --}}
                             @if (Auth::user()->role === 'admin')
                                 <div class="hidden sm:flex sm:items-center" x-data="{ openMaster: false }"
@@ -198,6 +203,10 @@
 
                     <x-responsive-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
                         Kehadiran
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('admin.laporan.index')" :active="request()->routeIs('admin.laporan.*')">
+                        Laporan
                     </x-responsive-nav-link>
 
                     {{-- Master Data mobile (admin only) --}}
