@@ -270,6 +270,7 @@ class BookingController extends Controller
             'final_price'           => $finalPrice,
             'promo_id'              => $validated['promo_id'] ?? null,
             'program_id'            => $validated['program_id'] ?? null,
+            'price'                 => $service->price,
             'notes'                 => $validated['notes'] ?? $booking->notes,
         ]);
 
