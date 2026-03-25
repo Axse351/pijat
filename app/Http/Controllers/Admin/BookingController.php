@@ -106,6 +106,7 @@ class BookingController extends Controller
             'promo_id'     => 'nullable|exists:promos,id',
             'program_id'   => 'nullable|exists:programs,id',
             'notes'        => 'nullable|string|max:500',
+            'is_rescheduled' => 'nullable|boolean',
         ]);
 
         $service    = Service::findOrFail($validated['service_id']);
@@ -173,6 +174,7 @@ class BookingController extends Controller
             'promo_id'               => $validated['promo_id'] ?? null,
             'program_id'             => $validated['program_id'] ?? null,
             'notes'                  => $validated['notes'] ?? null,
+            'price'                  => $service->price,
             'status'                 => 'scheduled',
         ]);
 
