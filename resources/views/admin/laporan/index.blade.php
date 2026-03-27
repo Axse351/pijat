@@ -106,7 +106,6 @@
             transition: width .6s ease;
         }
 
-        /* Widget toggle chips */
         .widget-chip {
             display: inline-flex;
             align-items: center;
@@ -137,6 +136,55 @@
         .section-block.sec-hidden {
             display: none;
         }
+
+        /* Bar pembagian keuangan */
+        .split-bar {
+            display: flex;
+            height: 32px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .split-bar-spa {
+            background: linear-gradient(90deg, #10B981, #6EE7B7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .split-bar-komisi {
+            background: linear-gradient(90deg, #F59E0B, #FCD34D);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .split-bar-diskon {
+            background: linear-gradient(90deg, #F43F5E, #FDA4AF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .split-bar-empty {
+            background: #F3F4F6;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dark .split-bar-empty {
+            background: #374151;
+        }
+
+        .split-bar span {
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+            white-space: nowrap;
+            padding: 0 6px;
+        }
     </style>
 
     <div class="py-6">
@@ -150,9 +198,11 @@
                         <button type="button" onclick="setMode('harian')"
                             class="tab-btn {{ $mode === 'harian' ? 'active' : '' }}" id="tab-harian">📅 Harian</button>
                         <button type="button" onclick="setMode('mingguan')"
-                            class="tab-btn {{ $mode === 'mingguan' ? 'active' : '' }}" id="tab-mingguan">📆 Mingguan</button>
+                            class="tab-btn {{ $mode === 'mingguan' ? 'active' : '' }}" id="tab-mingguan">📆
+                            Mingguan</button>
                         <button type="button" onclick="setMode('bulanan')"
-                            class="tab-btn {{ $mode === 'bulanan' ? 'active' : '' }}" id="tab-bulanan">🗓️ Bulanan</button>
+                            class="tab-btn {{ $mode === 'bulanan' ? 'active' : '' }}" id="tab-bulanan">🗓️
+                            Bulanan</button>
                     </div>
                     <input type="hidden" name="mode" id="modeInput" value="{{ $mode }}">
                     <div class="flex flex-wrap items-end gap-3">
@@ -187,25 +237,18 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="text-xs font-semibold text-gray-400 uppercase me-1">Tampilkan:</span>
-
                     <span class="widget-chip chip-on" style="background:#EEF2FF;color:#4F46E5;border-color:#4F46E5"
                         onclick="toggleSec('sec-keuangan',this)" data-sec="sec-keuangan">💰 Keuangan</span>
-
                     <span class="widget-chip chip-on" style="background:#F0FDF4;color:#10B981;border-color:#10B981"
                         onclick="toggleSec('sec-pengunjung',this)" data-sec="sec-pengunjung">👥 Pengunjung</span>
-
                     <span class="widget-chip chip-on" style="background:#FFF7ED;color:#F59E0B;border-color:#F59E0B"
                         onclick="toggleSec('sec-grafik',this)" data-sec="sec-grafik">📈 Grafik</span>
-
                     <span class="widget-chip chip-on" style="background:#FDF2F8;color:#EC4899;border-color:#EC4899"
                         onclick="toggleSec('sec-layanan',this)" data-sec="sec-layanan">💆 Layanan</span>
-
                     <span class="widget-chip chip-on" style="background:#F0F9FF;color:#0EA5E9;border-color:#0EA5E9"
                         onclick="toggleSec('sec-terapis',this)" data-sec="sec-terapis">🧑‍⚕️ Terapis</span>
-
                     <span class="widget-chip chip-on" style="background:#F5F3FF;color:#8B5CF6;border-color:#8B5CF6"
                         onclick="toggleSec('sec-transaksi',this)" data-sec="sec-transaksi">🧾 Transaksi</span>
-
                     <button onclick="resetSecs()"
                         class="ms-auto text-xs text-gray-400 hover:text-indigo-500 font-medium transition-colors">
                         ↺ Reset tampilan
@@ -213,55 +256,155 @@
                 </div>
             </div>
 
-            {{-- ===== SEC: KEUANGAN ===== --}}
+            {{-- ===== SEC: KEUANGAN (DIPERBAIKI) ===== --}}
             <div class="section-block" id="sec-keuangan">
                 <h3 class="section-title mb-3">💰 Laporan Keuangan</h3>
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div
-                        class="stat-card emerald bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
-                        <div class="text-xs text-gray-400 mb-1">Total Pendapatan (Nett)</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">Rp
-                            {{ number_format($totalPendapatan, 0, ',', '.') }}</div>
-                        <div class="text-xs text-emerald-500 mt-1">Setelah diskon</div>
-                    </div>
+
+                {{-- Baris 1: 3 kartu utama --}}
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+
+                    {{-- Total Uang Masuk --}}
                     <div
                         class="stat-card blue bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
-                        <div class="text-xs text-gray-400 mb-1">Pendapatan Bruto</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">Rp
-                            {{ number_format($totalBruto, 0, ',', '.') }}</div>
-                        <div class="text-xs text-blue-500 mt-1">Sebelum diskon</div>
+                        <div class="text-xs text-gray-400 mb-1">Total Uang Masuk (Bruto)</div>
+                        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                            Rp {{ number_format($totalBruto, 0, ',', '.') }}
+                        </div>
+                        <div class="text-xs text-blue-500 mt-1">Pembayaran pelanggan · setelah diskon</div>
+                    </div>
+
+                    {{-- Komisi Terapis --}}
+                    <div
+                        class="stat-card amber bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
+                        <div class="text-xs text-gray-400 mb-1">Komisi Terapis</div>
+                        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                            Rp {{ number_format($totalKomisiTerapis, 0, ',', '.') }}
+                        </div>
+                        @php $komisiPct = $totalBruto > 0 ? round(($totalKomisiTerapis / $totalBruto) * 100) : 0; @endphp
+                        <div class="text-xs text-amber-500 mt-1">{{ $komisiPct }}% dari bruto · bagian terapis</div>
+                    </div>
+
+                    {{-- Pendapatan Bersih SPA — highlighted --}}
+                    <div
+                        class="stat-card emerald bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-emerald-400 dark:border-emerald-500">
+                        <div class="flex items-center gap-1 text-xs text-gray-400 mb-1 font-semibold">
+                            <span class="text-emerald-500">✅</span> Pendapatan Bersih Spa
+                        </div>
+                        <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                            Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
+                        </div>
+                        @php $spaPct = $totalBruto > 0 ? round(($totalPendapatan / $totalBruto) * 100) : 0; @endphp
+                        <div class="text-xs text-emerald-500 mt-1">{{ $spaPct }}% dari bruto · kas spa</div>
+                    </div>
+                </div>
+
+                {{-- Baris 2: Detail angka --}}
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                        <div class="text-xs text-gray-400 mb-1">Harga Asli (Sebelum Diskon)</div>
+                        <div class="text-lg font-bold text-gray-700 dark:text-gray-300">
+                            Rp {{ number_format($totalHargaAsli, 0, ',', '.') }}
+                        </div>
                     </div>
                     <div
-                        class="stat-card rose bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
-                        <div class="text-xs text-gray-400 mb-1">Total Diskon</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">Rp
-                            {{ number_format($totalDiskon, 0, ',', '.') }}</div>
-                        <div class="text-xs text-rose-500 mt-1">Potongan diberikan</div>
+                        class="stat-card rose bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                        <div class="text-xs text-gray-400 mb-1">Total Diskon Pelanggan</div>
+                        <div class="text-lg font-bold text-rose-500">
+                            − Rp {{ number_format($totalDiskon, 0, ',', '.') }}
+                        </div>
                     </div>
                     <div
-                        class="stat-card cyan bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
+                        class="stat-card cyan bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
                         <div class="text-xs text-gray-400 mb-1">Pendapatan QRIS</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">Rp
-                            {{ number_format($pendapatanQris, 0, ',', '.') }}</div>
+                        <div class="text-lg font-bold text-gray-700 dark:text-gray-300">
+                            Rp {{ number_format($pendapatanQris, 0, ',', '.') }}
+                        </div>
                         <div class="text-xs text-cyan-500 mt-1">Via QRIS</div>
                     </div>
                     <div
-                        class="stat-card amber bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
+                        class="stat-card amber bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
                         <div class="text-xs text-gray-400 mb-1">Pendapatan Cash</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">Rp
-                            {{ number_format($pendapatanCash, 0, ',', '.') }}</div>
+                        <div class="text-lg font-bold text-gray-700 dark:text-gray-300">
+                            Rp {{ number_format($pendapatanCash, 0, ',', '.') }}
+                        </div>
                         <div class="text-xs text-amber-500 mt-1">Via Tunai</div>
                     </div>
+                </div>
+
+                {{-- Baris 3: Visualisasi pembagian + metode --}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                    {{-- Pembagian Uang Masuk --}}
                     <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
-                        <div class="text-xs text-gray-400 mb-2">Komposisi Metode</div>
+                        <div class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">
+                            Pembagian Uang Masuk
+                        </div>
+                        @php
+                            $spaPct = $totalBruto > 0 ? round(($totalPendapatan / $totalBruto) * 100) : 0;
+                            $komisiPct = $totalBruto > 0 ? round(($totalKomisiTerapis / $totalBruto) * 100) : 0;
+                            // Sisa bisa karena pembulatan, tidak ditampilkan terpisah
+                        @endphp
+
+                        {{-- Bar warna --}}
+                        <div class="split-bar mb-3">
+                            @if ($totalBruto > 0)
+                                @if ($spaPct > 0)
+                                    <div class="split-bar-spa" style="width:{{ $spaPct }}%">
+                                        @if ($spaPct > 10)
+                                            <span>Spa {{ $spaPct }}%</span>
+                                        @endif
+                                    </div>
+                                @endif
+                                @if ($komisiPct > 0)
+                                    <div class="split-bar-komisi" style="width:{{ $komisiPct }}%">
+                                        @if ($komisiPct > 10)
+                                            <span>Terapis {{ $komisiPct }}%</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            @else
+                                <div class="split-bar-empty">
+                                    <span class="text-xs text-gray-400">Belum ada data</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Legend --}}
+                        <div class="flex flex-wrap gap-4 text-xs mt-2">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full inline-block" style="background:#10B981"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Kas Spa</span>
+                                <span class="font-bold text-gray-800 dark:text-white">
+                                    Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
+                                    <span class="text-gray-400">({{ $spaPct }}%)</span>
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full inline-block" style="background:#F59E0B"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Komisi Terapis</span>
+                                <span class="font-bold text-gray-800 dark:text-white">
+                                    Rp {{ number_format($totalKomisiTerapis, 0, ',', '.') }}
+                                    <span class="text-gray-400">({{ $komisiPct }}%)</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Komposisi Metode Pembayaran --}}
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
+                        <div class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">
+                            Komposisi Metode Pembayaran
+                        </div>
                         @php
                             $totalPay = $pendapatanQris + $pendapatanCash;
                             $qrisPct = $totalPay > 0 ? round(($pendapatanQris / $totalPay) * 100) : 0;
                             $cashPct = 100 - $qrisPct;
                         @endphp
-                        <div class="mb-2">
-                            <div class="flex justify-between text-xs mb-1"><span
-                                    class="text-cyan-600 font-semibold">QRIS</span><span>{{ $qrisPct }}%</span>
+                        <div class="mb-3">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-cyan-600 font-semibold">QRIS</span>
+                                <span class="text-gray-500">Rp {{ number_format($pendapatanQris, 0, ',', '.') }} ·
+                                    {{ $qrisPct }}%</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill"
@@ -270,8 +413,10 @@
                             </div>
                         </div>
                         <div>
-                            <div class="flex justify-between text-xs mb-1"><span
-                                    class="text-amber-600 font-semibold">Cash</span><span>{{ $cashPct }}%</span>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-amber-600 font-semibold">Cash</span>
+                                <span class="text-gray-500">Rp {{ number_format($pendapatanCash, 0, ',', '.') }} ·
+                                    {{ $cashPct }}%</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill"
@@ -339,11 +484,12 @@
             <div class="section-block" id="sec-grafik">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-5">
-                        <div class="section-title mb-4">📈 Grafik Pendapatan</div>
+                        <div class="section-title mb-1">📈 Grafik Pendapatan Spa (Bersih)</div>
+                        <div class="text-xs text-gray-400 mb-4">Setelah dikurangi komisi terapis</div>
                         <canvas id="chartPendapatan" height="200"></canvas>
                     </div>
                     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-5">
-                        <div class="section-title mb-4">📊 Grafik Booking</div>
+                        <div class="section-title mb-4">📊 Grafik Jumlah Booking</div>
                         <canvas id="chartBooking" height="200"></canvas>
                     </div>
                 </div>
@@ -367,7 +513,7 @@
                                     <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
                                         Total Sesi</th>
                                     <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                        Pendapatan</th>
+                                        Pendapatan Bruto</th>
                                     <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                         Proporsi</th>
                                 </tr>
@@ -381,8 +527,9 @@
                                             {{ $svc->name }}</td>
                                         <td class="px-5 py-3 text-right font-bold text-indigo-600">
                                             {{ $svc->total_sesi }}</td>
-                                        <td class="px-5 py-3 text-right text-gray-700 dark:text-gray-300">Rp
-                                            {{ number_format($svc->total_pendapatan ?? 0, 0, ',', '.') }}</td>
+                                        <td class="px-5 py-3 text-right text-gray-700 dark:text-gray-300">
+                                            Rp {{ number_format($svc->total_pendapatan ?? 0, 0, ',', '.') }}
+                                        </td>
                                         <td class="px-5 py-3 min-w-[120px]">
                                             <div class="flex items-center gap-2">
                                                 <div class="progress-bar flex-1">
@@ -422,8 +569,10 @@
                                         Total Sesi</th>
                                     <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Sesi
                                         Selesai</th>
+                                    <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Uang
+                                        Masuk (Bruto)</th>
                                     <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                        Pendapatan</th>
+                                        Komisi Terapis</th>
                                     <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
                                         Completion Rate</th>
                                 </tr>
@@ -450,8 +599,18 @@
                                             {{ $terapis->total_sesi }}</td>
                                         <td class="px-5 py-3 text-right text-emerald-600 font-semibold">
                                             {{ $terapis->sesi_selesai }}</td>
-                                        <td class="px-5 py-3 text-right text-gray-700 dark:text-gray-300">Rp
-                                            {{ number_format($terapis->total_pendapatan ?? 0, 0, ',', '.') }}</td>
+                                        <td class="px-5 py-3 text-right text-gray-700 dark:text-gray-300">
+                                            Rp {{ number_format($terapis->total_pendapatan ?? 0, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-5 py-3 text-right">
+                                            <span class="font-semibold text-amber-600">
+                                                Rp {{ number_format($terapis->total_komisi ?? 0, 0, ',', '.') }}
+                                            </span>
+                                            @if ($terapis->commission_percent > 0)
+                                                <div class="text-xs text-gray-400">{{ $terapis->commission_percent }}%
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td class="px-5 py-3">
                                             <div class="flex items-center justify-end gap-2">
                                                 <div class="progress-bar w-20">
@@ -466,7 +625,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-10 text-gray-400">Belum ada data.
+                                        <td colspan="6" class="text-center py-10 text-gray-400">Belum ada data.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -498,7 +657,9 @@
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                         Terapis</th>
                                     <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                        Harga</th>
+                                        Bruto</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                        Komisi</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
                                         Bayar</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
@@ -509,16 +670,29 @@
                                 @forelse($detailTransaksi as $booking)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                         <td class="px-4 py-3 text-xs text-gray-500">
-                                            {{ \Carbon\Carbon::parse($booking->scheduled_at)->format('d/m H:i') }}</td>
+                                            {{ \Carbon\Carbon::parse($booking->scheduled_at)->format('d/m H:i') }}
+                                        </td>
                                         <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
-                                            {{ $booking->customer->name ?? '—' }}</td>
+                                            {{ $booking->customer->name ?? '—' }}
+                                        </td>
                                         <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                            {{ $booking->service->name ?? '—' }}</td>
+                                            {{ $booking->service->name ?? '—' }}
+                                        </td>
                                         <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                            {{ $booking->therapist->name ?? '—' }}</td>
+                                            {{ $booking->therapist->name ?? '—' }}
+                                        </td>
                                         <td
                                             class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">
-                                            Rp {{ number_format($booking->final_price, 0, ',', '.') }}</td>
+                                            Rp {{ number_format($booking->final_price, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-4 py-3 text-right text-amber-600 font-semibold">
+                                            @if ($booking->commission)
+                                                Rp
+                                                {{ number_format($booking->commission->commission_amount, 0, ',', '.') }}
+                                            @else
+                                                <span class="text-gray-400 text-xs">—</span>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-3 text-center">
                                             @if ($booking->payment)
                                                 <span
@@ -551,7 +725,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-10 text-gray-400">Belum ada
+                                        <td colspan="8" class="text-center py-10 text-gray-400">Belum ada
                                             transaksi.</td>
                                     </tr>
                                 @endforelse
@@ -571,9 +745,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        // ── SECTION TOGGLE — tersimpan di sessionStorage ──────────────────────
+        // ── SECTION TOGGLE ────────────────────────────────────────────────────
         const SKEY = 'laporan_vis';
-
         const DEFAULTS = {
             'sec-keuangan': true,
             'sec-pengunjung': true,
@@ -627,8 +800,6 @@
             saveVis(DEFAULTS);
             applyVis(DEFAULTS);
         }
-
-        // Apply on load
         applyVis(loadVis());
 
         // ── MODE SWITCHING ────────────────────────────────────────────────────
@@ -643,12 +814,15 @@
 
         // ── CHARTS ────────────────────────────────────────────────────────────
         const labels = @json($chartLabels);
-        const pendapatan = @json($chartPendapatan);
+        const pendapatan = @json($chartPendapatan); // pendapatan bersih spa
+        const bruto = @json($chartBruto); // total uang masuk
         const booking = @json($chartBooking);
+
         const isDark = document.documentElement.classList.contains('dark');
         const gridC = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
         const textC = isDark ? '#9CA3AF' : '#6B7280';
-        const scales = {
+
+        const baseScales = {
             x: {
                 grid: {
                     color: gridC
@@ -668,29 +842,51 @@
             }
         };
 
+        // Grafik Pendapatan — tampilkan bruto (abu) + nett spa (hijau) berdampingan
         new Chart(document.getElementById('chartPendapatan'), {
             type: 'bar',
             data: {
                 labels,
                 datasets: [{
-                    data: pendapatan,
-                    backgroundColor: 'rgba(79,70,229,.7)',
-                    borderColor: '#4F46E5',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
+                        label: 'Bruto',
+                        data: bruto,
+                        backgroundColor: 'rgba(99,102,241,.3)',
+                        borderColor: '#6366F1',
+                        borderWidth: 1,
+                        borderRadius: 3,
+                    },
+                    {
+                        label: 'Kas Spa (Bersih)',
+                        data: pendapatan,
+                        backgroundColor: 'rgba(16,185,129,.7)',
+                        borderColor: '#10B981',
+                        borderWidth: 1,
+                        borderRadius: 3,
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        labels: {
+                            color: textC,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' Rp ' + ctx.raw.toLocaleString('id-ID')
+                        }
                     }
                 },
                 scales: {
-                    ...scales,
+                    ...baseScales,
                     y: {
-                        ...scales.y,
+                        ...baseScales.y,
                         ticks: {
                             color: textC,
                             callback: v => 'Rp ' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'jt' : (v / 1e3).toFixed(0) +
@@ -701,6 +897,7 @@
             }
         });
 
+        // Grafik Booking
         new Chart(document.getElementById('chartBooking'), {
             type: 'line',
             data: {
@@ -723,7 +920,7 @@
                         display: false
                     }
                 },
-                scales
+                scales: baseScales
             }
         });
     </script>
