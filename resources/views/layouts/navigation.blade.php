@@ -44,10 +44,29 @@
                                 Kehadiran
                             </x-nav-link>
 
+                            {{-- JADWAL --}}
+                            <x-nav-link :href="route('admin.schedules.index')" :active="request()->routeIs('admin.schedules.*')">
+                                Jadwal
+                            </x-nav-link>
+
                             {{-- LAPORAN --}}
                             <x-nav-link :href="route('admin.laporan.index')" :active="request()->routeIs('admin.laporan.*')">
                                 Laporan
                             </x-nav-link>
+
+                            {{-- KOMISI (admin only) --}}
+                            @if (Auth::user()->role === 'admin')
+                                <x-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
+                                    Komisi
+                                    @php $unpaidCommissions = \App\Models\Commission::where('is_paid', false)->count(); @endphp
+                                    @if ($unpaidCommissions > 0)
+                                        <span
+                                            class="ms-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                            {{ $unpaidCommissions }}
+                                        </span>
+                                    @endif
+                                </x-nav-link>
+                            @endif
 
                             {{-- MASTER DATA DROPDOWN (admin only) --}}
                             @if (Auth::user()->role === 'admin')
@@ -82,7 +101,6 @@
                                         <div x-show="openMaster" x-transition
                                             class="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-gray-700 border rounded-lg shadow-lg z-50"
                                             style="display:none;">
-
                                             <a href="{{ route('admin.services.index') }}"
                                                 class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600
                                                   {{ request()->routeIs('admin.services.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
@@ -205,9 +223,27 @@
                         Kehadiran
                     </x-responsive-nav-link>
 
+                    <x-responsive-nav-link :href="route('admin.schedules.index')" :active="request()->routeIs('admin.schedules.*')">
+                        Jadwal
+                    </x-responsive-nav-link>
+
                     <x-responsive-nav-link :href="route('admin.laporan.index')" :active="request()->routeIs('admin.laporan.*')">
                         Laporan
                     </x-responsive-nav-link>
+
+                    {{-- KOMISI mobile (admin only) --}}
+                    @if (Auth::user()->role === 'admin')
+                        <x-responsive-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
+                            Komisi
+                            @php $unpaidCommissions = \App\Models\Commission::where('is_paid', false)->count(); @endphp
+                            @if ($unpaidCommissions > 0)
+                                <span
+                                    class="ms-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                    {{ $unpaidCommissions }}
+                                </span>
+                            @endif
+                        </x-responsive-nav-link>
+                    @endif
 
                     {{-- Master Data mobile (admin only) --}}
                     @if (Auth::user()->role === 'admin')

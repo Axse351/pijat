@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('specialty')->nullable();
             $table->string('phone')->nullable();
-            $table->decimal('commission_percent', 5, 2)->default(25);
+            $table->decimal('commission_percent', 5, 2)->default(0);
             $table->string('photo')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

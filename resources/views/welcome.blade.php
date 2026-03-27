@@ -50,7 +50,7 @@
             text-decoration: none;
         }
 
-        /* ─── NAVBAR ─── */
+        /* ── NAVBAR ── */
         .navbar {
             position: fixed;
             top: 0;
@@ -66,7 +66,7 @@
         }
 
         .navbar.scrolled {
-            background: rgba(250, 247, 242, 0.96);
+            background: rgba(250, 247, 242, .96);
             backdrop-filter: blur(14px);
             box-shadow: 0 2px 20px rgba(107, 66, 38, .08);
         }
@@ -77,12 +77,21 @@
             font-weight: 700;
             color: var(--brown);
             letter-spacing: -.02em;
+            display: flex;
+            align-items: center;
             text-decoration: none;
         }
 
-        .navbar-logo span {
-            color: var(--terracotta);
-            font-style: italic;
+        .navbar-logo-img {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-logo:hover .navbar-logo-img {
+            transform: scale(1.05);
         }
 
         .navbar-links {
@@ -96,7 +105,6 @@
             font-size: .875rem;
             font-weight: 500;
             color: var(--brown);
-            text-decoration: none;
             opacity: .75;
             transition: opacity .2s;
         }
@@ -149,7 +157,6 @@
             border-top: 1px solid var(--sand);
             padding: 24px 24px 32px;
             flex-direction: column;
-            gap: 0;
             z-index: 99;
             box-shadow: 0 8px 32px rgba(107, 66, 38, .12);
         }
@@ -162,7 +169,6 @@
             color: var(--brown) !important;
             font-size: 1rem;
             font-weight: 500;
-            text-decoration: none !important;
             padding: 12px 0;
             border-bottom: 1px solid var(--warm);
             display: block;
@@ -179,9 +185,13 @@
             border-bottom: none !important;
         }
 
-        @media (max-width: 768px) {
+        @media(max-width:768px) {
             .navbar {
                 padding: 0 20px;
+            }
+
+            .navbar-logo-img {
+                height: 40px;
             }
 
             .navbar-links {
@@ -193,7 +203,7 @@
             }
         }
 
-        /* ─── HERO ─── */
+        /* ── HERO ── */
         #hero {
             min-height: 100vh;
             display: flex;
@@ -212,37 +222,40 @@
                 radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232, 213, 183, .5) 0%, transparent 50%);
         }
 
-        .hero-ornament {
-            position: absolute;
-            right: -60px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            border: 1px solid rgba(196, 113, 75, .15);
-            pointer-events: none;
+        /* ── HERO: 2 KOLOM ── */
+        .hero-inner {
+            position: relative;
+            width: 100%;
+            max-width: 1160px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
         }
 
-        .hero-ornament::before {
-            content: '';
-            position: absolute;
-            inset: 40px;
-            border-radius: 50%;
-            border: 1px solid rgba(196, 113, 75, .1);
+        @media(max-width:960px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .hero-slider-col {
+                order: -1;
+            }
         }
 
-        .hero-ornament::after {
-            content: '';
-            position: absolute;
-            inset: 80px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(196, 113, 75, .06) 0%, transparent 70%);
+        @media(max-width:640px) {
+            #hero {
+                padding: 100px 20px 60px;
+            }
+
+            .hero-slider-col {
+                display: none;
+            }
         }
 
         .hero-content {
-            position: relative;
-            max-width: 640px;
             animation: fadeUp .8s ease both;
         }
 
@@ -276,18 +289,18 @@
             0%,
             100% {
                 opacity: 1;
-                transform: scale(1);
+                transform: scale(1)
             }
 
             50% {
                 opacity: .4;
-                transform: scale(.75);
+                transform: scale(.75)
             }
         }
 
         .hero-title {
             font-family: 'Playfair Display', serif;
-            font-size: clamp(2.8rem, 5vw, 4.5rem);
+            font-size: clamp(2.4rem, 4vw, 4rem);
             line-height: 1.1;
             color: var(--brown);
             margin-bottom: 24px;
@@ -322,7 +335,6 @@
             font-size: .95rem;
             font-weight: 600;
             cursor: pointer;
-            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -345,7 +357,6 @@
             font-size: .95rem;
             font-weight: 500;
             cursor: pointer;
-            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -380,7 +391,292 @@
             font-weight: 500;
         }
 
-        /* ─── SECTION BASE ─── */
+        /* ── PROMO SLIDER ── */
+        .hero-slider-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeUp .9s .15s ease both;
+        }
+
+        .promo-slider-outer {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .promo-slider-outer::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: -20px;
+            right: 20px;
+            bottom: -20px;
+            background: var(--sand);
+            border-radius: 28px;
+            z-index: 0;
+            opacity: .55;
+        }
+
+        .promo-slider-outer::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: -10px;
+            right: 10px;
+            bottom: -10px;
+            background: rgba(196, 113, 75, .12);
+            border-radius: 26px;
+            z-index: 0;
+        }
+
+        .promo-slider-wrap {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            aspect-ratio: 3/4;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(107, 66, 38, .22), 0 8px 24px rgba(107, 66, 38, .12);
+            background: #2c1f13;
+        }
+
+        .promo-slides-track {
+            display: flex;
+            height: 100%;
+            transition: transform .65s cubic-bezier(.77, 0, .175, 1);
+            will-change: transform;
+        }
+
+        .promo-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .promo-slide-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 8s ease;
+        }
+
+        .promo-slide.active .promo-slide-img {
+            transform: scale(1.06);
+        }
+
+        .promo-slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(44, 31, 19, 0) 25%, rgba(44, 31, 19, .25) 55%, rgba(44, 31, 19, .82) 100%);
+        }
+
+        .promo-slide-body {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 28px 24px;
+            transform: translateY(8px);
+            opacity: 0;
+            transition: transform .5s .1s ease, opacity .5s .1s ease;
+        }
+
+        .promo-slide.active .promo-slide-body {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .promo-slide-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--terracotta);
+            border-radius: 100px;
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .promo-slide-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.25;
+            margin-bottom: 6px;
+        }
+
+        .promo-slide-desc {
+            font-size: .78rem;
+            color: rgba(255, 255, 255, .8);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .promo-slide-price {
+            display: inline-block;
+            padding: 6px 18px;
+            background: rgba(255, 255, 255, .95);
+            color: var(--terracotta);
+            border-radius: 100px;
+            font-size: .82rem;
+            font-weight: 700;
+        }
+
+        .promo-nav {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .promo-nav-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, .18);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, .25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .2s, transform .2s;
+        }
+
+        .promo-nav-btn:hover {
+            background: rgba(255, 255, 255, .35);
+            transform: scale(1.1);
+        }
+
+        .promo-counter {
+            font-size: .7rem;
+            color: rgba(255, 255, 255, .8);
+            font-weight: 600;
+            letter-spacing: .05em;
+            background: rgba(0, 0, 0, .25);
+            backdrop-filter: blur(6px);
+            padding: 3px 10px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, .15);
+        }
+
+        .promo-dots {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .promo-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, .35);
+            cursor: pointer;
+            transition: all .35s;
+        }
+
+        .promo-dot.active {
+            background: #fff;
+            height: 20px;
+        }
+
+        .promo-thumbs {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .promo-thumb {
+            width: 52px;
+            height: 68px;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2.5px solid transparent;
+            transition: border-color .25s, transform .25s, opacity .25s;
+            opacity: .55;
+            flex-shrink: 0;
+            background: var(--sand);
+        }
+
+        .promo-thumb:hover {
+            opacity: .8;
+        }
+
+        .promo-thumb.active {
+            border-color: var(--terracotta);
+            transform: scale(1.1);
+            opacity: 1;
+        }
+
+        .promo-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .promo-label {
+            margin-top: 14px;
+            font-size: .72rem;
+            color: var(--muted);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .promo-label::before,
+        .promo-label::after {
+            content: '';
+            display: inline-block;
+            width: 24px;
+            height: 1px;
+            background: var(--sand);
+        }
+
+        /* placeholder foto */
+        .promo-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .promo-placeholder-icon {
+            font-size: 44px;
+            opacity: .25;
+        }
+
+        .promo-placeholder-text {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .4);
+            text-align: center;
+            padding: 0 16px;
+            line-height: 1.7;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── SECTIONS ── */
         section {
             padding: 100px 40px;
         }
@@ -425,13 +721,13 @@
             max-width: 520px;
         }
 
-        @media (max-width: 640px) {
+        @media(max-width:640px) {
             section {
                 padding: 70px 20px;
             }
         }
 
-        /* ─── SERVICES ─── */
+        /* SERVICES */
         #layanan {
             background: var(--white);
         }
@@ -513,7 +809,7 @@
             margin-top: 4px;
         }
 
-        /* ─── THERAPISTS ─── */
+        /* THERAPISTS */
         #terapis {
             background: var(--warm);
         }
@@ -579,7 +875,7 @@
             font-weight: 600;
         }
 
-        /* ─── WHY US ─── */
+        /* WHY */
         #tentang {
             background: var(--white);
         }
@@ -623,7 +919,7 @@
             line-height: 1.7;
         }
 
-        /* ─── BOOKING FORM ─── */
+        /* BOOKING */
         #booking {
             background: linear-gradient(180deg, var(--cream) 0%, var(--warm) 100%);
         }
@@ -635,7 +931,7 @@
             align-items: start;
         }
 
-        @media (max-width: 900px) {
+        @media(max-width:900px) {
             .booking-wrapper {
                 grid-template-columns: 1fr;
                 gap: 40px;
@@ -747,7 +1043,7 @@
             gap: 16px;
         }
 
-        @media (max-width: 500px) {
+        @media(max-width:500px) {
             .form-row {
                 grid-template-columns: 1fr;
             }
@@ -773,7 +1069,7 @@
             transform: translateY(-1px);
         }
 
-        /* ─── FOOTER ─── */
+        /* FOOTER */
         footer {
             background: var(--brown);
             color: rgba(255, 255, 255, .7);
@@ -833,7 +1129,6 @@
         .footer-links a {
             font-size: .875rem;
             color: rgba(255, 255, 255, .6);
-            text-decoration: none;
             transition: color .2s;
         }
 
@@ -850,16 +1145,15 @@
             gap: 12px;
         }
 
-        /* ─── ANIMATIONS ─── */
         @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(28px);
+                transform: translateY(28px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
 
@@ -880,7 +1174,9 @@
 
     {{-- NAVBAR --}}
     <nav class="navbar" id="mainNav">
-        <a href="#hero" class="navbar-logo">Koichi<span>Spa</span></a>
+        <a href="#hero" class="navbar-logo">
+            <img src="{{ asset('images/logo.png') }}" alt="Koichi Spa" class="navbar-logo-img">
+        </a>
         <ul class="navbar-links">
             <li><a href="#layanan">Layanan</a></li>
             <li><a href="#terapis">Terapis</a></li>
@@ -913,42 +1209,208 @@
     {{-- HERO --}}
     <section id="hero">
         <div class="hero-bg"></div>
-        <div class="hero-ornament"></div>
-        <div class="hero-content">
-            <div class="hero-badge">Buka Setiap Hari · 09.00 – 21.00</div>
-            <h1 class="hero-title">
-                Temukan <em>Kedamaian</em><br>
-                di Tengah Kesibukan
-            </h1>
-            <p class="hero-subtitle">
-                Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda.
-                Dipercaya lebih dari 500 pelanggan setia.
-            </p>
-            <div class="hero-actions">
-                <a href="#booking" class="btn-primary">
-                    Booking Sekarang
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </a>
-                <a href="#layanan" class="btn-outline">Lihat Layanan</a>
+        <div class="hero-inner">
+
+            {{-- Kolom Kiri --}}
+            <div class="hero-content">
+                <div class="hero-badge">Buka Setiap Hari · 09.00 – 21.00</div>
+                <h1 class="hero-title">
+                    Temukan <em>Kedamaian</em><br>
+                    di Tengah Kesibukan
+                </h1>
+                <p class="hero-subtitle">
+                    Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda.
+                    Dipercaya lebih dari 500 pelanggan setia.
+                </p>
+                <div class="hero-actions">
+                    <a href="#booking" class="btn-primary">
+                        Booking Sekarang
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                    <a href="#layanan" class="btn-outline">Lihat Layanan</a>
+                </div>
+                <div class="hero-stats">
+                    <div>
+                        <div class="hero-stat-num">500+</div>
+                        <div class="hero-stat-label">Pelanggan Puas</div>
+                    </div>
+                    <div>
+                        <div class="hero-stat-num">15+</div>
+                        <div class="hero-stat-label">Terapis Bersertifikat</div>
+                    </div>
+                    <div>
+                        <div class="hero-stat-num">8+</div>
+                        <div class="hero-stat-label">Jenis Layanan</div>
+                    </div>
+                </div>
             </div>
-            <div class="hero-stats">
-                <div>
-                    <div class="hero-stat-num">500+</div>
-                    <div class="hero-stat-label">Pelanggan Puas</div>
+
+            {{-- ================================================================
+                 KOLOM KANAN: PROMO SLIDER
+                 
+                 CARA PAKAI:
+                 1. Buat folder:  public/images/promos/
+                 2. Copy foto ke sana (nama bebas, misal: foto1.jpg, promo-massage.jpg)
+                 3. Ganti 'file' di array $slides di bawah sesuai nama file kamu
+                 4. Ubah badge, title, desc, price sesuai konten promo
+                 5. Tambah atau kurangi item di array sesuai jumlah foto kamu
+                 ================================================================ --}}
+
+            <div class="hero-slider-col">
+                <div class="promo-slider-outer">
+                    <div class="promo-slider-wrap" id="promoSlider">
+                        <div class="promo-slides-track" id="slidesTrack">
+
+                            @php
+                                /**
+                                 * ════════════════════════════════════════
+                                 *  EDIT BAGIAN INI UNTUK MENAMBAH FOTO
+                                 * ════════════════════════════════════════
+                                 *  - 'file'  → nama file foto di public/images/promos/
+                                 *  - 'badge' → label kecil di atas judul (maks ~2 kata)
+                                 *  - 'title' → judul slide
+                                 *  - 'desc'  → deskripsi singkat
+                                 *  - 'price' → harga (kosongkan '' jika tidak perlu)
+                                 * ════════════════════════════════════════
+                                 */
+                                $slides = [
+                                    [
+                                        'file' => '1.jpeg',
+                                        'badge' => 'Buy 4 Get 1',
+                                        'desc' =>
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                    ],
+                                    [
+                                        'file' => '2.jpeg',
+                                        'badge' => 'Weekend Deal',
+                                        'desc' =>
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                    ],
+                                    [
+                                        'file' => '3.jpeg',
+                                        'badge' => 'Hot Deal',
+                                        'desc' =>
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                    ],
+                                    [
+                                        'file' => '4.jpeg',
+                                        'badge' => 'Facial',
+                                        'desc' =>
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                    ],
+                                    [
+                                        'file' => '5.jpeg',
+                                        'badge' => 'Facial',
+                                        'desc' =>
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                    ],
+                                    [
+                                        'file' => '6.jpeg',
+                                        'badge' => 'Facial',
+                                        'desc' =>
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                    ],
+                                    [
+                                        'file' => '7.jpeg',
+                                        'badge' => 'Facial',
+                                        'desc' =>
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                    ],
+                                ];
+
+                                // Warna background placeholder jika foto belum ada
+                                $placeholderColors = ['#c4714b', '#a35a38', '#8c5c38', '#b07850', '#d4956e'];
+                            @endphp
+
+                            @foreach ($slides as $i => $slide)
+                                @php
+                                    $exists = file_exists(public_path('images/promos/' . $slide['file']));
+                                    $color = $placeholderColors[$i % count($placeholderColors)];
+                                @endphp
+
+                                <div class="promo-slide {{ $i === 0 ? 'active' : '' }}">
+
+                                    @if ($exists)
+                                        {{-- ✅ Foto ditemukan --}}
+                                        <img class="promo-slide-img"
+                                            src="{{ asset('images/promos/' . $slide['file']) }}"
+                                            loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
+                                    @else
+                                        {{-- ⚠️ Foto belum ada — tampilkan placeholder --}}
+                                        <div class="promo-placeholder"
+                                            style="background:linear-gradient(145deg,{{ $color }},{{ $color }}99);">
+                                            <div class="promo-placeholder-icon">🖼</div>
+                                            <div class="promo-placeholder-text">
+                                                Taruh foto di:<br>
+                                                <strong
+                                                    style="opacity:.6;">public/images/promos/{{ $slide['file'] }}</strong>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="promo-slide-overlay"></div>
+                                    <div class="promo-slide-body">
+                                        @if ($slide['badge'])
+                                            <div class="promo-slide-badge">{{ $slide['badge'] }}</div>
+                                        @endif
+
+                                        @if ($slide['desc'])
+                                            <div class="promo-slide-desc">{{ $slide['desc'] }}</div>
+                                        @endif
+
+                                    </div>
+                                </div>
+                            @endforeach
+
+                        </div>{{-- /slidesTrack --}}
+
+                        {{-- Tombol Prev / Counter / Next --}}
+                        <div class="promo-nav">
+                            <button class="promo-nav-btn" id="promoPrev" aria-label="Sebelumnya">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M9 2L4 7l5 5" stroke="white" stroke-width="1.8" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="promo-counter" id="promoCounter">1 / {{ count($slides) }}</div>
+                            <button class="promo-nav-btn" id="promoNext" aria-label="Berikutnya">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M5 2l5 5-5 5" stroke="white" stroke-width="1.8" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {{-- Dots vertikal --}}
+                        <div class="promo-dots" id="promoDots"></div>
+
+                    </div>{{-- /promo-slider-wrap --}}
+                </div>{{-- /promo-slider-outer --}}
+
+                {{-- Thumbnail strip --}}
+                <div class="promo-thumbs" id="promoThumbs">
+                    @foreach ($slides as $i => $slide)
+                        @php $exists = file_exists(public_path('images/promos/' . $slide['file'])); @endphp
+                        <div class="promo-thumb {{ $i === 0 ? 'active' : '' }}"
+                            onclick="promoGoTo({{ $i }})"
+                            style="{{ !$exists ? 'background:' . $placeholderColors[$i % count($placeholderColors)] . ';display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:16px;' : '' }}">
+                            @if ($exists)
+                                <img src="{{ asset('images/promos/' . $slide['file']) }}" loading="lazy">
+                            @else
+                                ✦
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
-                <div>
-                    <div class="hero-stat-num">15+</div>
-                    <div class="hero-stat-label">Terapis Bersertifikat</div>
-                </div>
-                <div>
-                    <div class="hero-stat-num">8+</div>
-                    <div class="hero-stat-label">Jenis Layanan</div>
-                </div>
-            </div>
-        </div>
+
+                <div class="promo-label">Foto Promo Kami</div>
+
+            </div>{{-- /hero-slider-col --}}
+
+        </div>{{-- /hero-inner --}}
     </section>
 
     {{-- LAYANAN --}}
@@ -1082,21 +1544,16 @@
                             <div style="font-size:3.5rem;margin-bottom:20px;">✅</div>
                             <h3
                                 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--brown);margin-bottom:12px;">
-                                Booking Berhasil!
-                            </h3>
-                            <p style="color:var(--muted);font-size:.9rem;line-height:1.8;">
-                                Terima kasih! Tim kami akan segera menghubungi Anda via WhatsApp untuk konfirmasi
-                                jadwal.
-                            </p>
+                                Booking Berhasil!</h3>
+                            <p style="color:var(--muted);font-size:.9rem;line-height:1.8;">Terima kasih! Tim kami akan
+                                segera menghubungi Anda via WhatsApp untuk konfirmasi jadwal.</p>
                             <a href="{{ route('welcome') }}"
-                                style="display:inline-block;margin-top:24px;padding:12px 28px;background:var(--terracotta);color:white;border-radius:100px;font-weight:600;font-size:.875rem;">
-                                Buat Booking Lain
-                            </a>
+                                style="display:inline-block;margin-top:24px;padding:12px 28px;background:var(--terracotta);color:white;border-radius:100px;font-weight:600;font-size:.875rem;">Buat
+                                Booking Lain</a>
                         </div>
                     @else
                         <h3 class="form-title">Buat Reservasi</h3>
                         <p class="form-sub">Isi data di bawah ini. Anda tidak perlu membuat akun.</p>
-
                         @if ($errors->any())
                             <div
                                 style="margin-bottom:20px;padding:12px 16px;background:#fff5f5;border:1px solid #feb2b2;border-radius:10px;font-size:.85rem;color:#c53030;">
@@ -1105,7 +1562,6 @@
                                 @endforeach
                             </div>
                         @endif
-
                         <form method="POST" action="{{ route('public.booking.store') }}">
                             @csrf
                             <div class="form-row">
@@ -1120,7 +1576,6 @@
                                         placeholder="08xx-xxxx-xxxx" value="{{ old('phone') }}" required>
                                 </div>
                             </div>
-
                             <div class="form-group">
                                 <label class="form-label">Layanan *</label>
                                 <select name="service_id" class="form-control" required>
@@ -1136,7 +1591,6 @@
                                     @endforelse
                                 </select>
                             </div>
-
                             <div class="form-group">
                                 <label class="form-label">Pilih Terapis (Opsional)</label>
                                 <select name="therapist_id" class="form-control">
@@ -1149,27 +1603,22 @@
                                     @endforeach
                                 </select>
                             </div>
-
                             <div class="form-group">
                                 <label class="form-label">Tanggal & Waktu *</label>
                                 <input type="datetime-local" name="scheduled_at" class="form-control"
                                     value="{{ old('scheduled_at') }}" required
                                     min="{{ now()->addHour()->format('Y-m-d\TH:i') }}">
                             </div>
-
                             <div class="form-group">
                                 <label class="form-label">Catatan (Opsional)</label>
                                 <textarea name="notes" class="form-control" rows="3" placeholder="Keluhan khusus, permintaan tertentu...">{{ old('notes') }}</textarea>
                             </div>
-
                             <button type="submit" class="submit-btn">Kirim Reservasi →</button>
-
                             <p
                                 style="text-align:center;font-size:.75rem;color:var(--muted);margin-top:16px;line-height:1.6;">
                                 Sudah punya akun?
-                                <a href="{{ route('login') }}"
-                                    style="color:var(--terracotta);font-weight:600;text-decoration:none;">Masuk di
-                                    sini</a>
+                                <a href="{{ route('login') }}" style="color:var(--terracotta);font-weight:600;">Masuk
+                                    di sini</a>
                                 untuk mengelola booking Anda.
                             </p>
                         </form>
@@ -1224,75 +1673,144 @@
     </footer>
 
     <script>
+        /* ── NAVBAR ── */
         const nav = document.getElementById('mainNav');
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('scrolled', window.scrollY > 30);
-        }, {
+        window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 30), {
             passive: true
         });
 
         function toggleMenu() {
-            const menu = document.getElementById('mobileMenu');
-            const btn = document.getElementById('hamburger');
-            const isOpen = menu.classList.toggle('open');
-            btn.setAttribute('aria-expanded', isOpen);
+            const menu = document.getElementById('mobileMenu'),
+                btn = document.getElementById('hamburger');
+            btn.setAttribute('aria-expanded', menu.classList.toggle('open'));
         }
 
         function closeMenu() {
             document.getElementById('mobileMenu').classList.remove('open');
             document.getElementById('hamburger').setAttribute('aria-expanded', 'false');
         }
-
-        document.addEventListener('click', function(e) {
-            const menu = document.getElementById('mobileMenu');
-            const btn = document.getElementById('hamburger');
-            if (menu.classList.contains('open') &&
-                !menu.contains(e.target) &&
-                !btn.contains(e.target)) {
-                closeMenu();
-            }
+        document.addEventListener('click', e => {
+            const menu = document.getElementById('mobileMenu'),
+                btn = document.getElementById('hamburger');
+            if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) closeMenu();
         });
 
-        const observer = new IntersectionObserver((entries) => {
+        /* ── FADE-UP ── */
+        const obs = new IntersectionObserver((entries) => {
             entries.forEach((entry, i) => {
                 if (entry.isIntersecting) {
-                    setTimeout(() => {
-                        entry.target.classList.add('visible');
-                    }, i * 80);
-                    observer.unobserve(entry.target);
+                    setTimeout(() => entry.target.classList.add('visible'), i * 80);
+                    obs.unobserve(entry.target);
                 }
             });
         }, {
             threshold: 0.1
         });
-        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+        document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
 
+        /* ── SMOOTH SCROLL ── */
         document.querySelectorAll('a[href^="#"]').forEach(a => {
-            a.addEventListener('click', function(e) {
-                const href = this.getAttribute('href');
+            a.addEventListener('click', e => {
+                const href = a.getAttribute('href');
                 if (!href || href === '#') return;
                 const target = document.querySelector(href);
                 if (!target) return;
                 e.preventDefault();
-                const top = target.getBoundingClientRect().top + window.scrollY - 80;
                 window.scrollTo({
-                    top,
+                    top: target.getBoundingClientRect().top + window.scrollY - 80,
                     behavior: 'smooth'
                 });
             });
         });
 
+        /* ── PROMO SLIDER ── */
+        (function() {
+            const track = document.getElementById('slidesTrack');
+            const dotsWrap = document.getElementById('promoDots');
+            const counterEl = document.getElementById('promoCounter');
+            const btnPrev = document.getElementById('promoPrev');
+            const btnNext = document.getElementById('promoNext');
+            const sliderEl = document.getElementById('promoSlider');
+
+            const slides = Array.from(track.querySelectorAll('.promo-slide'));
+            const total = slides.length;
+            let cur = 0,
+                timer = null,
+                paused = false,
+                touchX = 0;
+
+            /* Dots */
+            dotsWrap.innerHTML = '';
+            slides.forEach((_, i) => {
+                const d = document.createElement('div');
+                d.className = 'promo-dot' + (i === 0 ? ' active' : '');
+                d.addEventListener('click', () => promoGoTo(i));
+                dotsWrap.appendChild(d);
+            });
+
+            function updateUI() {
+                track.style.transform = `translateX(-${cur * 100}%)`;
+                counterEl.textContent = `${cur + 1} / ${total}`;
+                slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+                dotsWrap.querySelectorAll('.promo-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+                document.querySelectorAll('.promo-thumb').forEach((t, i) => t.classList.toggle('active', i === cur));
+                const th = document.querySelectorAll('.promo-thumb')[cur];
+                if (th) th.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+
+            window.promoGoTo = function(idx) {
+                cur = ((idx % total) + total) % total;
+                updateUI();
+                clearInterval(timer);
+                if (!paused) timer = setInterval(() => promoGoTo(cur + 1), 4500);
+            };
+
+            btnPrev.addEventListener('click', () => promoGoTo(cur - 1));
+            btnNext.addEventListener('click', () => promoGoTo(cur + 1));
+
+            sliderEl.addEventListener('touchstart', e => {
+                touchX = e.touches[0].clientX;
+                paused = true;
+                clearInterval(timer);
+            }, {
+                passive: true
+            });
+            sliderEl.addEventListener('touchend', e => {
+                const dx = e.changedTouches[0].clientX - touchX;
+                if (Math.abs(dx) > 40) promoGoTo(cur + (dx < 0 ? 1 : -1));
+                paused = false;
+                promoGoTo(cur);
+            });
+            sliderEl.addEventListener('mouseenter', () => {
+                paused = true;
+                clearInterval(timer);
+            });
+            sliderEl.addEventListener('mouseleave', () => {
+                paused = false;
+                promoGoTo(cur);
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'ArrowLeft') promoGoTo(cur - 1);
+                if (e.key === 'ArrowRight') promoGoTo(cur + 1);
+            });
+
+            updateUI();
+            timer = setInterval(() => promoGoTo(cur + 1), 4500);
+        })();
+
+        /* ── BOOKING SUCCESS SCROLL ── */
         @if (session('booking_success'))
             window.addEventListener('load', () => {
                 const el = document.getElementById('booking');
-                if (el) {
-                    setTimeout(() => {
-                        window.scrollTo({
-                            top: el.offsetTop - 80,
-                            behavior: 'smooth'
-                        });
-                    }, 300);
-                }
+                if (el) setTimeout(() => window.scrollTo({
+                    top: el.offsetTop - 80,
+                    behavior: 'smooth'
+                }), 300);
             });
         @endif
     </script>

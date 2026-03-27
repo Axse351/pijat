@@ -99,6 +99,20 @@ Route::middleware(['auth', 'role:admin,kasir'])
                     Route::delete('/{customerMembership}',   [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'destroy'])->name('destroy');
                 });
         });
+        Route::resource('schedules', \App\Http\Controllers\Admin\TherapistScheduleController::class)
+            ->names('schedules');
+
+        // Generate jadwal otomatis
+        Route::post(
+            'schedules/generate-month',
+            [\App\Http\Controllers\Admin\TherapistScheduleController::class, 'generateMonthSchedule']
+        )
+            ->name('schedules.generate');
+
+        Route::get('/commissions',                  [\App\Http\Controllers\Admin\CommissionController::class, 'index'])->name('commissions.index');
+        Route::patch('/commissions/{commission}/mark-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
+        Route::post('/commissions/bulk-paid',       [\App\Http\Controllers\Admin\CommissionController::class, 'markBulkPaid'])->name('commissions.bulk-paid');
+        Route::get('/commissions/therapist/{therapist}', [\App\Http\Controllers\Admin\CommissionController::class, 'therapistSummary'])->name('commissions.therapist');
     });
 
 // ============================================================================
