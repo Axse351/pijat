@@ -101,6 +101,7 @@ class BookingSeeder extends Seeder
                 'is_rescheduled' => $isRescheduled,
                 'order_source' => $orderSource,
                 'discount' => $discount,
+                'price' => $service->price,
                 'final_price' => $finalPrice,
                 'promo_id' => $hasPromo ? $promos->random()->id : null,
                 'program_id' => $hasProgram ? $programs->random()->id : null,

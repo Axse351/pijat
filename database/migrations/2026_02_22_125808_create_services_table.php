@@ -12,11 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('services', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->decimal('price', 12, 2);
-    $table->timestamps();
-});
+            $table->id();
+            $table->string('name');
+            $table->string('category')->default('Refleksi'); // Refleksi | Minuman
+            $table->text('description')->nullable();
+            $table->decimal('price', 12, 2);
+            $table->integer('duration')->nullable()->comment('Durasi dalam menit, null untuk non-terapi');
+            $table->string('sku')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**

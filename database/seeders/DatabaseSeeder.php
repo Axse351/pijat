@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,18 +13,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Nonaktifkan FK check selama seeding
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-         $this->call([
+        $this->call([
             UserSeeder::class,
             TherapistSeeder::class,
             ServiceSeeder::class,
             PromoSeeder::class,
             ProgramSeeder::class,
+            AtkCategorySeeder::class,
             MembershipSeeder::class,
             CustomerSeeder::class,
             CustomerMembershipSeeder::class,
             BookingSeeder::class,
             PaymentSeeder::class,
         ]);
+
+        // Aktifkan kembali setelah semua seeder selesai
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

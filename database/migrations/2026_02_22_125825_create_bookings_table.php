@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('therapist_id')->constrained()->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('promo_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('promo_id')->nullable()->constrained()->nullOnDelete();
 
             $table->enum('order_source', ['wa', 'walkin', 'web']);
             $table->dateTime('scheduled_at');
