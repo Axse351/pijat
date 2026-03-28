@@ -94,4 +94,17 @@ class Booking extends Model
     {
         return $query->where('status', 'cancelled');
     }
+
+
+    /**
+     * Scope: booking dalam rentang waktu berdasarkan scheduled_at
+     */
+    public function scopeInRange($query, $start, $end)
+    {
+        return $query->whereBetween('scheduled_at', [$start, $end]);
+    }
+
+    // ── Jika belum ada, tambahkan juga relasi berikut ────────────────────────
+
+
 }

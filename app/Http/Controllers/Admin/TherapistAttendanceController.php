@@ -117,7 +117,21 @@ class TherapistAttendanceController extends Controller
         ]);
 
         $therapist = Therapist::findOrFail($request->therapist_id);
-        $today     = Carbon::today();
+        $today     = Carbon::today('Asia/Jakarta');
+        $now       = Carbon::now('Asia/Jakarta');
+
+        // ✅ Cek jadwal hari ini
+        $schedule = \App\Models\TherapistSchedule::where('therapist_id', $therapist->id)
+            ->whereDate('schedule_date', $today)
+            ->first();
+
+        // ✅ Validasi apakah dijadwalkan masuk
+        if (!$schedule || $schedule->status !== 'working') {
+            return response()->json([
+                'success' => false,
+                'message' => $therapist->name . ' tidak dijadwalkan masuk hari ini.',
+            ]);
+        }
 
         // Cek sudah check-in hari ini
         $existing = TherapistAttendance::where('therapist_id', $therapist->id)
@@ -128,7 +142,10 @@ class TherapistAttendanceController extends Controller
         if ($existing) {
             return response()->json([
                 'success' => false,
-                'message' => $therapist->name . ' sudah check-in pada ' . $existing->check_in_at->format('H:i'),
+                'message' => $therapist->name . ' sudah check-in pada '
+                    . Carbon::parse($existing->check_in_at)
+                    ->setTimezone('Asia/Jakarta')
+                    ->format('H:i'),
             ]);
         }
 
@@ -136,12 +153,15 @@ class TherapistAttendanceController extends Controller
             DB::beginTransaction();
 
             $imagePath = $request->file('image')->store('faces/checkin', 'public');
-            $status    = now()->format('H:i') > '09:00' ? 'late' : 'present';
+
+            // ✅ Bandingkan dengan start_time dari jadwal, bukan hardcode 09:00
+            $scheduledStart = Carbon::parse($schedule->start_time, 'Asia/Jakarta');
+            $status         = $now->gt($scheduledStart) ? 'late' : 'present';
 
             TherapistAttendance::updateOrCreate(
                 ['therapist_id' => $therapist->id, 'attendance_date' => $today],
                 [
-                    'check_in_at'         => now(),
+                    'check_in_at'         => $now,
                     'check_in_image'      => $imagePath,
                     'check_in_confidence' => $request->confidence ?? 1.0,
                     'status'              => $status,
@@ -153,9 +173,73 @@ class TherapistAttendanceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'time'    => now()->format('H:i'),
+                'time'    => $now->format('H:i'),
                 'status'  => $status,
                 'message' => 'Check-in berhasil',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()]);
+        }
+    }
+
+    public function checkOutAjax(Request $request)
+    {
+        $request->validate([
+            'therapist_id' => 'required|exists:therapists,id',
+            'image'        => 'required|image|max:5120',
+            'confidence'   => 'nullable|numeric',
+        ]);
+
+        $therapist = Therapist::findOrFail($request->therapist_id);
+        $today     = Carbon::today('Asia/Jakarta');
+        $now       = Carbon::now('Asia/Jakarta');
+
+        $attendance = TherapistAttendance::where('therapist_id', $therapist->id)
+            ->whereDate('attendance_date', $today)
+            ->first();
+
+        if (!$attendance || !$attendance->check_in_at) {
+            return response()->json([
+                'success' => false,
+                'message' => $therapist->name . ' belum check-in hari ini.',
+            ]);
+        }
+
+        if ($attendance->check_out_at) {
+            return response()->json([
+                'success' => false,
+                'message' => $therapist->name . ' sudah check-out pada '
+                    . Carbon::parse($attendance->check_out_at)
+                    ->setTimezone('Asia/Jakarta')
+                    ->format('H:i'),
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $imagePath = $request->file('image')->store('faces/checkout', 'public');
+
+            $attendance->update([
+                'check_out_at'         => $now,
+                'check_out_image'      => $imagePath,
+                'check_out_confidence' => $request->confidence ?? 1.0,
+            ]);
+
+            DB::commit();
+
+            // ✅ Hitung durasi pakai timezone WIB
+            $checkIn  = Carbon::parse($attendance->check_in_at)->setTimezone('Asia/Jakarta');
+            $hours    = $checkIn->diffInHours($now);
+            $minutes  = $checkIn->diff($now)->i;
+            $duration = $hours . ' jam ' . $minutes . ' menit';
+
+            return response()->json([
+                'success'  => true,
+                'time'     => $now->format('H:i'),
+                'duration' => $duration,
+                'message'  => 'Check-out berhasil',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -168,58 +252,7 @@ class TherapistAttendanceController extends Controller
     | CHECK-OUT via AJAX
     |--------------------------------------------------------------------------
     */
-    public function checkOutAjax(Request $request)
-    {
-        $request->validate([
-            'therapist_id' => 'required|exists:therapists,id',
-            'image'        => 'required|image|max:5120',
-            'confidence'   => 'nullable|numeric',
-        ]);
 
-        $therapist = Therapist::findOrFail($request->therapist_id);
-        $today     = Carbon::today();
-
-        $attendance = TherapistAttendance::where('therapist_id', $therapist->id)
-            ->whereDate('attendance_date', $today)
-            ->first();
-
-        if (!$attendance || !$attendance->check_in_at) {
-            return response()->json(['success' => false, 'message' => $therapist->name . ' belum check-in hari ini.']);
-        }
-
-        if ($attendance->check_out_at) {
-            return response()->json(['success' => false, 'message' => $therapist->name . ' sudah check-out pada ' . $attendance->check_out_at->format('H:i')]);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $imagePath = $request->file('image')->store('faces/checkout', 'public');
-
-            $attendance->update([
-                'check_out_at'         => now(),
-                'check_out_image'      => $imagePath,
-                'check_out_confidence' => $request->confidence ?? 1.0,
-            ]);
-
-            DB::commit();
-
-            // Hitung durasi kerja
-            $hours    = $attendance->check_in_at->diffInHours(now());
-            $minutes  = $attendance->check_in_at->diff(now())->i;
-            $duration = $hours . ' jam ' . $minutes . ' menit';
-
-            return response()->json([
-                'success'  => true,
-                'time'     => now()->format('H:i'),
-                'duration' => $duration,
-                'message'  => 'Check-out berhasil',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()]);
-        }
-    }
 
     /*
     |--------------------------------------------------------------------------

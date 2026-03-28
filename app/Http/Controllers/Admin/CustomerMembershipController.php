@@ -44,22 +44,27 @@ class CustomerMembershipController extends Controller
 
         $membership = Membership::findOrFail($request->membership_id);
 
-        // Nonaktifkan membership lama
         CustomerMembership::where('customer_id', $customer->id)
             ->where('is_active', true)
             ->update(['is_active' => false]);
 
         CustomerMembership::create([
-            'customer_id'  => $customer->id,
+            'customer_id'   => $customer->id,
             'membership_id' => $membership->id,
-            'start_date'   => Carbon::today(),
-            'end_date'     => Carbon::today()->addDays($membership->duration_days),
-            'is_active'    => true,
+            'start_date'    => Carbon::today(),
+            'end_date'      => Carbon::today()->addDays($membership->duration_days),
+            'is_active'     => true,
         ]);
 
         return redirect()
             ->route('admin.customers.membership.index', $customer)
-            ->with('success', "Membership {$membership->name} berhasil diberikan.");
+            ->with('success', "Membership {$membership->name} berhasil diberikan.")
+            ->with('welcome_membership', [
+                'customer_name'   => $customer->user->name,
+                'membership_name' => $membership->name,
+                'end_date'        => Carbon::today()->addDays($membership->duration_days)->translatedFormat('d F Y'),
+                'phone'           => $customer->phone ?? $customer->user->phone ?? null, // ← tambah baris ini saja
+            ]);
     }
 
     public function edit(Customer $customer, CustomerMembership $customerMembership)

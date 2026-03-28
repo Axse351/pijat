@@ -103,9 +103,17 @@ Route::middleware(['auth', 'role:admin,kasir'])
             // ATK ITEMS (ADMIN ONLY)
             // ============================
             Route::resource('atk-items', \App\Http\Controllers\AtkController::class);
-            Route::post('atk-items/{atk}/adjust-stock',
-                [\App\Http\Controllers\AtkController::class, 'adjustStock'])
+            Route::post(
+                'atk-items/{atk}/adjust-stock',
+                [\App\Http\Controllers\AtkController::class, 'adjustStock']
+            )
                 ->name('atk-items.adjust-stock');
+            Route::get('/laporan', [App\Http\Controllers\Admin\LaporanController::class, 'index'])
+                ->name('laporan.index');
+
+            // Export Laporan ke Excel
+            Route::get('/laporan/export', [App\Http\Controllers\Admin\LaporanController::class, 'export'])
+                ->name('laporan.export');
         });
 
         // ============================
@@ -113,29 +121,39 @@ Route::middleware(['auth', 'role:admin,kasir'])
         // ============================
         Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
 
-        Route::post('atk-purchases/{purchase}/confirm',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'confirm'])
+        Route::post(
+            'atk-purchases/{purchase}/confirm',
+            [\App\Http\Controllers\AtkPurchaseController::class, 'confirm']
+        )
             ->name('atk-purchases.confirm');
 
-        Route::post('atk-purchases/{purchase}/cancel',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'cancel'])
+        Route::post(
+            'atk-purchases/{purchase}/cancel',
+            [\App\Http\Controllers\AtkPurchaseController::class, 'cancel']
+        )
             ->name('atk-purchases.cancel');
 
         // AJAX
-        Route::get('/api/atk-by-category/{category}',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkByCategory']);
+        Route::get(
+            '/api/atk-by-category/{category}',
+            [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkByCategory']
+        );
 
-        Route::get('/api/atk-detail/{atk}',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']);
+        Route::get(
+            '/api/atk-detail/{atk}',
+            [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']
+        );
 
-     Route::resource('atk-categories', AtkCategoryController::class);
+        Route::resource('atk-categories', AtkCategoryController::class);
 
         // ── Schedule ────────────────────────────────────────────────────
         Route::resource('schedules', \App\Http\Controllers\Admin\TherapistScheduleController::class)
             ->names('schedules');
 
-        Route::post('schedules/generate-month',
-            [\App\Http\Controllers\Admin\TherapistScheduleController::class, 'generateMonthSchedule'])
+        Route::post(
+            'schedules/generate-month',
+            [\App\Http\Controllers\Admin\TherapistScheduleController::class, 'generateMonthSchedule']
+        )
             ->name('schedules.generate');
 
         // ── Commission ──────────────────────────────────────────────────
