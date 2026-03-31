@@ -34,9 +34,7 @@
             padding: 0;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
+
 
         body {
             font-family: 'DM Sans', sans-serif;
@@ -87,7 +85,7 @@
             width: auto;
             object-fit: contain;
             display: block;
-            transition: transform 0.3s ease;
+            transition: transform .3s ease;
         }
 
         .navbar-logo:hover .navbar-logo-img {
@@ -222,7 +220,6 @@
                 radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232, 213, 183, .5) 0%, transparent 50%);
         }
 
-        /* ── HERO: 2 KOLOM ── */
         .hero-inner {
             position: relative;
             width: 100%;
@@ -503,30 +500,11 @@
             margin-bottom: 8px;
         }
 
-        .promo-slide-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1.25;
-            margin-bottom: 6px;
-        }
-
         .promo-slide-desc {
             font-size: .78rem;
             color: rgba(255, 255, 255, .8);
             line-height: 1.6;
             margin-bottom: 12px;
-        }
-
-        .promo-slide-price {
-            display: inline-block;
-            padding: 6px 18px;
-            background: rgba(255, 255, 255, .95);
-            color: var(--terracotta);
-            border-radius: 100px;
-            font-size: .82rem;
-            font-weight: 700;
         }
 
         .promo-nav {
@@ -651,7 +629,6 @@
             background: var(--sand);
         }
 
-        /* placeholder foto */
         .promo-placeholder {
             position: absolute;
             inset: 0;
@@ -727,7 +704,7 @@
             }
         }
 
-        /* SERVICES */
+        /* ── LAYANAN ── */
         #layanan {
             background: var(--white);
         }
@@ -809,7 +786,7 @@
             margin-top: 4px;
         }
 
-        /* THERAPISTS */
+        /* ── TERAPIS ── */
         #terapis {
             background: var(--warm);
         }
@@ -875,7 +852,339 @@
             font-weight: 600;
         }
 
-        /* WHY */
+        /* ── JADWAL TERAPIS ── */
+        #jadwal {
+            background: var(--white);
+        }
+
+        .ts-filter-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+            margin-top: 40px;
+        }
+
+        .ts-btn {
+            padding: 9px 20px;
+            border-radius: 100px;
+            border: 1.5px solid var(--sand);
+            background: transparent;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: .82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ts-btn:hover {
+            border-color: var(--terracotta);
+            color: var(--brown);
+        }
+
+        .ts-btn.active {
+            background: var(--terracotta);
+            border-color: var(--terracotta);
+            color: white;
+        }
+
+        .ts-btn-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--sand), var(--terracotta));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .ts-btn.active .ts-btn-avatar {
+            background: rgba(255, 255, 255, .28);
+        }
+
+        .ts-cal-wrap {
+            background: var(--cream);
+            border: 1.5px solid var(--sand);
+            border-radius: 20px;
+            padding: 32px;
+        }
+
+        .ts-cal-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ts-nav-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1.5px solid var(--sand);
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--brown);
+            font-size: 1rem;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        .ts-nav-btn:hover {
+            background: var(--terracotta);
+            border-color: var(--terracotta);
+            color: white;
+        }
+
+        .ts-month-label {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--brown);
+            flex: 1;
+        }
+
+        .ts-therapist-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .ts-therapist-info-name {
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--brown);
+        }
+
+        .ts-therapist-info-spec {
+            font-size: .72rem;
+            color: var(--muted);
+        }
+
+        .ts-therapist-mini-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--sand), var(--terracotta));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: .9rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .ts-day-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .ts-day-name {
+            text-align: center;
+            font-size: .7rem;
+            font-weight: 600;
+            color: var(--muted);
+            padding: 6px 0;
+            letter-spacing: .05em;
+        }
+
+        .ts-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .ts-cell {
+            min-height: 76px;
+            border-radius: 10px;
+            padding: 8px 7px;
+            border: 1.5px solid transparent;
+            transition: transform .15s, box-shadow .15s;
+        }
+
+        .ts-cell.working {
+            background: #f0faf5;
+            border-color: #9fe1cb;
+        }
+
+        .ts-cell.off {
+            background: #f8f7f4;
+            border-color: #e0ded9;
+        }
+
+        .ts-cell.today {
+            outline: 2px solid var(--terracotta);
+            outline-offset: 2px;
+        }
+
+        .ts-cell-date {
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--brown);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .ts-cell-date.off-num {
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .ts-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 100px;
+            font-size: .65rem;
+            font-weight: 600;
+        }
+
+        .ts-badge.work {
+            background: #c0dd97;
+            color: #3b6d11;
+        }
+
+        .ts-badge.off {
+            background: #d9d7d0;
+            color: #6b6860;
+        }
+
+        .ts-time {
+            font-size: .65rem;
+            color: #1d9e75;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        .ts-summary {
+            display: flex;
+            gap: 14px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .ts-sum-card {
+            flex: 1;
+            min-width: 100px;
+            background: var(--white);
+            border: 1.5px solid var(--sand);
+            border-radius: 14px;
+            padding: 18px 16px;
+            text-align: center;
+        }
+
+        .ts-sum-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--brown);
+            line-height: 1;
+        }
+
+        .ts-sum-num.green {
+            color: #1d9e75;
+        }
+
+        .ts-sum-num.muted {
+            color: var(--muted);
+        }
+
+        .ts-sum-label {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .ts-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .ts-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .75rem;
+            color: var(--muted);
+        }
+
+        .ts-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .ts-empty {
+            padding: 56px 24px;
+            text-align: center;
+            color: var(--muted);
+            background: var(--cream);
+            border: 1.5px dashed var(--sand);
+            border-radius: 20px;
+        }
+
+        .ts-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: .5;
+        }
+
+        .ts-empty p {
+            font-size: .9rem;
+            line-height: 1.7;
+        }
+
+        .ts-note {
+            margin-top: 20px;
+            padding: 14px 18px;
+            background: rgba(196, 113, 75, .07);
+            border-left: 3px solid var(--terracotta);
+            border-radius: 0 10px 10px 0;
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.8;
+        }
+
+        .ts-note a {
+            color: var(--terracotta);
+            font-weight: 600;
+        }
+
+        @media(max-width:600px) {
+            .ts-cal-wrap {
+                padding: 20px 14px;
+            }
+
+            .ts-cell {
+                min-height: 52px;
+                padding: 5px 4px;
+            }
+
+            .ts-time,
+            .ts-badge {
+                display: none;
+            }
+
+            .ts-therapist-info {
+                display: none;
+            }
+        }
+
+        /* ── TENTANG ── */
         #tentang {
             background: var(--white);
         }
@@ -919,7 +1228,7 @@
             line-height: 1.7;
         }
 
-        /* BOOKING */
+        /* ── BOOKING ── */
         #booking {
             background: linear-gradient(180deg, var(--cream) 0%, var(--warm) 100%);
         }
@@ -1069,7 +1378,7 @@
             transform: translateY(-1px);
         }
 
-        /* FOOTER */
+        /* ── FOOTER ── */
         footer {
             background: var(--brown);
             color: rgba(255, 255, 255, .7);
@@ -1157,22 +1466,22 @@
             }
         }
 
+        /* BARU — pakai will-change + contain agar tidak ganggu layout scroll */
+        /* GANTI blok .fade-up dan .fade-up.visible dengan ini: */
         .fade-up {
             opacity: 0;
-            transform: translateY(28px);
-            transition: opacity .6s ease, transform .6s ease;
+            transition: opacity .6s ease;
         }
 
         .fade-up.visible {
             opacity: 1;
-            transform: translateY(0);
         }
     </style>
 </head>
 
 <body>
 
-    {{-- NAVBAR --}}
+    {{-- ── NAVBAR ── --}}
     <nav class="navbar" id="mainNav">
         <a href="#hero" class="navbar-logo">
             <img src="{{ asset('images/logo.png') }}" alt="Koichi Spa" class="navbar-logo-img">
@@ -1180,6 +1489,7 @@
         <ul class="navbar-links">
             <li><a href="#layanan">Layanan</a></li>
             <li><a href="#terapis">Terapis</a></li>
+            <li><a href="#jadwal">Jadwal</a></li>
             <li><a href="#tentang">Tentang</a></li>
             <li><a href="#booking">Booking</a></li>
             @auth
@@ -1193,10 +1503,11 @@
         </button>
     </nav>
 
-    {{-- MOBILE MENU --}}
+    {{-- ── MOBILE MENU ── --}}
     <div class="mobile-menu" id="mobileMenu">
         <a href="#layanan" onclick="closeMenu()">Layanan</a>
         <a href="#terapis" onclick="closeMenu()">Terapis</a>
+        <a href="#jadwal" onclick="closeMenu()">Jadwal</a>
         <a href="#tentang" onclick="closeMenu()">Tentang</a>
         <a href="#booking" onclick="closeMenu()">Booking</a>
         @auth
@@ -1206,7 +1517,7 @@
         @endauth
     </div>
 
-    {{-- HERO --}}
+    {{-- ── HERO ── --}}
     <section id="hero">
         <div class="hero-bg"></div>
         <div class="hero-inner">
@@ -1248,80 +1559,57 @@
                 </div>
             </div>
 
-            {{-- ================================================================
-                 KOLOM KANAN: PROMO SLIDER
-                 
-                 CARA PAKAI:
-                 1. Buat folder:  public/images/promos/
-                 2. Copy foto ke sana (nama bebas, misal: foto1.jpg, promo-massage.jpg)
-                 3. Ganti 'file' di array $slides di bawah sesuai nama file kamu
-                 4. Ubah badge, title, desc, price sesuai konten promo
-                 5. Tambah atau kurangi item di array sesuai jumlah foto kamu
-                 ================================================================ --}}
-
+            {{-- Kolom Kanan: Promo Slider --}}
             <div class="hero-slider-col">
                 <div class="promo-slider-outer">
                     <div class="promo-slider-wrap" id="promoSlider">
                         <div class="promo-slides-track" id="slidesTrack">
 
                             @php
-                                /**
-                                 * ════════════════════════════════════════
-                                 *  EDIT BAGIAN INI UNTUK MENAMBAH FOTO
-                                 * ════════════════════════════════════════
-                                 *  - 'file'  → nama file foto di public/images/promos/
-                                 *  - 'badge' → label kecil di atas judul (maks ~2 kata)
-                                 *  - 'title' → judul slide
-                                 *  - 'desc'  → deskripsi singkat
-                                 *  - 'price' → harga (kosongkan '' jika tidak perlu)
-                                 * ════════════════════════════════════════
-                                 */
                                 $slides = [
                                     [
                                         'file' => '1.jpeg',
                                         'badge' => 'Buy 4 Get 1',
                                         'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
                                     ],
                                     [
                                         'file' => '2.jpeg',
                                         'badge' => 'Weekend Deal',
                                         'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
                                     ],
                                     [
                                         'file' => '3.jpeg',
                                         'badge' => 'Hot Deal',
                                         'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
                                     ],
                                     [
                                         'file' => '4.jpeg',
                                         'badge' => 'Facial',
                                         'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
                                     ],
                                     [
                                         'file' => '5.jpeg',
                                         'badge' => 'Facial',
                                         'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
                                     ],
                                     [
                                         'file' => '6.jpeg',
                                         'badge' => 'Facial',
                                         'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
                                     ],
                                     [
                                         'file' => '7.jpeg',
                                         'badge' => 'Facial',
                                         'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik untuk terapi kesehatan dan relaksasi keluarga.',
+                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
                                     ],
                                 ];
-
-                                // Warna background placeholder jika foto belum ada
                                 $placeholderColors = ['#c4714b', '#a35a38', '#8c5c38', '#b07850', '#d4956e'];
                             @endphp
 
@@ -1330,16 +1618,12 @@
                                     $exists = file_exists(public_path('images/promos/' . $slide['file']));
                                     $color = $placeholderColors[$i % count($placeholderColors)];
                                 @endphp
-
                                 <div class="promo-slide {{ $i === 0 ? 'active' : '' }}">
-
                                     @if ($exists)
-                                        {{-- ✅ Foto ditemukan --}}
                                         <img class="promo-slide-img"
                                             src="{{ asset('images/promos/' . $slide['file']) }}"
                                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
                                     @else
-                                        {{-- ⚠️ Foto belum ada — tampilkan placeholder --}}
                                         <div class="promo-placeholder"
                                             style="background:linear-gradient(145deg,{{ $color }},{{ $color }}99);">
                                             <div class="promo-placeholder-icon">🖼</div>
@@ -1350,24 +1634,20 @@
                                             </div>
                                         </div>
                                     @endif
-
                                     <div class="promo-slide-overlay"></div>
                                     <div class="promo-slide-body">
                                         @if ($slide['badge'])
                                             <div class="promo-slide-badge">{{ $slide['badge'] }}</div>
                                         @endif
-
                                         @if ($slide['desc'])
                                             <div class="promo-slide-desc">{{ $slide['desc'] }}</div>
                                         @endif
-
                                     </div>
                                 </div>
                             @endforeach
 
-                        </div>{{-- /slidesTrack --}}
+                        </div>
 
-                        {{-- Tombol Prev / Counter / Next --}}
                         <div class="promo-nav">
                             <button class="promo-nav-btn" id="promoPrev" aria-label="Sebelumnya">
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -1383,17 +1663,13 @@
                                 </svg>
                             </button>
                         </div>
-
-                        {{-- Dots vertikal --}}
                         <div class="promo-dots" id="promoDots"></div>
+                    </div>
+                </div>
 
-                    </div>{{-- /promo-slider-wrap --}}
-                </div>{{-- /promo-slider-outer --}}
-
-                {{-- Thumbnail strip --}}
                 <div class="promo-thumbs" id="promoThumbs">
                     @foreach ($slides as $i => $slide)
-                        @php $exists = file_exists(public_path('images/promos/' . $slide['file'])); @endphp
+                        @php $exists = file_exists(public_path('images/promos/'.$slide['file'])); @endphp
                         <div class="promo-thumb {{ $i === 0 ? 'active' : '' }}"
                             onclick="promoGoTo({{ $i }})"
                             style="{{ !$exists ? 'background:' . $placeholderColors[$i % count($placeholderColors)] . ';display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:16px;' : '' }}">
@@ -1405,15 +1681,13 @@
                         </div>
                     @endforeach
                 </div>
-
                 <div class="promo-label">Foto Promo Kami</div>
+            </div>
 
-            </div>{{-- /hero-slider-col --}}
-
-        </div>{{-- /hero-inner --}}
+        </div>
     </section>
 
-    {{-- LAYANAN --}}
+    {{-- ── LAYANAN ── --}}
     <section id="layanan">
         <div class="section-inner">
             <div class="fade-up">
@@ -1449,7 +1723,7 @@
         </div>
     </section>
 
-    {{-- TERAPIS --}}
+    {{-- ── TERAPIS ── --}}
     <section id="terapis">
         <div class="section-inner">
             <div class="fade-up">
@@ -1480,7 +1754,53 @@
         </div>
     </section>
 
-    {{-- TENTANG --}}
+    {{-- ════════════════════════════════════════════════════════════════
+         JADWAL TERAPIS — Seksi baru untuk pelanggan umum
+         Data jadwal diambil dari $therapistSchedules yang di-pass controller
+    ════════════════════════════════════════════════════════════════ --}}
+    <section id="jadwal">
+        <div class="section-inner">
+
+            <div class="fade-up">
+                <div class="section-eyebrow">Cek Ketersediaan</div>
+                <h2 class="section-title">Jadwal Terapis<br>Bulan Ini</h2>
+                <p class="section-sub">
+                    Lihat kapan terapis favorit Anda masuk dan libur sebelum membuat booking,
+                    agar sesi Anda tidak bentrok.
+                </p>
+            </div>
+
+            {{-- Filter Terapis --}}
+            <div class="ts-filter-row fade-up" id="tsFilter">
+                @forelse ($therapists ?? [] as $t)
+                    <button type="button" class="ts-btn" data-id="{{ $t->id }}"
+                        onclick="tsSelect({{ $t->id }}, '{{ addslashes($t->name) }}', '{{ addslashes($t->specialization ?? 'Terapis Profesional') }}')">
+                        <div class="ts-btn-avatar">{{ strtoupper(substr($t->name, 0, 1)) }}</div>
+                        {{ $t->name }}
+                    </button>
+                @empty
+                    <p style="font-size:.85rem;color:var(--muted);font-style:italic;">Belum ada terapis terdaftar.</p>
+                @endforelse
+            </div>
+
+            {{-- Area Kalender --}}
+            <div id="tsCalArea" class="fade-up">
+                <div class="ts-empty">
+                    <div class="ts-empty-icon">🗓</div>
+                    <p>Pilih salah satu terapis di atas<br>untuk melihat jadwal bulan ini.</p>
+                </div>
+            </div>
+
+            {{-- Catatan bawah --}}
+            <p class="ts-note fade-up">
+                💡 Jadwal dapat berubah sewaktu-waktu. Untuk konfirmasi ketersediaan,
+                <a href="#booking">buat reservasi</a> dan tim kami menghubungi Anda via WhatsApp dalam 30 menit.
+            </p>
+
+        </div>
+    </section>
+
+    {{-- ── TENTANG ── --}}
     <section id="tentang">
         <div class="section-inner">
             <div class="fade-up" style="text-align:center;max-width:600px;margin:0 auto;">
@@ -1501,7 +1821,7 @@
         </div>
     </section>
 
-    {{-- BOOKING --}}
+    {{-- ── BOOKING ── --}}
     <section id="booking">
         <div class="section-inner">
             <div class="booking-wrapper">
@@ -1593,7 +1913,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Pilih Terapis (Opsional)</label>
-                                <select name="therapist_id" class="form-control">
+                                <select name="therapist_id" class="form-control" id="bookingTherapistSelect">
                                     <option value="">-- Terapis Mana Saja --</option>
                                     @foreach ($therapists ?? [] as $therapist)
                                         <option value="{{ $therapist->id }}"
@@ -1628,7 +1948,7 @@
         </div>
     </section>
 
-    {{-- FOOTER --}}
+    {{-- ── FOOTER ── --}}
     <footer>
         <div class="footer-inner">
             <div class="footer-top">
@@ -1642,6 +1962,7 @@
                     <ul>
                         <li><a href="#layanan">Layanan</a></li>
                         <li><a href="#terapis">Terapis</a></li>
+                        <li><a href="#jadwal">Jadwal</a></li>
                         <li><a href="#tentang">Tentang</a></li>
                         <li><a href="#booking">Booking</a></li>
                     </ul>
@@ -1696,29 +2017,38 @@
         });
 
         /* ── FADE-UP ── */
+        /* BARU — delay berdasarkan posisi elemen, bukan index batch */
+        /* DENGAN ini: */
+        /* ── FADE-UP ── */
         const obs = new IntersectionObserver((entries) => {
-            entries.forEach((entry, i) => {
+            entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    setTimeout(() => entry.target.classList.add('visible'), i * 80);
+                    entry.target.classList.add('visible');
                     obs.unobserve(entry.target);
                 }
             });
         }, {
-            threshold: 0.1
+            threshold: 0.08
         });
         document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
 
         /* ── SMOOTH SCROLL ── */
+        /* DENGAN ini: */
         document.querySelectorAll('a[href^="#"]').forEach(a => {
             a.addEventListener('click', e => {
                 const href = a.getAttribute('href');
-                if (!href || href === '#') return;
-                const target = document.querySelector(href);
+                if (!href || href.length < 2) return;
+                let target;
+                try {
+                    target = document.querySelector(href);
+                } catch (_) {
+                    return;
+                }
                 if (!target) return;
                 e.preventDefault();
-                window.scrollTo({
-                    top: target.getBoundingClientRect().top + window.scrollY - 80,
-                    behavior: 'smooth'
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
                 });
             });
         });
@@ -1731,15 +2061,12 @@
             const btnPrev = document.getElementById('promoPrev');
             const btnNext = document.getElementById('promoNext');
             const sliderEl = document.getElementById('promoSlider');
-
             const slides = Array.from(track.querySelectorAll('.promo-slide'));
             const total = slides.length;
             let cur = 0,
                 timer = null,
                 paused = false,
                 touchX = 0;
-
-            /* Dots */
             dotsWrap.innerHTML = '';
             slides.forEach((_, i) => {
                 const d = document.createElement('div');
@@ -1755,23 +2082,23 @@
                 dotsWrap.querySelectorAll('.promo-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
                 document.querySelectorAll('.promo-thumb').forEach((t, i) => t.classList.toggle('active', i === cur));
                 const th = document.querySelectorAll('.promo-thumb')[cur];
-                if (th) th.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                    inline: 'center'
-                });
+                if (th) {
+                    const container = th.parentElement;
+                    const offset = th.offsetLeft - container.offsetLeft;
+                    container.scrollTo({
+                        left: offset - (container.offsetWidth / 2) + (th.offsetWidth / 2),
+                        behavior: 'smooth'
+                    });
+                }
             }
-
             window.promoGoTo = function(idx) {
                 cur = ((idx % total) + total) % total;
                 updateUI();
                 clearInterval(timer);
                 if (!paused) timer = setInterval(() => promoGoTo(cur + 1), 4500);
             };
-
             btnPrev.addEventListener('click', () => promoGoTo(cur - 1));
             btnNext.addEventListener('click', () => promoGoTo(cur + 1));
-
             sliderEl.addEventListener('touchstart', e => {
                 touchX = e.touches[0].clientX;
                 paused = true;
@@ -1793,15 +2120,175 @@
                 paused = false;
                 promoGoTo(cur);
             });
-
             document.addEventListener('keydown', e => {
                 if (e.key === 'ArrowLeft') promoGoTo(cur - 1);
                 if (e.key === 'ArrowRight') promoGoTo(cur + 1);
             });
-
             updateUI();
             timer = setInterval(() => promoGoTo(cur + 1), 4500);
         })();
+
+        /* ════════════════════════════════════════════════════════════
+           JADWAL TERAPIS — data dari Laravel (JSON)
+        ════════════════════════════════════════════════════════════ */
+        const TS_DATA = @json($therapistSchedules ?? []);
+        /*
+          Format yang diharapkan dari controller:
+          {
+            "1": {                          ← therapist id
+              "name"       : "Sari Dewi",
+              "spec"       : "Refleksiologi",
+              "start_time" : "09:00",
+              "end_time"   : "17:00",
+              "schedules"  : {
+                "2026-04-01": "working",    ← tanggal: status
+                "2026-04-02": "off",
+                ...
+              }
+            },
+            ...
+          }
+        */
+
+        const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
+            'Oktober', 'November', 'Desember'
+        ];
+
+        let tsActiveId = null;
+        let tsCurYear = new Date().getFullYear();
+        let tsCurMonth = new Date().getMonth(); // 0-indexed
+
+        function tsSelect(id, name, spec) {
+            tsActiveId = id;
+            document.querySelectorAll('.ts-btn').forEach(b =>
+                b.classList.toggle('active', parseInt(b.dataset.id) === id));
+            tsRenderCal();
+        }
+
+        function tsRenderCal() {
+            const area = document.getElementById('tsCalArea');
+            if (!tsActiveId || !TS_DATA[tsActiveId]) {
+                area.innerHTML =
+                    `<div class="ts-empty"><div class="ts-empty-icon">🗓</div><p>Data jadwal belum tersedia untuk terapis ini.</p></div>`;
+                return;
+            }
+
+            const t = TS_DATA[tsActiveId];
+            const scheds = t.schedules || {};
+            const today = new Date();
+            const firstDay = new Date(tsCurYear, tsCurMonth, 1);
+            const lastDate = new Date(tsCurYear, tsCurMonth + 1, 0).getDate();
+            const startDow = firstDay.getDay();
+
+            let workCount = 0,
+                offCount = 0,
+                cells = '';
+
+            for (let i = 0; i < startDow; i++) cells += `<div></div>`;
+
+            for (let d = 1; d <= lastDate; d++) {
+                const ds = `${tsCurYear}-${String(tsCurMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const status = scheds[ds] || 'nodata';
+                const cellDate = new Date(tsCurYear, tsCurMonth, d);
+                const isToday = cellDate.toDateString() === today.toDateString();
+                const isPast = cellDate < today && !isToday;
+
+                if (status === 'working') workCount++;
+                else if (status !== 'nodata') offCount++;
+
+                let cellCls = 'ts-cell';
+                let dateCls = 'ts-cell-date';
+                let badge = '';
+                let timeEl = '';
+
+                if (status === 'working') {
+                    cellCls += ' working';
+                    badge = `<span class="ts-badge work">Kerja</span>`;
+                    timeEl = `<div class="ts-time">${t.start_time || '09:00'} – ${t.end_time || '17:00'}</div>`;
+                } else if (status === 'off' || status === 'sick' || status === 'vacation' || status === 'cuti_bersama') {
+                    cellCls += ' off';
+                    dateCls += ' off-num';
+                    const labels = {
+                        off: 'Libur',
+                        sick: 'Sakit',
+                        vacation: 'Liburan',
+                        cuti_bersama: 'Cuti'
+                    };
+                    badge = `<span class="ts-badge off">${labels[status] ?? 'Libur'}</span>`;
+                } else {
+                    cellCls += ' off';
+                    dateCls += ' off-num';
+                    badge = `<span class="ts-badge off" style="opacity:.4">—</span>`;
+                }
+
+                if (isToday) cellCls += ' today';
+                if (isPast) cellCls += ' past';
+
+                cells += `<div class="${cellCls}">
+                    <span class="${dateCls}">${d}</span>
+                    ${badge}${timeEl}
+                </div>`;
+            }
+
+            const totalDays = workCount + offCount;
+
+            area.innerHTML = `
+                <div class="ts-cal-wrap">
+                    <div class="ts-cal-nav">
+                        <button class="ts-nav-btn" onclick="tsPrev()">&#8249;</button>
+                        <button class="ts-nav-btn" onclick="tsNext()">&#8250;</button>
+                        <span class="ts-month-label">${MONTH_NAMES[tsCurMonth]} ${tsCurYear}</span>
+                        <div class="ts-therapist-info">
+                            <div>
+                                <div class="ts-therapist-info-name">${t.name}</div>
+                                <div class="ts-therapist-info-spec">${t.spec}</div>
+                            </div>
+                            <div class="ts-therapist-mini-avatar">${t.name.charAt(0).toUpperCase()}</div>
+                        </div>
+                    </div>
+                    <div class="ts-day-header">${DAY_NAMES.map(n => `<div class="ts-day-name">${n}</div>`).join('')}</div>
+                    <div class="ts-grid">${cells}</div>
+                    <div class="ts-summary">
+                        <div class="ts-sum-card">
+                            <div class="ts-sum-num green">${workCount}</div>
+                            <div class="ts-sum-label">Hari Masuk</div>
+                        </div>
+                        <div class="ts-sum-card">
+                            <div class="ts-sum-num muted">${offCount}</div>
+                            <div class="ts-sum-label">Hari Libur</div>
+                        </div>
+                        <div class="ts-sum-card">
+                            <div class="ts-sum-num" style="color:var(--terracotta);font-size:1.1rem;padding-top:4px;">${t.start_time || '09:00'} – ${t.end_time || '17:00'}</div>
+                            <div class="ts-sum-label">Jam Kerja</div>
+                        </div>
+                    </div>
+                    <div class="ts-legend">
+                        <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#c0dd97;border:1px solid #9fe1cb;"></div> Hari masuk</div>
+                        <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#d9d7d0;border:1px solid #c4c2bb;"></div> Hari libur / sakit</div>
+                        <div class="ts-legend-item"><div class="ts-legend-dot" style="background:transparent;border:2px solid var(--terracotta);"></div> Hari ini</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function tsPrev() {
+            tsCurMonth--;
+            if (tsCurMonth < 0) {
+                tsCurMonth = 11;
+                tsCurYear--;
+            }
+            tsRenderCal();
+        }
+
+        function tsNext() {
+            tsCurMonth++;
+            if (tsCurMonth > 11) {
+                tsCurMonth = 0;
+                tsCurYear++;
+            }
+            tsRenderCal();
+        }
 
         /* ── BOOKING SUCCESS SCROLL ── */
         @if (session('booking_success'))

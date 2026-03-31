@@ -85,6 +85,31 @@
                             <p class="text-xs text-gray-400 mt-1">Kosongkan jika bukan layanan terapi.</p>
                         </div>
 
+                        {{-- ✅ Poin Reward --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Poin Reward ⭐
+                            </label>
+                            <input type="number" name="reward_points" value="{{ old('reward_points', 0) }}"
+                                min="0" max="10" id="rewardPointsInput"
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="0" oninput="updatePointPreview()">
+
+                            {{-- Preview badge poin --}}
+                            <div id="pointPreview" class="mt-2 hidden">
+                                <span id="pointBadge"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                                    ⭐ +<span id="pointBadgeVal">0</span> poin per kunjungan selesai
+                                </span>
+                            </div>
+                            <div id="pointZeroInfo" class="mt-2">
+                                <span class="text-xs text-gray-400">
+                                    Isi <strong>0</strong> jika layanan ini tidak memberikan poin (contoh: minuman).
+                                    Pelanggan perlu <strong>10 poin</strong> untuk mendapat bonus gratis 1 jam.
+                                </span>
+                            </div>
+                        </div>
+
                         {{-- Deskripsi --}}
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -125,4 +150,25 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function updatePointPreview() {
+            const val = parseInt(document.getElementById('rewardPointsInput').value) || 0;
+            const preview = document.getElementById('pointPreview');
+            const zeroInfo = document.getElementById('pointZeroInfo');
+            const badgeVal = document.getElementById('pointBadgeVal');
+
+            if (val > 0) {
+                badgeVal.textContent = val;
+                preview.classList.remove('hidden');
+                zeroInfo.classList.add('hidden');
+            } else {
+                preview.classList.add('hidden');
+                zeroInfo.classList.remove('hidden');
+            }
+        }
+
+        // Jalankan saat halaman load (untuk old() value saat validation error)
+        document.addEventListener('DOMContentLoaded', updatePointPreview);
+    </script>
 </x-app-layout>

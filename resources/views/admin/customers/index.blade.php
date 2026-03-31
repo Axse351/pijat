@@ -17,6 +17,11 @@
                     ✓ {{ session('success') }}
                 </div>
             @endif
+            @if (session('error'))
+                <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                    ✗ {{ session('error') }}
+                </div>
+            @endif
 
             @php
                 function daysUntilBirthday($ulang_tahun): int
@@ -39,7 +44,36 @@
                 });
 
                 $inactiveCustomers = $customers->filter(fn($c) => $c->is_inactive);
+                $bonusReadyCustomers = $customers->filter(fn($c) => $c->hasBonus());
             @endphp
+
+            {{-- ✅ Banner: Pelanggan Siap Klaim Bonus --}}
+            @if ($bonusReadyCustomers->count())
+                <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">
+                        🎁 Pelanggan Siap Klaim Bonus Gratis 1 Jam! (Poin ≥ 10)
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($bonusReadyCustomers as $c)
+                            <div
+                                class="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg text-sm shadow-sm">
+                                <span class="font-medium text-gray-800">{{ $c->name }}</span>
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+                                    {{ $c->points }} poin
+                                </span>
+                                <form method="POST" action="{{ route('admin.customers.redeem-bonus', $c) }}"
+                                    onsubmit="return confirm('Klaim bonus gratis 1 jam untuk {{ $c->name }}? Poin akan direset ke 0.')">
+                                    @csrf
+                                    <button type="submit"
+                                        class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-md transition-colors">
+                                        🎁 Klaim Bonus
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- Banner: Ulang Tahun --}}
             @if ($soonBirthdays->count())
@@ -64,7 +98,8 @@
                                 <span class="font-medium text-gray-800">{{ $c->name }}</span>
                                 <span class="text-xs text-pink-500">{{ $label }}</span>
                                 @if ($phone)
-                                    <a href="https://wa.me/{{ $phone }}?text={{ $msg }}" target="_blank"
+                                    <a href="https://wa.me/{{ $phone }}?text={{ $msg }}"
+                                        target="_blank"
                                         class="px-2 py-0.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-md">WhatsApp</a>
                                 @endif
                             </div>
@@ -96,10 +131,10 @@
                                 <span class="font-medium text-gray-800">{{ $c->name }}</span>
                                 <span class="text-xs text-orange-500">{{ $lastVisitFormatted }}</span>
                                 @if ($phone)
-                                    <a href="https://wa.me/{{ $phone }}?text={{ $msg }}" target="_blank"
-                                        class="px-2 py-0.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-md">
-                                        Ajak Kembali
-                                    </a>
+                                    <a href="https://wa.me/{{ $phone }}?text={{ $msg }}"
+                                        target="_blank"
+                                        class="px-2 py-0.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-md">Ajak
+                                        Kembali</a>
                                 @endif
                             </div>
                         @endforeach
@@ -132,6 +167,9 @@
                                     <th
                                         class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                         Kunjungan</th>
+                                    <th
+                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        🏆 Poin</th>
                                     <th
                                         class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                         Terakhir Datang</th>
@@ -167,7 +205,6 @@
                                         $waBdayMsg = urlencode(
                                             "Halo {$customer->name}! 🎂 Selamat ulang tahun ya! Semoga hari-harimu selalu menyenangkan. Kami di sini senang bisa melayanimu. 🎁",
                                         );
-
                                         $waInactiveMsg = urlencode(
                                             "Halo {$customer->name}! 👋 Kami kangen nih sama kamu. Sudah lama nggak ke sini, yuk mampir lagi! Ada promo menarik menanti. 😊",
                                         );
@@ -191,11 +228,19 @@
                                                 $customer->visit_count . 'x ⭐',
                                             ],
                                         };
+
+                                        // Poin
+                                        $pts = $customer->points ?? 0;
+                                        $hasBonus = $customer->hasBonus();
+                                        // Progress: jika sudah >= 10 tampilkan penuh, sisanya progress normal
+                                        $progressPct = $hasBonus ? 100 : ($pts / 10) * 100;
                                     @endphp
+
                                     <tr
                                         class="hover:bg-gray-50 dark:hover:bg-gray-700/50
                                         {{ $isBirthday ? 'bg-pink-50 dark:bg-pink-900/10' : '' }}
-                                        {{ $customer->is_inactive ? 'bg-orange-50/40 dark:bg-orange-900/5' : '' }}">
+                                        {{ $customer->is_inactive && !$isBirthday ? 'bg-orange-50/40 dark:bg-orange-900/5' : '' }}
+                                        {{ $hasBonus && !$isBirthday ? 'bg-amber-50/20' : '' }}">
 
                                         <td class="px-5 py-3.5 text-gray-400">{{ $i + 1 }}</td>
 
@@ -203,11 +248,14 @@
                                         <td class="px-5 py-3.5 font-medium text-gray-800 dark:text-gray-200">
                                             {{ $customer->name }}
                                             @if ($isBirthday)
-                                                <span class="ml-1">🎂</span>
+                                                <span>🎂</span>
                                             @endif
                                             @if ($customer->is_inactive)
-                                                <span class="ml-1 text-xs text-orange-400"
+                                                <span class="text-xs text-orange-400"
                                                     title="Tidak aktif > 30 hari">😴</span>
+                                            @endif
+                                            @if ($hasBonus)
+                                                <span title="Bonus siap diklaim!">🎁</span>
                                             @endif
                                         </td>
 
@@ -222,6 +270,57 @@
                                                 class="px-2.5 py-1 rounded-full text-xs font-semibold {{ $visitBadge[0] }}">
                                                 {{ $visitBadge[1] }}
                                             </span>
+                                        </td>
+
+                                        {{-- ✅ Kolom Poin --}}
+                                        <td class="px-5 py-3.5">
+                                            <div class="flex flex-col gap-1.5 min-w-[130px]">
+                                                {{-- Angka poin + label --}}
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <span
+                                                        class="text-xs font-bold {{ $hasBonus ? 'text-amber-600' : 'text-gray-700 dark:text-gray-300' }}">
+                                                        {{ $pts }} poin
+                                                    </span>
+                                                    @if ($hasBonus)
+                                                        <span
+                                                            class="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full whitespace-nowrap">
+                                                            🎁 Bonus!
+                                                        </span>
+                                                    @else
+                                                        <span
+                                                            class="text-xs text-gray-400">{{ $pts }}/10</span>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Progress bar --}}
+                                                <div
+                                                    class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                                                    <div class="h-2 rounded-full transition-all duration-500
+                                                        {{ $hasBonus ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-indigo-400 to-indigo-500' }}"
+                                                        style="width: {{ $progressPct }}%">
+                                                    </div>
+                                                </div>
+
+                                                {{-- Tombol klaim jika bonus tersedia --}}
+                                                @if ($hasBonus)
+                                                    <form method="POST"
+                                                        action="{{ route('admin.customers.redeem-bonus', $customer) }}"
+                                                        onsubmit="return confirm('Klaim bonus gratis 1 jam untuk {{ addslashes($customer->name) }}?\nPoin akan direset ke 0.')">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="w-full text-xs px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors text-center">
+                                                            Klaim Gratis 1 Jam
+                                                        </button>
+                                                    </form>
+                                                @endif
+
+                                                {{-- Info poin lifetime --}}
+                                                @if ($customer->total_points_earned > 0)
+                                                    <span class="text-xs text-gray-400">
+                                                        Total: {{ $customer->total_points_earned }} poin
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         {{-- Terakhir Datang --}}
@@ -239,13 +338,6 @@
                                                             <a href="https://wa.me/{{ $phone }}?text={{ $waInactiveMsg }}"
                                                                 target="_blank"
                                                                 class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-md">
-                                                                <svg class="w-3 h-3" viewBox="0 0 24 24"
-                                                                    fill="currentColor">
-                                                                    <path
-                                                                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                                                                    <path
-                                                                        d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.847L0 24l6.335-1.507A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.659-.5-5.192-1.375l-.371-.22-3.762.895.952-3.67-.242-.38A9.955 9.955 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
-                                                                </svg>
                                                                 Ajak Kembali
                                                             </a>
                                                         @endif
@@ -326,8 +418,8 @@
                 @else
                     <div class="text-center py-16 text-gray-400 text-sm">
                         Belum ada pelanggan.
-                        <a href="{{ route('admin.customers.create') }}" class="text-indigo-500 hover:underline">Tambah
-                            sekarang</a>
+                        <a href="{{ route('admin.customers.create') }}"
+                            class="text-indigo-500 hover:underline">Tambah sekarang</a>
                     </div>
                 @endif
             </div>

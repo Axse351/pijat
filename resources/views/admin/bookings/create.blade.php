@@ -11,15 +11,26 @@
     <div class="py-6">
         <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-6">
+
+                @if ($errors->any())
+                    <div class="mb-5 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('admin.bookings.store') }}">
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
                         {{-- Pelanggan --}}
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pelanggan
-                                *</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Pelanggan *
+                            </label>
                             <select name="customer_id" required
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Pilih --</option>
@@ -27,6 +38,9 @@
                                     <option value="{{ $c->id }}"
                                         {{ old('customer_id') == $c->id ? 'selected' : '' }}>
                                         {{ $c->name }}
+                                        @if ($c->points > 0)
+                                            ({{ $c->points }} poin{{ $c->hasBonus() ? ' 🎁' : '' }})
+                                        @endif
                                     </option>
                                 @endforeach
                             </select>
@@ -34,9 +48,9 @@
 
                         {{-- Terapis --}}
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Terapis
-                                *</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Terapis *
+                            </label>
                             <select name="therapist_id" required
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Pilih --</option>
@@ -50,27 +64,35 @@
                         </div>
 
                         {{-- Layanan --}}
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Layanan
-                                *</label>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Layanan *
+                            </label>
                             <select name="service_id" id="serviceSelect" required
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Pilih --</option>
                                 @foreach ($services as $s)
                                     <option value="{{ $s->id }}" data-price="{{ $s->price }}"
+                                        data-points="{{ $s->reward_points ?? 0 }}"
                                         {{ old('service_id') == $s->id ? 'selected' : '' }}>
                                         {{ $s->name }} — Rp {{ number_format($s->price, 0, ',', '.') }}
+                                        @if (($s->reward_points ?? 0) > 0)
+                                            ⭐ +{{ $s->reward_points }} poin
+                                        @endif
                                     </option>
                                 @endforeach
                             </select>
+
+                            {{-- Info poin layanan --}}
+                            <div id="servicePointInfo" class="hidden mt-2 px-3 py-2 rounded-lg text-xs font-medium">
+                            </div>
                         </div>
 
                         {{-- Sumber Order --}}
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sumber
-                                Order</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Sumber Order
+                            </label>
                             <select name="order_source"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                                 <option value="walkin">Walk-in</option>
@@ -81,17 +103,18 @@
 
                         {{-- Tanggal & Waktu --}}
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tanggal
-                                & Waktu *</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Tanggal & Waktu *
+                            </label>
                             <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                         </div>
 
                         {{-- Program --}}
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Program</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Program
+                            </label>
                             <select name="program_id" id="programSelect"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Tanpa Program --</option>
@@ -115,8 +138,9 @@
 
                         {{-- Promo --}}
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Promo</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Promo
+                            </label>
                             <select name="promo_id" id="promoSelect"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Tanpa Promo --</option>
@@ -133,9 +157,9 @@
 
                         {{-- Diskon Manual (Rp) --}}
                         <div class="sm:col-span-2">
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Diskon
-                                Tambahan (Rp)</label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Diskon Tambahan (Rp)
+                            </label>
                             <input type="number" name="discount" id="discount" value="{{ old('discount', 0) }}"
                                 min="0"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
@@ -173,17 +197,34 @@
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Bayar</div>
                                     <div id="displayTotal" class="font-bold text-amber-600 text-xl">Rp 0</div>
                                 </div>
+                                {{-- ✅ Preview Poin --}}
+                                <div id="pointPreviewWrap" class="hidden ml-auto">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Poin Didapat</div>
+                                    <div id="displayPoint" class="font-bold text-indigo-600 text-lg">+0 poin</div>
+                                </div>
                             </div>
+                        </div>
+
+                        {{-- ✅ Notes --}}
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Catatan
+                            </label>
+                            <textarea name="notes" rows="2" placeholder="Catatan tambahan..."
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">{{ old('notes') }}</textarea>
                         </div>
 
                     </div>
 
                     <div class="flex gap-3 mt-6">
                         <button type="submit"
-                            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">Buat
-                            Booking</button>
+                            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
+                            Buat Booking
+                        </button>
                         <a href="{{ route('admin.bookings.index') }}"
-                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">Batal</a>
+                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">
+                            Batal
+                        </a>
                     </div>
                 </form>
             </div>
@@ -192,18 +233,43 @@
 
     <script>
         let basePrice = 0;
+        let servicePoints = 0;
 
-        document.getElementById('serviceSelect').addEventListener('change', function() {
-            basePrice = parseInt(this.options[this.selectedIndex].getAttribute('data-price')) || 0;
+        const serviceSelect = document.getElementById('serviceSelect');
+        const programSelect = document.getElementById('programSelect');
+        const promoSelect = document.getElementById('promoSelect');
+        const pointInfoBox = document.getElementById('servicePointInfo');
+        const pointPreviewWrap = document.getElementById('pointPreviewWrap');
+        const displayPoint = document.getElementById('displayPoint');
+
+        // ✅ Saat pilih layanan: update harga + tampilkan info poin
+        serviceSelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            basePrice = parseInt(selected.getAttribute('data-price')) || 0;
+            servicePoints = parseInt(selected.getAttribute('data-points')) || 0;
+
+            // Tampilkan info poin di bawah dropdown layanan
+            if (this.value === '') {
+                pointInfoBox.className = 'hidden mt-2 px-3 py-2 rounded-lg text-xs font-medium';
+                pointInfoBox.textContent = '';
+            } else if (servicePoints > 0) {
+                pointInfoBox.className =
+                    'mt-2 px-3 py-2 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100';
+                pointInfoBox.textContent =
+                    `⭐ Layanan ini memberikan ${servicePoints} poin reward saat booking selesai. Pelanggan butuh 10 poin untuk bonus gratis 1 jam.`;
+            } else {
+                pointInfoBox.className =
+                    'mt-2 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
+                pointInfoBox.textContent = '— Layanan ini tidak memberikan poin reward.';
+            }
+
             calcTotal();
         });
 
-        document.getElementById('programSelect').addEventListener('change', calcTotal);
-        document.getElementById('promoSelect').addEventListener('change', calcTotal);
+        programSelect.addEventListener('change', calcTotal);
+        promoSelect.addEventListener('change', calcTotal);
 
         function calcTotal() {
-            const programSelect = document.getElementById('programSelect');
-            const promoSelect = document.getElementById('promoSelect');
             const selectedProgram = programSelect.options[programSelect.selectedIndex];
             const selectedPromo = promoSelect.options[promoSelect.selectedIndex];
             const manualDisc = parseInt(document.getElementById('discount').value) || 0;
@@ -221,9 +287,7 @@
 
                 if (discType === 'percent') {
                     programDisc = Math.round(basePrice * discValue / 100);
-                    if (maxDisc > 0 && programDisc > maxDisc) {
-                        programDisc = maxDisc;
-                    }
+                    if (maxDisc > 0 && programDisc > maxDisc) programDisc = maxDisc;
                     programLabel = discValue + '% dari harga layanan';
                 } else {
                     programDisc = Math.round(discValue);
@@ -247,9 +311,17 @@
             document.getElementById('displayPromoLabel').textContent = promoLabel;
             document.getElementById('displayDiscount').textContent = 'Rp ' + manualDisc.toLocaleString('id-ID');
             document.getElementById('displayTotal').textContent = 'Rp ' + total.toLocaleString('id-ID');
+
+            // ✅ Tampilkan preview poin di kotak ringkasan harga
+            if (servicePoints > 0 && serviceSelect.value !== '') {
+                pointPreviewWrap.classList.remove('hidden');
+                displayPoint.textContent = '+' + servicePoints + ' poin';
+            } else {
+                pointPreviewWrap.classList.add('hidden');
+            }
         }
 
-        // Inisialisasi harga saat halaman load
+        // Inisialisasi saat halaman load
         document.addEventListener('DOMContentLoaded', calcTotal);
     </script>
 </x-app-layout>

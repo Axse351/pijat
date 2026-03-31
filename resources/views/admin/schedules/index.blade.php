@@ -83,6 +83,10 @@
                                     class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition">
                                     ➕ {{ __('Tambah Manual') }}
                                 </a>
+                                <a href="{{ route('admin.schedules.all', ['month' => $month, 'year' => $year]) }}"
+                                    class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition">
+                                    👥 Semua Terapis
+                                </a>
                             </div>
                         @endif
                     </form>

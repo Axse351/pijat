@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\TherapistFaceController;
 use App\Http\Controllers\Admin\TherapistAttendanceController;
 use App\Http\Controllers\Admin\ProgramController;
+use App\Http\Controllers\Admin\TherapistScheduleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\WelcomeController;
@@ -99,62 +100,52 @@ Route::middleware(['auth', 'role:admin,kasir'])
                     Route::delete('/{customerMembership}', [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'destroy'])->name('destroy');
                 });
 
-            // ============================
-            // ATK ITEMS (ADMIN ONLY)
-            // ============================
+            // ATK ITEMS
             Route::resource('atk-items', \App\Http\Controllers\AtkController::class);
-            Route::post(
-                'atk-items/{atk}/adjust-stock',
-                [\App\Http\Controllers\AtkController::class, 'adjustStock']
-            )
+            Route::post('atk-items/{atk}/adjust-stock', [\App\Http\Controllers\AtkController::class, 'adjustStock'])
                 ->name('atk-items.adjust-stock');
-            Route::get('/laporan', [App\Http\Controllers\Admin\LaporanController::class, 'index'])
+            Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])
                 ->name('laporan.index');
-
-            // Export Laporan ke Excel
-            Route::get('/laporan/export', [App\Http\Controllers\Admin\LaporanController::class, 'export'])
+            Route::get('/laporan/export', [\App\Http\Controllers\Admin\LaporanController::class, 'export'])
                 ->name('laporan.export');
         });
 
-        // ============================
         // ATK PURCHASES (ADMIN + KASIR)
-        // ============================
         Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
-
-        Route::post(
-            'atk-purchases/{purchase}/confirm',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'confirm']
-        )
+        Route::post('atk-purchases/{purchase}/confirm', [\App\Http\Controllers\AtkPurchaseController::class, 'confirm'])
             ->name('atk-purchases.confirm');
-
-        Route::post(
-            'atk-purchases/{purchase}/cancel',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'cancel']
-        )
+        Route::post('atk-purchases/{purchase}/cancel', [\App\Http\Controllers\AtkPurchaseController::class, 'cancel'])
             ->name('atk-purchases.cancel');
-
-        // AJAX
-        Route::get(
-            '/api/atk-by-category/{category}',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkByCategory']
-        );
-
-        Route::get(
-            '/api/atk-detail/{atk}',
-            [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']
-        );
-
+        Route::get('/api/atk-by-category/{category}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkByCategory']);
+        Route::get('/api/atk-detail/{atk}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']);
         Route::resource('atk-categories', AtkCategoryController::class);
 
         // ── Schedule ────────────────────────────────────────────────────
-        Route::resource('schedules', \App\Http\Controllers\Admin\TherapistScheduleController::class)
-            ->names('schedules');
+        // ⚠️  URUTAN PENTING: route statis ('all', 'generate-month') harus
+        //     didaftarkan SEBELUM Route::resource agar tidak dianggap {schedule}
+        Route::get(
+            'schedules/all',
+            [TherapistScheduleController::class, 'allSchedules']
+        )->name('schedules.all');                          // → admin.schedules.all
 
         Route::post(
             'schedules/generate-month',
-            [\App\Http\Controllers\Admin\TherapistScheduleController::class, 'generateMonthSchedule']
-        )
-            ->name('schedules.generate');
+            [TherapistScheduleController::class, 'generateMonthSchedule']
+        )->name('schedules.generate');                     // → admin.schedules.generate
+
+        Route::resource(
+            'schedules',
+            TherapistScheduleController::class
+        );
+
+        // Resource di atas menghasilkan nama:
+        //   admin.schedules.index   GET  /admin/schedules
+        //   admin.schedules.create  GET  /admin/schedules/create
+        //   admin.schedules.store   POST /admin/schedules
+        //   admin.schedules.show    GET  /admin/schedules/{schedule}
+        //   admin.schedules.edit    GET  /admin/schedules/{schedule}/edit
+        //   admin.schedules.update  PUT  /admin/schedules/{schedule}
+        //   admin.schedules.destroy DEL  /admin/schedules/{schedule}
 
         // ── Commission ──────────────────────────────────────────────────
         Route::get('/commissions', [\App\Http\Controllers\Admin\CommissionController::class, 'index'])->name('commissions.index');
@@ -174,6 +165,36 @@ Route::middleware(['auth', 'role:kasir'])
         Route::get('dashboard', [\App\Http\Controllers\Kasir\KasirDashboardController::class, 'index'])
             ->name('dashboard');
     });
+
+Route::prefix('terapis')->name('terapis.')->group(function () {
+
+    // Dashboard
+    Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'index'])
+        ->name('dashboard')
+        ->middleware('role:terapis');
+
+    // Bookings
+    Route::prefix('bookings')->name('bookings.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'bookings'])
+            ->name('index')
+            ->middleware('role:terapis');
+    });
+
+    // Profile
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'profile'])
+            ->name('show')
+            ->middleware('role:terapis');
+
+        Route::post('/', [App\Http\Controllers\Terapis\DashboardController::class, 'updateProfile'])
+            ->name('update')
+            ->middleware('role:terapis');
+
+        Route::post('/change-password', [App\Http\Controllers\Terapis\DashboardController::class, 'changePassword'])
+            ->name('change-password')
+            ->middleware('role:terapis');
+    });
+});
 
 // ============================================================================
 // USER ROUTES

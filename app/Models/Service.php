@@ -11,6 +11,14 @@ class Service extends Model
     protected $table = 'services';
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'price'         => 'integer',
+        'duration'      => 'integer',
+        'is_active'     => 'boolean',
+        'reward_points' => 'integer',
+    ];
+
+
     public function bookings()
     {
         return $this->hasMany(Booking::class);

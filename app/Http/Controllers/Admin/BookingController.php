@@ -97,48 +97,36 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_id'  => 'required|exists:customers,id',
-            'therapist_id' => 'required|exists:therapists,id',
-            'service_id'   => 'required|exists:services,id',
-            'scheduled_at' => 'required|date',
-            'order_source' => 'nullable|in:walkin,wa,web',
-            'discount'     => 'nullable|numeric|min:0',
-            'promo_id'     => 'nullable|exists:promos,id',
-            'program_id'   => 'nullable|exists:programs,id',
-            'notes'        => 'nullable|string|max:500',
+            'customer_id'    => 'required|exists:customers,id',
+            'therapist_id'   => 'required|exists:therapists,id',
+            'service_id'     => 'required|exists:services,id',
+            'scheduled_at'   => 'required|date',
+            'order_source'   => 'nullable|in:walkin,wa,web',
+            'discount'       => 'nullable|numeric|min:0',
+            'promo_id'       => 'nullable|exists:promos,id',
+            'program_id'     => 'nullable|exists:programs,id',
+            'notes'          => 'nullable|string|max:500',
             'is_rescheduled' => 'nullable|boolean',
         ]);
 
-        $service    = Service::findOrFail($validated['service_id']);
-        $discount   = $validated['discount'] ?? 0;
-        $program    = null;
+        $service  = Service::findOrFail($validated['service_id']);
+        $discount = $validated['discount'] ?? 0;
 
-        // Jika ada program, hitung discount dari program
         if (!empty($validated['program_id'])) {
             $program = Program::findOrFail($validated['program_id']);
 
-            // Validasi: program harus aktif dan dalam periode valid
             if (!$program->is_active) {
-                return back()
-                    ->withErrors(['program_id' => 'Program tidak aktif.'])
-                    ->withInput();
+                return back()->withErrors(['program_id' => 'Program tidak aktif.'])->withInput();
             }
 
-            // Check tanggal program
             $now = Carbon::now();
             if ($program->start_date && Carbon::parse($program->start_date)->isAfter($now)) {
-                return back()
-                    ->withErrors(['program_id' => 'Program belum dimulai.'])
-                    ->withInput();
+                return back()->withErrors(['program_id' => 'Program belum dimulai.'])->withInput();
             }
-
             if ($program->end_date && Carbon::parse($program->end_date)->isBefore($now)) {
-                return back()
-                    ->withErrors(['program_id' => 'Program sudah berakhir.'])
-                    ->withInput();
+                return back()->withErrors(['program_id' => 'Program sudah berakhir.'])->withInput();
             }
 
-            // Hitung discount dari program
             if ($program->discount_type === 'percent') {
                 $programDisc = round($service->price * $program->discount_value / 100);
                 if ($program->max_discount && $programDisc > $program->max_discount) {
@@ -148,34 +136,31 @@ class BookingController extends Controller
                 $programDisc = $program->discount_value;
             }
 
-            $discount = $discount + $programDisc;
+            $discount += $programDisc;
         }
 
         $finalPrice = max(0, $service->price - $discount);
         $hasPromo   = !empty($validated['promo_id']);
 
-        // Validasi: total 0 hanya boleh jika ada promo
         if ($finalPrice === 0 && $service->price > 0 && !$hasPromo) {
-            return back()
-                ->withErrors(['discount' => 'Total tidak boleh Rp 0 kecuali menggunakan promo.'])
-                ->withInput();
+            return back()->withErrors(['discount' => 'Total tidak boleh Rp 0 kecuali menggunakan promo.'])->withInput();
         }
 
         Booking::create([
-            'customer_id'            => $validated['customer_id'],
-            'therapist_id'           => $validated['therapist_id'],
-            'service_id'             => $validated['service_id'],
-            'scheduled_at'           => $validated['scheduled_at'],
-            'original_scheduled_at'  => $validated['scheduled_at'],
-            'is_rescheduled'         => false,
-            'order_source'           => $validated['order_source'] ?? 'walkin',
-            'discount'               => $discount,
-            'final_price'            => $finalPrice,
-            'promo_id'               => $validated['promo_id'] ?? null,
-            'program_id'             => $validated['program_id'] ?? null,
-            'notes'                  => $validated['notes'] ?? null,
-            'price'                  => $service->price,
-            'status'                 => 'scheduled',
+            'customer_id'           => $validated['customer_id'],
+            'therapist_id'          => $validated['therapist_id'],
+            'service_id'            => $validated['service_id'],
+            'scheduled_at'          => $validated['scheduled_at'],
+            'original_scheduled_at' => $validated['scheduled_at'],
+            'is_rescheduled'        => false,
+            'order_source'          => $validated['order_source'] ?? 'walkin',
+            'discount'              => $discount,
+            'final_price'           => $finalPrice,
+            'promo_id'              => $validated['promo_id'] ?? null,
+            'program_id'            => $validated['program_id'] ?? null,
+            'notes'                 => $validated['notes'] ?? null,
+            'price'                 => $service->price,
+            'status'                => 'scheduled',
         ]);
 
         return redirect()->route('admin.bookings.index')
@@ -209,22 +194,16 @@ class BookingController extends Controller
             'is_rescheduled' => 'nullable|boolean',
         ]);
 
-        $service    = Service::findOrFail($validated['service_id']);
-        $discount   = $validated['discount'] ?? 0;
-        $program    = null;
+        $service  = Service::findOrFail($validated['service_id']);
+        $discount = $validated['discount'] ?? 0;
 
-        // Jika ada program, hitung discount dari program
         if (!empty($validated['program_id'])) {
             $program = Program::findOrFail($validated['program_id']);
 
-            // Validasi: program harus aktif
             if (!$program->is_active) {
-                return back()
-                    ->withErrors(['program_id' => 'Program tidak aktif.'])
-                    ->withInput();
+                return back()->withErrors(['program_id' => 'Program tidak aktif.'])->withInput();
             }
 
-            // Hitung discount dari program
             if ($program->discount_type === 'percent') {
                 $programDisc = round($service->price * $program->discount_value / 100);
                 if ($program->max_discount && $programDisc > $program->max_discount) {
@@ -234,28 +213,28 @@ class BookingController extends Controller
                 $programDisc = $program->discount_value;
             }
 
-            $discount = $discount + $programDisc;
+            $discount += $programDisc;
         }
 
         $finalPrice = max(0, $service->price - $discount);
         $hasPromo   = !empty($validated['promo_id']);
 
-        // Validasi: total 0 hanya boleh jika ada promo
         if ($finalPrice === 0 && $service->price > 0 && !$hasPromo) {
-            return back()
-                ->withErrors(['discount' => 'Total tidak boleh Rp 0 kecuali menggunakan promo.'])
-                ->withInput();
+            return back()->withErrors(['discount' => 'Total tidak boleh Rp 0 kecuali menggunakan promo.'])->withInput();
         }
 
-        // Deteksi reschedule: jadwal berubah dari yang tersimpan
-        $oldScheduled    = $booking->scheduled_at;
-        $newScheduled    = $validated['scheduled_at'];
-        $dateChanged     = Carbon::parse($oldScheduled)->ne(Carbon::parse($newScheduled));
-        $isRescheduled   = $dateChanged && $request->boolean('is_rescheduled');
-
-        // Simpan original_scheduled_at hanya sekali (pertama kali booking dibuat)
-        // Jika sudah ada dan sudah pernah reschedule, jangan timpa lagi
+        // Deteksi reschedule
+        $oldScheduled        = $booking->scheduled_at;
+        $newScheduled        = $validated['scheduled_at'];
+        $dateChanged         = Carbon::parse($oldScheduled)->ne(Carbon::parse($newScheduled));
+        $isRescheduled       = $dateChanged && $request->boolean('is_rescheduled');
         $originalScheduledAt = $booking->original_scheduled_at ?? $booking->scheduled_at;
+
+        // Catat status lama SEBELUM update untuk deteksi perubahan ke completed
+        $oldStatus      = $booking->status;
+        $newStatus      = $validated['status'] ?? $booking->status;
+        $wasCompleted   = $oldStatus === 'completed';
+        $becomesCompleted = $newStatus === 'completed';
 
         $booking->update([
             'customer_id'           => $validated['customer_id'],
@@ -265,7 +244,7 @@ class BookingController extends Controller
             'original_scheduled_at' => $originalScheduledAt,
             'is_rescheduled'        => $isRescheduled || $booking->is_rescheduled,
             'order_source'          => $validated['order_source'] ?? $booking->order_source,
-            'status'                => $validated['status'] ?? $booking->status,
+            'status'                => $newStatus,
             'discount'              => $discount,
             'final_price'           => $finalPrice,
             'promo_id'              => $validated['promo_id'] ?? null,
@@ -274,9 +253,18 @@ class BookingController extends Controller
             'notes'                 => $validated['notes'] ?? $booking->notes,
         ]);
 
+        // ✅ Berikan poin ke pelanggan hanya saat pertama kali status berubah ke completed
+        if (!$wasCompleted && $becomesCompleted) {
+            $rewardPoints = $service->reward_points ?? 0;
+            if ($rewardPoints > 0) {
+                $booking->customer->addPoints($rewardPoints);
+            }
+        }
+
         $message = 'Booking berhasil diperbarui.';
-        if ($isRescheduled) {
-            $message .= ' Jadwal telah diubah dan ditandai.';
+        if ($isRescheduled) $message .= ' Jadwal telah diubah dan ditandai.';
+        if (!$wasCompleted && $becomesCompleted && ($service->reward_points ?? 0) > 0) {
+            $message .= " +{$service->reward_points} poin diberikan ke {$booking->customer->name}.";
         }
 
         return redirect()->route('admin.bookings.index')

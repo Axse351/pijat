@@ -18,14 +18,11 @@ class CustomerController extends Controller
             $q->where('status', 'completed')->orderByDesc('scheduled_at');
         }])->latest()->get();
 
-        // Tambahkan atribut kunjungan & last visit ke setiap customer
         $customers->each(function ($c) {
-            $completed       = $c->bookings; // sudah di-filter completed
-            $c->visit_count  = $completed->count();
-            $c->last_visit   = $completed->first()?->scheduled_at; // booking terbaru
-
-            // Inactive: sudah pernah datang tapi terakhir kunjungan > 30 hari lalu
-            $c->is_inactive  = $c->last_visit
+            $completed      = $c->bookings;
+            $c->visit_count = $completed->count();
+            $c->last_visit  = $completed->first()?->scheduled_at;
+            $c->is_inactive = $c->last_visit
                 && Carbon::parse($c->last_visit)->lt(now()->subDays(30));
         });
 
@@ -68,8 +65,7 @@ class CustomerController extends Controller
             ]);
         });
 
-        return redirect()
-            ->route('admin.customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Pelanggan berhasil ditambahkan.');
     }
 
@@ -91,10 +87,7 @@ class CustomerController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $customer) {
-            $userData = [
-                'name'  => $request->name,
-                'email' => $request->email,
-            ];
+            $userData = ['name' => $request->name, 'email' => $request->email];
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
@@ -109,8 +102,7 @@ class CustomerController extends Controller
             ]);
         });
 
-        return redirect()
-            ->route('admin.customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Data pelanggan berhasil diperbarui.');
     }
 
@@ -120,8 +112,23 @@ class CustomerController extends Controller
             $customer->user->delete();
         });
 
-        return redirect()
-            ->route('admin.customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Pelanggan berhasil dihapus.');
+    }
+
+    // ✅ Klaim bonus — reset poin ke 0
+    public function redeemBonus(Customer $customer)
+    {
+        if (!$customer->hasBonus()) {
+            return back()->with('error', 'Poin belum cukup untuk klaim bonus (minimal 10 poin).');
+        }
+
+        $customer->redeemBonus();
+
+        return back()->with(
+            'success',
+            "🎁 Bonus berhasil diklaim untuk {$customer->name}! " .
+                "Pelanggan mendapatkan 1x layanan gratis 1 jam. Poin direset ke 0."
+        );
     }
 }
