@@ -65,15 +65,17 @@
 
             {{-- ── Legend ──────────────────────────────────────────────── --}}
             <div class="flex flex-wrap gap-3 mb-4 text-xs text-gray-600 dark:text-gray-400">
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-green-400 inline-block"></span>
-                    Kerja</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-gray-300 inline-block"></span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-green-500 inline-block"></span>
+                    Kerja Pagi</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-green-700 inline-block"></span>
+                    Kerja Malam</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-orange-500 inline-block"></span>
                     Libur</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-orange-400 inline-block"></span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-gray-400 inline-block"></span>
                     Sakit</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-400 inline-block"></span>
-                    Liburan</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-400 inline-block"></span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-500 inline-block"></span>
+                    Ijin</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500 inline-block"></span>
                     Cuti Bersama</span>
                 <span class="flex items-center gap-1.5"><span
                         class="w-3 h-3 rounded bg-gray-100 border border-dashed border-gray-300 inline-block"></span>
@@ -151,30 +153,36 @@
                                         @php
                                             $sched = $day['schedules'][$t->id] ?? null;
                                             $status = $sched?->status;
+
+                                            // Helper function untuk cek waktu kerja
+                                            $isNightShift = false;
+                                            if ($status === 'working' && $sched->start_time) {
+                                                $startHour = \Carbon\Carbon::parse($sched->start_time)->hour;
+                                                $isNightShift = $startHour >= 18 || $startHour < 6; // 18:00 - 05:59
+                                            }
+
                                             [$cellBg, $pill, $pillText] = match ($status) {
-                                                'working' => [
-                                                    '',
-                                                    'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
-                                                    'Kerja',
-                                                ],
+                                                'working' => $isNightShift
+                                                    ? ['', 'bg-green-700 text-white dark:bg-green-800 dark:text-green-100', 'Kerja Mlm']
+                                                    : ['', 'bg-green-500 text-white dark:bg-green-600 dark:text-green-100', 'Kerja'],
                                                 'off' => [
                                                     '',
-                                                    'bg-gray-200 dark:bg-gray-600/60 text-gray-600 dark:text-gray-300',
+                                                    'bg-orange-500 text-white dark:bg-orange-600 dark:text-orange-100',
                                                     'Libur',
                                                 ],
                                                 'sick' => [
                                                     '',
-                                                    'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+                                                    'bg-gray-400 text-white dark:bg-gray-500 dark:text-gray-100',
                                                     'Sakit',
                                                 ],
                                                 'vacation' => [
                                                     '',
-                                                    'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-                                                    'Liburan',
+                                                    'bg-blue-500 text-white dark:bg-blue-600 dark:text-blue-100',
+                                                    'Ijin',
                                                 ],
                                                 'cuti_bersama' => [
                                                     '',
-                                                    'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+                                                    'bg-red-500 text-white dark:bg-red-600 dark:text-red-100',
                                                     'Cuti',
                                                 ],
                                                 default => [
@@ -257,12 +265,20 @@
                                         @php
                                             $sched = $day['schedules'][$t->id] ?? null;
                                             $status = $sched?->status;
+
+                                            // Helper function untuk cek waktu kerja
+                                            $isNightShift = false;
+                                            if ($status === 'working' && $sched->start_time) {
+                                                $startHour = \Carbon\Carbon::parse($sched->start_time)->hour;
+                                                $isNightShift = $startHour >= 18 || $startHour < 6;
+                                            }
+
                                             $dot = match ($status) {
-                                                'working' => 'bg-green-400',
-                                                'off' => 'bg-gray-300',
-                                                'sick' => 'bg-orange-400',
-                                                'vacation' => 'bg-purple-400',
-                                                'cuti_bersama' => 'bg-blue-400',
+                                                'working' => $isNightShift ? 'bg-green-700' : 'bg-green-500',
+                                                'off' => 'bg-orange-500',
+                                                'sick' => 'bg-gray-400',
+                                                'vacation' => 'bg-blue-500',
+                                                'cuti_bersama' => 'bg-red-500',
                                                 default => 'bg-gray-200 border border-dashed border-gray-300',
                                             };
                                         @endphp
@@ -303,7 +319,10 @@
                     @php
                         $tScheds = $allSchedules->where('therapist_id', $t->id);
                         $workCount = $tScheds->where('status', 'working')->count();
-                        $offCount = $tScheds->whereIn('status', ['off', 'sick', 'vacation', 'cuti_bersama'])->count();
+                        $offCount = $tScheds->where('status', 'off')->count();
+                        $sickCount = $tScheds->where('status', 'sick')->count();
+                        $ijinCount = $tScheds->where('status', 'vacation')->count();
+                        $cutiCount = $tScheds->where('status', 'cuti_bersama')->count();
                         $totalHours = $tScheds->sum('working_hours');
                     @endphp
                     <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-4">
@@ -320,18 +339,30 @@
                             <a href="{{ route('admin.schedules.index', ['therapist_id' => $t->id, 'month' => $month, 'year' => $year]) }}"
                                 class="ml-auto text-xs text-indigo-500 hover:underline">Detail →</a>
                         </div>
-                        <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
                             <div>
-                                <div class="text-lg font-bold text-green-600">{{ $workCount }}</div>
-                                <div class="text-xs text-gray-400">Kerja</div>
+                                <div class="text-sm font-bold text-green-600">{{ $workCount }}</div>
+                                <div class="text-gray-400">Kerja</div>
                             </div>
                             <div>
-                                <div class="text-lg font-bold text-gray-400">{{ $offCount }}</div>
-                                <div class="text-xs text-gray-400">Libur</div>
+                                <div class="text-sm font-bold text-orange-500">{{ $offCount }}</div>
+                                <div class="text-gray-400">Libur</div>
                             </div>
                             <div>
-                                <div class="text-lg font-bold text-indigo-500">{{ $totalHours }}</div>
-                                <div class="text-xs text-gray-400">Jam</div>
+                                <div class="text-sm font-bold text-gray-400">{{ $sickCount }}</div>
+                                <div class="text-gray-400">Sakit</div>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-blue-500">{{ $ijinCount }}</div>
+                                <div class="text-gray-400">Ijin</div>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-red-500">{{ $cutiCount }}</div>
+                                <div class="text-gray-400">Cuti</div>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-indigo-500">{{ $totalHours }}</div>
+                                <div class="text-gray-400">Jam</div>
                             </div>
                         </div>
                     </div>

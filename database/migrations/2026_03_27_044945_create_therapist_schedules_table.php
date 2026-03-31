@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('day_of_week');
 
             // Status hari (working, off, sick, vacation, etc)
-            $table->enum('status', ['working', 'off', 'sick', 'vacation', 'cuti_bersama'])
+            $table->enum('status', ['working', 'working_afternoon', 'off', 'sick', 'vacation', 'cuti_bersama'])
                 ->default('working');
 
             // Jam kerja (jika status = working)

@@ -123,14 +123,16 @@
                                         $isEmpty => 'bg-gray-50 dark:bg-gray-900/30',
                                         $status === 'working'
                                             => 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+                                        $status === 'working_afternoon'
+                                            => 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700',
                                         $status === 'off'
-                                            => 'bg-gray-100 dark:bg-gray-700/60 border-gray-300 dark:border-gray-600',
-                                        $status === 'sick'
                                             => 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800',
+                                        $status === 'sick'
+                                            => 'bg-gray-100 dark:bg-gray-700/60 border-gray-300 dark:border-gray-600',
                                         $status === 'vacation'
-                                            => 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
-                                        $status === 'cuti_bersama'
                                             => 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+                                        $status === 'cuti_bersama'
+                                            => 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
                                         default => 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                                     };
                                 @endphp
@@ -139,9 +141,8 @@
                                     class="min-h-24 border rounded-lg p-2 {{ $cellClass }} {{ !$isEmpty ? 'hover:shadow-md transition' : '' }}">
                                     @if ($day['date'])
                                         <div class="flex justify-between items-start mb-1">
-                                            <span
-                                                class="text-sm font-bold
-                                                {{ $status === 'working' ? 'text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-400' }}">
+                                            <span class="text-sm font-bold
+                                                {{ $status === 'working' ? 'text-green-700 dark:text-green-300' : ($status === 'working_afternoon' ? 'text-amber-700 dark:text-amber-300' : 'text-gray-600 dark:text-gray-400') }}">
                                                 {{ $day['date']->format('d') }}
                                             </span>
                                             @if ($schedule)
@@ -153,9 +154,8 @@
 
                                         @if ($schedule)
                                             @if ($status === 'working')
-                                                <span
-                                                    class="inline-block px-1.5 py-0.5 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold rounded mb-1">
-                                                    Kerja
+                                                <span class="inline-block px-1.5 py-0.5 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold rounded mb-1">
+                                                    🌅 Pagi
                                                 </span>
                                                 <div class="text-xs text-green-700 dark:text-green-400 font-medium">
                                                     {{ $schedule->getStartTimeFormatted() }} –
@@ -166,29 +166,39 @@
                                                         {{ $schedule->working_hours }} jam
                                                     </div>
                                                 @endif
+
+                                            @elseif ($status === 'working_afternoon')
+                                                <span class="inline-block px-1.5 py-0.5 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-xs font-semibold rounded mb-1">
+                                                    🌤 Siang
+                                                </span>
+                                                <div class="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                                                    {{ $schedule->getStartTimeFormatted() }} –
+                                                    {{ $schedule->getEndTimeFormatted() }}
+                                                </div>
+                                                @if ($schedule->working_hours)
+                                                    <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                        {{ $schedule->working_hours }} jam
+                                                    </div>
+                                                @endif
+
                                             @else
                                                 @php
                                                     $badgeClass = match ($status) {
-                                                        'off'
-                                                            => 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200',
-                                                        'sick'
-                                                            => 'bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200',
-                                                        'vacation'
-                                                            => 'bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200',
-                                                        'cuti_bersama'
-                                                            => 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200',
-                                                        default => 'bg-gray-200 text-gray-700',
+                                                        'off'           => 'bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200',
+                                                        'sick'          => 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200',
+                                                        'vacation'      => 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200',
+                                                        'cuti_bersama'  => 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200',
+                                                        default         => 'bg-gray-200 text-gray-700',
                                                     };
                                                     $label = match ($status) {
-                                                        'off' => 'Libur',
-                                                        'sick' => 'Sakit',
-                                                        'vacation' => 'Liburan',
-                                                        'cuti_bersama' => 'Cuti Bersama',
-                                                        default => $status,
+                                                        'off'           => 'Libur',
+                                                        'sick'          => 'Sakit',
+                                                        'vacation'      => 'Ijin',
+                                                        'cuti_bersama'  => 'Cuti Bersama',
+                                                        default         => $status,
                                                     };
                                                 @endphp
-                                                <span
-                                                    class="inline-block px-1.5 py-0.5 {{ $badgeClass }} text-xs font-semibold rounded">
+                                                <span class="inline-block px-1.5 py-0.5 {{ $badgeClass }} text-xs font-semibold rounded">
                                                     {{ $label }}
                                                 </span>
                                             @endif
@@ -201,26 +211,29 @@
                         </div>
 
                         {{-- Summary --}}
-                        <div
-                            class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                             <div class="text-center">
                                 <p class="text-2xl font-bold text-green-600">
                                     {{ $schedules->where('status', 'working')->count() }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Hari Kerja</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Kerja Pagi</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-2xl font-bold text-gray-500">
+                                <p class="text-2xl font-bold text-amber-500">
+                                    {{ $schedules->where('status', 'working_afternoon')->count() }}</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Kerja Siang</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-orange-500">
                                     {{ $schedules->where('status', 'off')->count() }}</p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Libur</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-2xl font-bold text-orange-500">
+                                <p class="text-2xl font-bold text-gray-500">
                                     {{ $schedules->where('status', 'sick')->count() }}</p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Sakit</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-2xl font-bold text-purple-600">{{ $schedules->sum('working_hours') }}
-                                </p>
+                                <p class="text-2xl font-bold text-purple-600">{{ $schedules->sum('working_hours') }}</p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Total Jam</p>
                             </div>
                         </div>
@@ -237,27 +250,18 @@
 
             {{-- Legend --}}
             <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-green-200 inline-block"></span>
-                    Kerja</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-gray-300 inline-block"></span>
-                    Libur</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-orange-200 inline-block"></span>
-                    Sakit</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-purple-200 inline-block"></span>
-                    Liburan</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-blue-200 inline-block"></span> Cuti
-                    Bersama</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-green-200 inline-block"></span> Kerja Pagi</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-amber-200 inline-block"></span> Kerja Siang</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-orange-200 inline-block"></span> Libur</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-gray-300 inline-block"></span> Sakit</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-blue-200 inline-block"></span> Ijin</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-red-200 inline-block"></span> Cuti Bersama</div>
             </div>
         </div>
     </div>
 
     {{-- ═══════════════════════════════════════════════════════════════════
          MODAL: Atur Jadwal Bulan Ini
-         Cara kerja:
-         - Tentukan jam kerja (start & end)
-         - Pilih pola hari kerja (default Senin-Jumat)
-         - Semua hari lain otomatis Libur
-         - Klik tanggal di mini-kalender untuk override jadi Libur manual
     ════════════════════════════════════════════════════════════════════ --}}
     <div id="generateModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
         onclick="if(event.target===this) closeGenerateModal()">
@@ -278,13 +282,45 @@
                     <input type="hidden" name="therapist_id" value="{{ $selectedTherapist }}">
                     <input type="hidden" name="month" value="{{ $month }}">
                     <input type="hidden" name="year" value="{{ $year }}">
-                    {{-- off_dates akan di-inject oleh JS dari klik kalender --}}
 
-                    {{-- Step 1: Jam Kerja --}}
+                    {{-- Step 1: Shift & Jam Kerja --}}
                     <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                            1️⃣ Jam Kerja Default
+                            1️⃣ Shift & Jam Kerja Default
                         </p>
+
+                        {{-- Pilihan shift preset --}}
+                        <div class="flex gap-3 mb-4">
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="shift_type" value="morning" checked class="sr-only peer"
+                                    onchange="applyShiftPreset(this.value)">
+                                <span class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition
+                                    peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:text-green-700 dark:peer-checked:bg-green-900/30 dark:peer-checked:text-green-300
+                                    border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-400">
+                                    🌅 Pagi
+                                </span>
+                            </label>
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="shift_type" value="afternoon" class="sr-only peer"
+                                    onchange="applyShiftPreset(this.value)">
+                                <span class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition
+                                    peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:text-amber-700 dark:peer-checked:bg-amber-900/30 dark:peer-checked:text-amber-300
+                                    border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-amber-400">
+                                    🌤 Siang
+                                </span>
+                            </label>
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="shift_type" value="custom" class="sr-only peer"
+                                    onchange="applyShiftPreset(this.value)">
+                                <span class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition
+                                    peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 dark:peer-checked:bg-indigo-900/30 dark:peer-checked:text-indigo-300
+                                    border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400">
+                                    ✏️ Custom
+                                </span>
+                            </label>
+                        </div>
+
+                        {{-- Input jam --}}
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jam Masuk</label>
@@ -307,15 +343,14 @@
                         <div class="flex flex-wrap gap-2">
                             @php
                                 $dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-                                $defaultWork = [1, 2, 3, 4, 5]; // Senin-Jumat
+                                $defaultWork = [1, 2, 3, 4, 5];
                             @endphp
                             @foreach ($dayLabels as $idx => $lbl)
                                 <label class="cursor-pointer">
                                     <input type="checkbox" name="working_days[]" value="{{ $idx }}"
                                         {{ in_array($idx, $defaultWork) ? 'checked' : '' }} class="sr-only peer"
                                         onchange="refreshMiniCalendar()">
-                                    <span
-                                        class="inline-block px-3 py-1.5 rounded-full text-sm font-medium border transition
+                                    <span class="inline-block px-3 py-1.5 rounded-full text-sm font-medium border transition
                                         peer-checked:bg-indigo-500 peer-checked:text-white peer-checked:border-indigo-500
                                         border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400
                                         hover:border-indigo-400">
@@ -326,7 +361,7 @@
                         </div>
                     </div>
 
-                    {{-- Step 3: Mini-kalender – klik tanggal untuk tandai libur --}}
+                    {{-- Step 3: Mini-kalender --}}
                     <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                             3️⃣ Tandai Hari Libur Khusus
@@ -336,30 +371,25 @@
                             tidak diklik mengikuti pola kerja di atas.
                         </p>
 
-                        {{-- Mini calendar header --}}
                         <div class="grid grid-cols-7 gap-1 mb-1">
                             @foreach ($dayLabels as $lbl)
-                                <div class="text-center text-xs font-bold text-gray-400 py-1">{{ $lbl }}
-                                </div>
+                                <div class="text-center text-xs font-bold text-gray-400 py-1">{{ $lbl }}</div>
                             @endforeach
                         </div>
 
-                        {{-- Mini calendar grid (diisi JS) --}}
                         <div id="miniCalendar" class="grid grid-cols-7 gap-1"></div>
-
-                        {{-- Hidden inputs untuk off_dates --}}
                         <div id="offDatesInputs"></div>
 
-                        <p class="text-xs text-gray-400 mt-2">
-                            <span class="inline-block w-3 h-3 rounded bg-red-400 mr-1"></span> = Libur manual
-                            <span class="inline-block w-3 h-3 rounded bg-green-400 mx-1 ml-3"></span> = Kerja
-                            <span class="inline-block w-3 h-3 rounded bg-gray-300 mx-1 ml-3"></span> = Libur (pola)
+                        <p class="text-xs text-gray-400 mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                            <span><span class="inline-block w-3 h-3 rounded bg-red-400 mr-1"></span>Libur manual</span>
+                            <span><span class="inline-block w-3 h-3 rounded bg-green-400 mr-1"></span>Kerja Pagi</span>
+                            <span><span class="inline-block w-3 h-3 rounded bg-amber-400 mr-1"></span>Kerja Siang</span>
+                            <span><span class="inline-block w-3 h-3 rounded bg-gray-300 mr-1"></span>Libur (pola)</span>
                         </p>
                     </div>
 
                     {{-- Warning --}}
-                    <div
-                        class="mb-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <div class="mb-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                         <p class="text-xs text-amber-700 dark:text-amber-300">
                             ⚠️ Generate akan <strong>menghapus & membuat ulang</strong> semua jadwal bulan
                             {{ \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y') }} untuk terapis ini.
@@ -382,12 +412,27 @@
     </div>
 
     <script>
-        // ── Config dari PHP ──────────────────────────────────────────────
-        const CAL_YEAR = {{ $year }};
-        const CAL_MONTH = {{ $month }}; // 1-12
-        // ────────────────────────────────────────────────────────────────
+        const CAL_YEAR  = {{ $year }};
+        const CAL_MONTH = {{ $month }};
 
-        let offDates = new Set(); // Set of 'YYYY-MM-DD' string
+        let offDates    = new Set();
+        let currentShift = 'morning';
+
+        const SHIFT_PRESETS = {
+            morning:   { start: '09:00', end: '17:00' },
+            afternoon: { start: '13:00', end: '21:00' },
+            custom:    null,
+        };
+
+        function applyShiftPreset(shift) {
+            currentShift = shift;
+            const preset = SHIFT_PRESETS[shift];
+            if (preset) {
+                document.getElementById('startTime').value = preset.start;
+                document.getElementById('endTime').value   = preset.end;
+            }
+            refreshMiniCalendar();
+        }
 
         function openGenerateModal() {
             document.getElementById('generateModal').classList.remove('hidden');
@@ -406,60 +451,52 @@
 
         function refreshMiniCalendar() {
             const workingDays = getWorkingDays();
-            const container = document.getElementById('miniCalendar');
+            const isAfternoon = currentShift === 'afternoon';
+            const container   = document.getElementById('miniCalendar');
             container.innerHTML = '';
 
             const firstDay = new Date(CAL_YEAR, CAL_MONTH - 1, 1);
-            const lastDay = new Date(CAL_YEAR, CAL_MONTH, 0);
-            const startDow = firstDay.getDay(); // 0=Sun
+            const lastDay  = new Date(CAL_YEAR, CAL_MONTH, 0);
+            const startDow = firstDay.getDay();
 
-            // Empty cells before first day
             for (let i = 0; i < startDow; i++) {
-                const blank = document.createElement('div');
-                container.appendChild(blank);
+                container.appendChild(document.createElement('div'));
             }
 
-            // Days
             for (let d = 1; d <= lastDay.getDate(); d++) {
-                const date = new Date(CAL_YEAR, CAL_MONTH - 1, d);
-                const dateStr = formatDate(date);
-                const dow = date.getDay();
+                const date     = new Date(CAL_YEAR, CAL_MONTH - 1, d);
+                const dateStr  = formatDate(date);
+                const dow      = date.getDay();
 
-                const isWorkDay = workingDays.includes(dow);
+                const isWorkDay   = workingDays.includes(dow);
                 const isManualOff = offDates.has(dateStr);
-
-                // Final status
-                const isWorking = isWorkDay && !isManualOff;
+                const isWorking   = isWorkDay && !isManualOff;
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.dataset.date = dateStr;
-                btn.textContent = String(d).padStart(2, '0');
+                btn.textContent  = String(d).padStart(2, '0');
 
                 btn.className = [
                     'w-full aspect-square rounded-lg text-xs font-semibold transition',
                     'focus:outline-none focus:ring-2 focus:ring-indigo-400',
-                    isManualOff ?
-                    'bg-red-400 text-white hover:bg-red-500' // libur manual
-                    :
-                    isWorking ?
-                    'bg-green-400 text-white hover:bg-green-500' // kerja
-                    :
-                    'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300', // libur pola
+                    isManualOff
+                        ? 'bg-red-400 text-white hover:bg-red-500'
+                        : isWorking
+                            ? (isAfternoon
+                                ? 'bg-amber-400 text-white hover:bg-amber-500'
+                                : 'bg-green-400 text-white hover:bg-green-500')
+                            : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300',
                 ].join(' ');
 
-                btn.title = isManualOff ?
-                    'Libur Manual — klik untuk batalkan' :
-                    isWorking ?
-                    'Kerja — klik untuk jadikan libur' :
-                    'Libur (pola) — klik untuk jadikan libur manual';
+                btn.title = isManualOff
+                    ? 'Libur Manual — klik untuk batalkan'
+                    : isWorking
+                        ? `Kerja ${isAfternoon ? 'Siang' : 'Pagi'} — klik untuk jadikan libur`
+                        : 'Libur (pola) — klik untuk jadikan libur manual';
 
                 btn.addEventListener('click', () => {
-                    if (offDates.has(dateStr)) {
-                        offDates.delete(dateStr);
-                    } else {
-                        offDates.add(dateStr);
-                    }
+                    offDates.has(dateStr) ? offDates.delete(dateStr) : offDates.add(dateStr);
                     refreshMiniCalendar();
                     syncOffDateInputs();
                 });
@@ -475,8 +512,8 @@
             container.innerHTML = '';
             offDates.forEach(date => {
                 const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'off_dates[]';
+                input.type  = 'hidden';
+                input.name  = 'off_dates[]';
                 input.value = date;
                 container.appendChild(input);
             });

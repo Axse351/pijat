@@ -52,7 +52,7 @@
                                                 : 'false' }} ?
                                             'border-indigo-500 text-gray-900 dark:text-gray-100' :
                                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
-                                        COA
+                                        Pengeluaran
                                         <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': openCoa }"
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -81,13 +81,13 @@
                                             @if (Route::has('admin.atk-categories.index'))
                                                 <a href="{{ route('admin.atk-categories.index') }}"
                                                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-categories.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
-                                                    Kategori COA
+                                                    Kategori Pengeluaran
                                                 </a>
                                             @endif
                                             @if (Route::has('admin.atk-items.index'))
                                                 <a href="{{ route('admin.atk-items.index') }}"
                                                     class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-items.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
-                                                    Item COA
+                                                    Item Pengeluaran
                                                 </a>
                                             @endif
                                         @endif
@@ -252,7 +252,7 @@
                     </x-responsive-nav-link>
 
                     {{-- COA MOBILE --}}
-                    <div class="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">COA</div>
+                    <div class="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">Pengeluaran</div>
                     {{-- <x-responsive-nav-link :href="route('admin.atk-purchases.index')" :active="request()->routeIs('admin.atk-purchases.*')">
                         Catat Pengeluaran
                     </x-responsive-nav-link> --}}
@@ -260,12 +260,12 @@
                     @if (Auth::user()->role === 'admin')
                         @if (Route::has('admin.atk-categories.index'))
                             <x-responsive-nav-link :href="route('admin.atk-categories.index')" :active="request()->routeIs('admin.atk-categories.*')">
-                                Kategori COA
+                                Kategori Pengeluaran
                             </x-responsive-nav-link>
                         @endif
                         @if (Route::has('admin.atk-items.index'))
                             <x-responsive-nav-link :href="route('admin.atk-items.index')" :active="request()->routeIs('admin.atk-items.*')">
-                                Item COA
+                                Item Pengeluaran
                             </x-responsive-nav-link>
                         @endif
                     @endif

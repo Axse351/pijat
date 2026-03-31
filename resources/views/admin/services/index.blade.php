@@ -70,6 +70,9 @@
                                         Harga</th>
                                     <th
                                         class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Poin ⭐</th>
+                                    <th
+                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                         Status</th>
                                     <th
                                         class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -104,6 +107,16 @@
                                         </td>
                                         <td class="px-5 py-3.5 font-semibold text-amber-600 dark:text-amber-400">
                                             Rp {{ number_format($service->price, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-5 py-3.5">
+                                            @if ($service->reward_points && $service->reward_points > 0)
+                                                <span
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                                                    ⭐ +{{ $service->reward_points }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-300 text-xs">—</span>
+                                            @endif
                                         </td>
                                         <td class="px-5 py-3.5">
                                             <span
