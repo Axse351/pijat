@@ -29,9 +29,10 @@ Route::post('/booking', [PublicBookingController::class, 'store'])->name('public
 
 Route::middleware('auth')->get('/dashboard', function () {
     return match (auth()->user()->role) {
-        'admin'  => redirect()->route('admin.dashboard'),
-        'kasir'  => redirect()->route('admin.dashboard'),
-        default  => redirect()->route('user.dashboard'),
+        'admin'     => redirect()->route('admin.dashboard'),
+        'kasir'     => redirect()->route('kasir.dashboard'),
+        'therapist' => redirect()->route('terapis.dashboard'),
+        default     => redirect()->route('user.dashboard'),
     };
 })->name('dashboard');
 
@@ -180,6 +181,41 @@ Route::prefix('terapis')->name('terapis.')->group(function () {
             ->middleware('role:terapis');
     });
 
+    // Jadwal Terapis
+    // Hapus seluruh blok Route::prefix('terapis') yang lama, ganti dengan ini:
+
+    Route::middleware(['auth', 'role:therapist'])
+        ->prefix('terapis')
+        ->name('terapis.')
+        ->group(function () {
+
+            Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'index'])
+                ->name('dashboard');
+
+            Route::prefix('bookings')->name('bookings.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'bookings'])
+                    ->name('index');
+            });
+
+            Route::prefix('schedules')->name('schedules.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'schedules'])
+                    ->name('index');
+            });
+
+            Route::prefix('leaves')->name('leaves.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'leaveRequests'])->name('index');
+                Route::get('/create', [App\Http\Controllers\Terapis\DashboardController::class, 'createLeaveRequest'])->name('create');
+                Route::post('/', [App\Http\Controllers\Terapis\DashboardController::class, 'storeLeaveRequest'])->name('store');
+                Route::get('/{leaveRequest}', [App\Http\Controllers\Terapis\DashboardController::class, 'showLeaveRequest'])->name('show');
+                Route::delete('/{leaveRequest}', [App\Http\Controllers\Terapis\DashboardController::class, 'cancelLeaveRequest'])->name('destroy');
+            });
+
+            Route::prefix('profile')->name('profile.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'profile'])->name('show');
+                Route::post('/', [App\Http\Controllers\Terapis\DashboardController::class, 'updateProfile'])->name('update');
+                Route::post('/change-password', [App\Http\Controllers\Terapis\DashboardController::class, 'changePassword'])->name('change-password');
+            });
+        });
     // Profile
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'profile'])
@@ -213,6 +249,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/api/booked-slots',    [App\Http\Controllers\WelcomeController::class, 'bookedSlots']);
+Route::get('/api/bookings-by-date', [App\Http\Controllers\WelcomeController::class, 'bookingsByDate']);
 
 // ============================================================================
 // AUTH ROUTES

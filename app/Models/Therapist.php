@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Carbon\Carbon;
 
 class Therapist extends Model
 {
@@ -69,6 +70,22 @@ class Therapist extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'therapist_id');
+    }
+
+    /**
+     * Relationship ke schedules (jadwal kerja)
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(TherapistSchedule::class, 'therapist_id');
+    }
+
+    /**
+     * Relationship ke leaveRequests (pengajuan izin/cuti)
+     */
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(TherapistLeaveRequest::class, 'therapist_id');
     }
 
     /*
@@ -168,6 +185,50 @@ class Therapist extends Model
     {
         $revenue = $this->getMonthRevenue();
         return $revenue * ($this->commission_percent / 100);
+    }
+
+    /**
+     * Check apakah terapis sedang cuti/izin pada tanggal tertentu
+     */
+    public function isOnLeaveOnDate($date)
+    {
+        return $this->leaveRequests()
+            ->approved()
+            ->where('start_date', '<=', $date)
+            ->where('end_date', '>=', $date)
+            ->exists();
+    }
+
+    /**
+     * Dapatkan jadwal untuk bulan tertentu
+     */
+    public function getSchedulesForMonth($month, $year)
+    {
+        return $this->schedules()
+            ->whereMonth('schedule_date', $month)
+            ->whereYear('schedule_date', $year)
+            ->orderBy('schedule_date')
+            ->get();
+    }
+
+    /**
+     * Dapatkan izin yang aktif hari ini
+     */
+    public function getActiveLeaveToday()
+    {
+        return $this->leaveRequests()
+            ->active()
+            ->first();
+    }
+
+    /**
+     * Dapatkan jadwal hari ini
+     */
+    public function getTodaySchedule()
+    {
+        return $this->schedules()
+            ->whereDate('schedule_date', Carbon::today())
+            ->first();
     }
 
     /*

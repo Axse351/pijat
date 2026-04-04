@@ -54,7 +54,7 @@ class TherapistController extends Controller
                 'email'     => $validated['email'],
                 'phone'     => $validated['phone'] ?? null,
                 'password'  => Hash::make('123456'), // Password default
-                'role'      => 'terapis',
+                'role'      => 'therapist',
                 'is_active' => (bool) $validated['is_active'],
             ]);
 
@@ -134,7 +134,7 @@ class TherapistController extends Controller
                     'email'     => $validated['email'],
                     'phone'     => $validated['phone'] ?? null,
                     'password'  => Hash::make('123456'),
-                    'role'      => 'terapis',
+                    'role'      => 'therapist',
                     'is_active' => (bool) $validated['is_active'],
                 ]);
                 $therapist->user_id = $user->id;

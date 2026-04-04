@@ -68,6 +68,17 @@
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
                                 placeholder="Nama lengkap terapis">
                         </div>
+                        <div>
+                            <label
+                                class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                Email *
+                            </label>
+                            <input type="email" name="email" value="{{ old('email') }}" required
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="email@example.com">
+                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Email ini digunakan untuk login.
+                                Password default: <strong>123456</strong></p>
+                        </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             {{-- Spesialisasi --}}

@@ -34,8 +34,6 @@
             padding: 0;
         }
 
-
-
         body {
             font-family: 'DM Sans', sans-serif;
             background: var(--cream);
@@ -1008,16 +1006,28 @@
         }
 
         .ts-cell {
-            min-height: 76px;
+            min-height: 84px;
             border-radius: 10px;
             padding: 8px 7px;
             border: 1.5px solid transparent;
             transition: transform .15s, box-shadow .15s;
+            cursor: default;
         }
 
         .ts-cell.working {
             background: #f0faf5;
             border-color: #9fe1cb;
+        }
+
+        .ts-cell.working.has-booking {
+            background: #fff8ed;
+            border-color: #f5c87a;
+            cursor: pointer;
+        }
+
+        .ts-cell.working.has-booking:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(196, 113, 75, .15);
         }
 
         .ts-cell.off {
@@ -1034,7 +1044,7 @@
             font-size: .82rem;
             font-weight: 600;
             color: var(--brown);
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             display: block;
         }
 
@@ -1047,7 +1057,7 @@
             display: inline-block;
             padding: 2px 7px;
             border-radius: 100px;
-            font-size: .65rem;
+            font-size: .62rem;
             font-weight: 600;
         }
 
@@ -1061,11 +1071,223 @@
             color: #6b6860;
         }
 
-        .ts-time {
-            font-size: .65rem;
-            color: #1d9e75;
+        .ts-badge.booked {
+            background: #fde68a;
+            color: #92400e;
+        }
+
+        .ts-slot-preview {
             margin-top: 3px;
+        }
+
+        .ts-slot-dot-row {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 3px;
+        }
+
+        .ts-slot-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #f59e0b;
+            flex-shrink: 0;
+        }
+
+        .ts-slot-dot.free {
+            background: #22c55e;
+        }
+
+        .ts-slot-more-text {
+            font-size: .58rem;
+            color: var(--muted);
+        }
+
+        .ts-time {
+            font-size: .62rem;
+            color: #1d9e75;
+            margin-top: 2px;
             font-weight: 500;
+        }
+
+        /* ── MODAL DETAIL BOOKING HARI ── */
+        .ts-day-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: rgba(44, 31, 19, .55);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .ts-day-modal-overlay.open {
+            display: flex;
+        }
+
+        .ts-day-modal {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 32px 80px rgba(44, 31, 19, .25);
+            animation: modalIn .25s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(.97)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .ts-day-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+
+        .ts-day-modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--brown);
+        }
+
+        .ts-day-modal-sub {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .ts-day-modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid var(--sand);
+            background: var(--cream);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--muted);
+            flex-shrink: 0;
+            transition: all .2s;
+        }
+
+        .ts-day-modal-close:hover {
+            background: var(--terracotta);
+            color: white;
+            border-color: var(--terracotta);
+        }
+
+        .ts-slot-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ts-slot-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1.5px solid var(--sand);
+        }
+
+        .ts-slot-row.booked {
+            background: #fff8ed;
+            border-color: #f5c87a;
+        }
+
+        .ts-slot-row.free {
+            background: #f0faf5;
+            border-color: #9fe1cb;
+        }
+
+        .ts-slot-row-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            flex-shrink: 0;
+        }
+
+        .ts-slot-row.booked .ts-slot-row-icon {
+            background: #fde68a;
+        }
+
+        .ts-slot-row.free .ts-slot-row-icon {
+            background: #c0dd97;
+        }
+
+        .ts-slot-row-time {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--brown);
+            min-width: 42px;
+        }
+
+        .ts-slot-row-label {
+            font-size: .78rem;
+            color: var(--muted);
+            flex: 1;
+        }
+
+        .ts-slot-row-status {
+            font-size: .68rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 100px;
+        }
+
+        .ts-slot-row.booked .ts-slot-row-status {
+            background: #fde68a;
+            color: #92400e;
+        }
+
+        .ts-slot-row.free .ts-slot-row-status {
+            background: #c0dd97;
+            color: #3b6d11;
+        }
+
+        .ts-modal-book-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            background: var(--terracotta);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background .2s;
+        }
+
+        .ts-modal-book-btn:hover {
+            background: var(--terra-dark);
         }
 
         .ts-summary {
@@ -1108,7 +1330,7 @@
 
         .ts-legend {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             margin-top: 18px;
             flex-wrap: wrap;
         }
@@ -1170,12 +1392,12 @@
             }
 
             .ts-cell {
-                min-height: 52px;
+                min-height: 56px;
                 padding: 5px 4px;
             }
 
             .ts-time,
-            .ts-badge {
+            .ts-slot-preview {
                 display: none;
             }
 
@@ -1346,6 +1568,11 @@
             color: #c0a898;
         }
 
+        .form-control:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1376,6 +1603,83 @@
         .submit-btn:hover {
             background: var(--terra-dark);
             transform: translateY(-1px);
+        }
+
+        .submit-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── SLOT PICKER ── */
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .slot-btn {
+            padding: 9px 4px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .78rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            border: 1.5px solid var(--sand);
+            background: var(--cream);
+            color: var(--brown);
+            transition: all .15s;
+            line-height: 1.3;
+        }
+
+        .slot-btn:hover:not(:disabled) {
+            border-color: var(--terracotta);
+            background: rgba(196, 113, 75, .06);
+        }
+
+        .slot-btn.selected {
+            background: var(--terracotta);
+            border-color: var(--terracotta);
+            color: white;
+        }
+
+        .slot-btn:disabled {
+            background: #f3f4f6;
+            border-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .slot-btn .slot-lock {
+            display: block;
+            font-size: .6rem;
+            margin-bottom: 1px;
+            opacity: .7;
+        }
+
+        .slot-hint {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .slot-hint-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .slot-loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+            font-size: .85rem;
         }
 
         /* ── FOOTER ── */
@@ -1466,8 +1770,6 @@
             }
         }
 
-        /* BARU — pakai will-change + contain agar tidak ganggu layout scroll */
-        /* GANTI blok .fade-up dan .fade-up.visible dengan ini: */
         .fade-up {
             opacity: 0;
             transition: opacity .6s ease;
@@ -1521,18 +1823,11 @@
     <section id="hero">
         <div class="hero-bg"></div>
         <div class="hero-inner">
-
-            {{-- Kolom Kiri --}}
             <div class="hero-content">
-                <div class="hero-badge">Buka Setiap Hari · 09.00 – 21.00</div>
-                <h1 class="hero-title">
-                    Temukan <em>Kedamaian</em><br>
-                    di Tengah Kesibukan
-                </h1>
-                <p class="hero-subtitle">
-                    Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda.
-                    Dipercaya lebih dari 500 pelanggan setia.
-                </p>
+                <div class="hero-badge">Buka Setiap Hari · 09.00 – 20.00</div>
+                <h1 class="hero-title">Temukan <em>Kedamaian</em><br>di Tengah Kesibukan</h1>
+                <p class="hero-subtitle">Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa
+                    Anda. Dipercaya lebih dari 500 pelanggan setia.</p>
                 <div class="hero-actions">
                     <a href="#booking" class="btn-primary">
                         Booking Sekarang
@@ -1559,12 +1854,10 @@
                 </div>
             </div>
 
-            {{-- Kolom Kanan: Promo Slider --}}
             <div class="hero-slider-col">
                 <div class="promo-slider-outer">
                     <div class="promo-slider-wrap" id="promoSlider">
                         <div class="promo-slides-track" id="slidesTrack">
-
                             @php
                                 $slides = [
                                     [
@@ -1612,7 +1905,6 @@
                                 ];
                                 $placeholderColors = ['#c4714b', '#a35a38', '#8c5c38', '#b07850', '#d4956e'];
                             @endphp
-
                             @foreach ($slides as $i => $slide)
                                 @php
                                     $exists = file_exists(public_path('images/promos/' . $slide['file']));
@@ -1620,16 +1912,13 @@
                                 @endphp
                                 <div class="promo-slide {{ $i === 0 ? 'active' : '' }}">
                                     @if ($exists)
-                                        <img class="promo-slide-img"
-                                            src="{{ asset('images/promos/' . $slide['file']) }}"
+                                        <img class="promo-slide-img" src="{{ asset('images/promos/' . $slide['file']) }}"
                                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
                                     @else
                                         <div class="promo-placeholder"
                                             style="background:linear-gradient(145deg,{{ $color }},{{ $color }}99);">
                                             <div class="promo-placeholder-icon">🖼</div>
-                                            <div class="promo-placeholder-text">
-                                                Taruh foto di:<br>
-                                                <strong
+                                            <div class="promo-placeholder-text">Taruh foto di:<br><strong
                                                     style="opacity:.6;">public/images/promos/{{ $slide['file'] }}</strong>
                                             </div>
                                         </div>
@@ -1645,9 +1934,7 @@
                                     </div>
                                 </div>
                             @endforeach
-
                         </div>
-
                         <div class="promo-nav">
                             <button class="promo-nav-btn" id="promoPrev" aria-label="Sebelumnya">
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -1666,12 +1953,10 @@
                         <div class="promo-dots" id="promoDots"></div>
                     </div>
                 </div>
-
                 <div class="promo-thumbs" id="promoThumbs">
                     @foreach ($slides as $i => $slide)
                         @php $exists = file_exists(public_path('images/promos/'.$slide['file'])); @endphp
-                        <div class="promo-thumb {{ $i === 0 ? 'active' : '' }}"
-                            onclick="promoGoTo({{ $i }})"
+                        <div class="promo-thumb {{ $i === 0 ? 'active' : '' }}" onclick="promoGoTo({{ $i }})"
                             style="{{ !$exists ? 'background:' . $placeholderColors[$i % count($placeholderColors)] . ';display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:16px;' : '' }}">
                             @if ($exists)
                                 <img src="{{ asset('images/promos/' . $slide['file']) }}" loading="lazy">
@@ -1683,7 +1968,6 @@
                 </div>
                 <div class="promo-label">Foto Promo Kami</div>
             </div>
-
         </div>
     </section>
 
@@ -1754,23 +2038,16 @@
         </div>
     </section>
 
-    {{-- ════════════════════════════════════════════════════════════════
-         JADWAL TERAPIS — Seksi baru untuk pelanggan umum
-         Data jadwal diambil dari $therapistSchedules yang di-pass controller
-    ════════════════════════════════════════════════════════════════ --}}
+    {{-- ── JADWAL TERAPIS ── --}}
     <section id="jadwal">
         <div class="section-inner">
-
             <div class="fade-up">
                 <div class="section-eyebrow">Cek Ketersediaan</div>
-                <h2 class="section-title">Jadwal Terapis<br>Bulan Ini</h2>
-                <p class="section-sub">
-                    Lihat kapan terapis favorit Anda masuk dan libur sebelum membuat booking,
-                    agar sesi Anda tidak bentrok.
-                </p>
+                <h2 class="section-title">Jadwal & Ketersediaan<br>Terapis</h2>
+                <p class="section-sub">Klik pada tanggal yang bertanda kuning untuk melihat jam mana saja yang sudah
+                    dipesan dan yang masih tersedia.</p>
             </div>
 
-            {{-- Filter Terapis --}}
             <div class="ts-filter-row fade-up" id="tsFilter">
                 @forelse ($therapists ?? [] as $t)
                     <button type="button" class="ts-btn" data-id="{{ $t->id }}"
@@ -1783,22 +2060,39 @@
                 @endforelse
             </div>
 
-            {{-- Area Kalender --}}
             <div id="tsCalArea" class="fade-up">
                 <div class="ts-empty">
                     <div class="ts-empty-icon">🗓</div>
-                    <p>Pilih salah satu terapis di atas<br>untuk melihat jadwal bulan ini.</p>
+                    <p>Pilih salah satu terapis di atas<br>untuk melihat jadwal dan ketersediaan.</p>
                 </div>
             </div>
 
-            {{-- Catatan bawah --}}
             <p class="ts-note fade-up">
-                💡 Jadwal dapat berubah sewaktu-waktu. Untuk konfirmasi ketersediaan,
-                <a href="#booking">buat reservasi</a> dan tim kami menghubungi Anda via WhatsApp dalam 30 menit.
+                💡 Tanggal dengan tanda kuning berarti sudah ada booking di hari itu — klik untuk melihat detail jam.
+                Jadwal dapat berubah sewaktu-waktu.
+                <a href="#booking">Buat reservasi</a> dan tim kami konfirmasi via WhatsApp dalam 30 menit.
             </p>
-
         </div>
     </section>
+
+    {{-- ── MODAL DETAIL SLOT HARIAN ── --}}
+    <div class="ts-day-modal-overlay" id="tsDayModalOverlay" onclick="closeDayModal(event)">
+        <div class="ts-day-modal" id="tsDayModal">
+            <div class="ts-day-modal-header">
+                <div>
+                    <div class="ts-day-modal-title" id="tsDayModalTitle">—</div>
+                    <div class="ts-day-modal-sub" id="tsDayModalSub">—</div>
+                </div>
+                <button class="ts-day-modal-close" onclick="closeDayModalDirect()">✕</button>
+            </div>
+            <div class="ts-slot-timeline" id="tsDayModalSlots">
+                <div class="slot-loading">Memuat data slot...</div>
+            </div>
+            <button class="ts-modal-book-btn" id="tsDayModalBookBtn" onclick="bookFromModal()">
+                Booking di Tanggal Ini →
+            </button>
+        </div>
+    </div>
 
     {{-- ── TENTANG ── --}}
     <section id="tentang">
@@ -1810,7 +2104,7 @@
                     dengan standar pelayanan tertinggi.</p>
             </div>
             <div class="why-grid">
-                @foreach ([['🏅', 'Terapis Bersertifikat', 'Semua terapis kami bersertifikat nasional & internasional dengan pengalaman minimal 3 tahun.'], ['🌿', 'Bahan Alami Premium', 'Kami hanya menggunakan produk organik berkualitas tinggi yang aman untuk kulit Anda.'], ['📅', 'Booking Mudah', 'Pesan layanan kapan saja, di mana saja — tanpa perlu daftar akun terlebih dahulu.'], ['💆', 'Privasi Terjaga', 'Ruangan terapi privat yang tenang dan nyaman untuk pengalaman terbaik Anda.'], ['⏰', 'Fleksibel', 'Tersedia dari pukul 09.00–21.00 setiap hari, termasuk akhir pekan dan hari libur.'], ['💎', 'Harga Transparan', 'Tidak ada biaya tersembunyi. Harga yang Anda lihat adalah harga yang Anda bayar.']] as [$icon, $title, $text])
+                @foreach ([['🏅', 'Terapis Bersertifikat', 'Semua terapis kami bersertifikat nasional & internasional dengan pengalaman minimal 3 tahun.'], ['🌿', 'Bahan Alami Premium', 'Kami hanya menggunakan produk organik berkualitas tinggi yang aman untuk kulit Anda.'], ['📅', 'Booking Mudah', 'Pesan layanan kapan saja, di mana saja — tanpa perlu daftar akun terlebih dahulu.'], ['💆', 'Privasi Terjaga', 'Ruangan terapi privat yang tenang dan nyaman untuk pengalaman terbaik Anda.'], ['⏰', 'Fleksibel', 'Tersedia dari pukul 09.00–20.00 setiap hari, termasuk akhir pekan dan hari libur.'], ['💎', 'Harga Transparan', 'Tidak ada biaya tersembunyi. Harga yang Anda lihat adalah harga yang Anda bayar.']] as [$icon, $title, $text])
                     <div class="why-card fade-up">
                         <div class="why-icon">{{ $icon }}</div>
                         <div class="why-title">{{ $title }}</div>
@@ -1874,6 +2168,7 @@
                     @else
                         <h3 class="form-title">Buat Reservasi</h3>
                         <p class="form-sub">Isi data di bawah ini. Anda tidak perlu membuat akun.</p>
+
                         @if ($errors->any())
                             <div
                                 style="margin-bottom:20px;padding:12px 16px;background:#fff5f5;border:1px solid #feb2b2;border-radius:10px;font-size:.85rem;color:#c53030;">
@@ -1882,8 +2177,10 @@
                                 @endforeach
                             </div>
                         @endif
-                        <form method="POST" action="{{ route('public.booking.store') }}">
+
+                        <form method="POST" action="{{ route('public.booking.store') }}" id="bookingForm">
                             @csrf
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Nama Lengkap *</label>
@@ -1896,21 +2193,25 @@
                                         placeholder="08xx-xxxx-xxxx" value="{{ old('phone') }}" required>
                                 </div>
                             </div>
+
                             <div class="form-group">
                                 <label class="form-label">Layanan *</label>
-                                <select name="service_id" class="form-control" required>
+                                <select name="service_id" class="form-control" id="serviceSelect" required>
                                     <option value="">-- Pilih Layanan --</option>
-                                    @forelse ($services ?? [] as $service)
+                                    @forelse($services ?? [] as $service)
                                         <option value="{{ $service->id }}"
+                                            data-duration="{{ $service->duration_minutes ?? 60 }}"
                                             {{ old('service_id') == $service->id ? 'selected' : '' }}>
                                             {{ $service->name }} — Rp
                                             {{ number_format($service->price, 0, ',', '.') }}
+                                            ({{ $service->duration_minutes ?? 60 }} mnt)
                                         </option>
                                     @empty
                                         <option value="" disabled>Belum ada layanan tersedia</option>
                                     @endforelse
                                 </select>
                             </div>
+
                             <div class="form-group">
                                 <label class="form-label">Pilih Terapis (Opsional)</label>
                                 <select name="therapist_id" class="form-control" id="bookingTherapistSelect">
@@ -1923,17 +2224,43 @@
                                     @endforeach
                                 </select>
                             </div>
+
+                            {{-- Tanggal --}}
                             <div class="form-group">
-                                <label class="form-label">Tanggal & Waktu *</label>
-                                <input type="datetime-local" name="scheduled_at" class="form-control"
-                                    value="{{ old('scheduled_at') }}" required
-                                    min="{{ now()->addHour()->format('Y-m-d\TH:i') }}">
+                                <label class="form-label">Tanggal *</label>
+                                <input type="date" id="bookingDate" name="booking_date" class="form-control"
+                                    min="{{ now()->addHour()->format('Y-m-d') }}"
+                                    value="{{ old('booking_date', now()->addHour()->format('Y-m-d')) }}" required>
                             </div>
+
+                            {{-- Slot Jam --}}
+                            <div class="form-group">
+                                <label class="form-label">Pilih Jam *</label>
+                                <div id="slotArea">
+                                    <div class="slot-loading">Pilih terapis dan tanggal untuk melihat ketersediaan jam.
+                                    </div>
+                                </div>
+                                {{-- hidden input yang dikirim ke server --}}
+                                <input type="hidden" name="scheduled_at" id="scheduledAt"
+                                    value="{{ old('scheduled_at') }}">
+                                <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;">
+                                    <div class="slot-hint">
+                                        <div class="slot-hint-dot" style="background:#22c55e;"></div> Tersedia
+                                    </div>
+                                    <div class="slot-hint">
+                                        <div class="slot-hint-dot" style="background:#9ca3af;"></div> Sudah dipesan
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label class="form-label">Catatan (Opsional)</label>
                                 <textarea name="notes" class="form-control" rows="3" placeholder="Keluhan khusus, permintaan tertentu...">{{ old('notes') }}</textarea>
                             </div>
-                            <button type="submit" class="submit-btn">Kirim Reservasi →</button>
+
+                            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                                Pilih jam terlebih dahulu
+                            </button>
                             <p
                                 style="text-align:center;font-size:.75rem;color:var(--muted);margin-top:16px;line-height:1.6;">
                                 Sudah punya akun?
@@ -1982,7 +2309,7 @@
                         <li><a href="#">📍 Jl. Melati Raya No. 47, Cirebon</a></li>
                         <li><a href="#">📞 0821-5567-3894</a></li>
                         <li><a href="#">✉ hello@koichispa.id</a></li>
-                        <li><a href="#">⏰ 09.00 – 21.00</a></li>
+                        <li><a href="#">⏰ 09.00 – 20.00</a></li>
                     </ul>
                 </div>
             </div>
@@ -2017,11 +2344,8 @@
         });
 
         /* ── FADE-UP ── */
-        /* BARU — delay berdasarkan posisi elemen, bukan index batch */
-        /* DENGAN ini: */
-        /* ── FADE-UP ── */
         const obs = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
+            entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
                     obs.unobserve(entry.target);
@@ -2033,7 +2357,6 @@
         document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
 
         /* ── SMOOTH SCROLL ── */
-        /* DENGAN ini: */
         document.querySelectorAll('a[href^="#"]').forEach(a => {
             a.addEventListener('click', e => {
                 const href = a.getAttribute('href');
@@ -2129,27 +2452,9 @@
         })();
 
         /* ════════════════════════════════════════════════════════════
-           JADWAL TERAPIS — data dari Laravel (JSON)
+           JADWAL TERAPIS
         ════════════════════════════════════════════════════════════ */
         const TS_DATA = @json($therapistSchedules ?? []);
-        /*
-          Format yang diharapkan dari controller:
-          {
-            "1": {                          ← therapist id
-              "name"       : "Sari Dewi",
-              "spec"       : "Refleksiologi",
-              "start_time" : "09:00",
-              "end_time"   : "17:00",
-              "schedules"  : {
-                "2026-04-01": "working",    ← tanggal: status
-                "2026-04-02": "off",
-                ...
-              }
-            },
-            ...
-          }
-        */
-
         const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
         const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
             'Oktober', 'November', 'Desember'
@@ -2157,12 +2462,15 @@
 
         let tsActiveId = null;
         let tsCurYear = new Date().getFullYear();
-        let tsCurMonth = new Date().getMonth(); // 0-indexed
+        let tsCurMonth = new Date().getMonth();
+
+        // State modal
+        let modalActiveDate = null;
+        let modalActiveTherapistId = null;
 
         function tsSelect(id, name, spec) {
             tsActiveId = id;
-            document.querySelectorAll('.ts-btn').forEach(b =>
-                b.classList.toggle('active', parseInt(b.dataset.id) === id));
+            document.querySelectorAll('.ts-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.id) === id));
             tsRenderCal();
         }
 
@@ -2176,23 +2484,27 @@
 
             const t = TS_DATA[tsActiveId];
             const scheds = t.schedules || {};
+            const bookingMap = t.booking_map || {};
             const today = new Date();
-            const firstDay = new Date(tsCurYear, tsCurMonth, 1);
             const lastDate = new Date(tsCurYear, tsCurMonth + 1, 0).getDate();
-            const startDow = firstDay.getDay();
+            const startDow = new Date(tsCurYear, tsCurMonth, 1).getDay();
+
+            // Bangun semua jam operasional
+            const startH = parseInt((t.start_time || '09:00').split(':')[0]);
+            const endH = parseInt((t.end_time || '20:00').split(':')[0]);
+            const totalSlots = endH - startH;
 
             let workCount = 0,
                 offCount = 0,
                 cells = '';
-
             for (let i = 0; i < startDow; i++) cells += `<div></div>`;
 
             for (let d = 1; d <= lastDate; d++) {
-                const ds = `${tsCurYear}-${String(tsCurMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const ds = `${tsCurYear}-${String(tsCurMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const status = scheds[ds] || 'nodata';
+                const dayBooks = bookingMap[ds] || [];
                 const cellDate = new Date(tsCurYear, tsCurMonth, d);
                 const isToday = cellDate.toDateString() === today.toDateString();
-                const isPast = cellDate < today && !isToday;
 
                 if (status === 'working') workCount++;
                 else if (status !== 'nodata') offCount++;
@@ -2200,13 +2512,34 @@
                 let cellCls = 'ts-cell';
                 let dateCls = 'ts-cell-date';
                 let badge = '';
-                let timeEl = '';
+                let preview = '';
 
                 if (status === 'working') {
-                    cellCls += ' working';
-                    badge = `<span class="ts-badge work">Kerja</span>`;
-                    timeEl = `<div class="ts-time">${t.start_time || '09:00'} – ${t.end_time || '17:00'}</div>`;
-                } else if (status === 'off' || status === 'sick' || status === 'vacation' || status === 'cuti_bersama') {
+                    const hasBook = dayBooks.length > 0;
+                    cellCls += ' working' + (hasBook ? ' has-booking' : '');
+                    badge = hasBook ?
+                        `<span class="ts-badge booked">📋 ${dayBooks.length} booking</span>` :
+                        `<span class="ts-badge work">Tersedia</span>`;
+
+                    // Titik-titik slot (maks 6 tampil)
+                    if (hasBook) {
+                        const slotsLeft = totalSlots - dayBooks.length;
+                        const dots = dayBooks.slice(0, 6).map(() => `<div class="ts-slot-dot"></div>`).join('');
+                        const freeDots = Math.min(slotsLeft, 3) > 0 ?
+                            Array(Math.min(slotsLeft, 3)).fill(`<div class="ts-slot-dot free"></div>`).join('') :
+                            '';
+                        preview =
+                            `<div class="ts-slot-dot-row">${dots}${freeDots}${dayBooks.length > 6 ? `<span class="ts-slot-more-text">+${dayBooks.length-6}</span>` : ''}</div>`;
+                    } else {
+                        preview = `<div class="ts-time">${t.start_time||'09:00'} – ${t.end_time||'20:00'}</div>`;
+                    }
+
+                    // Klik buka modal hanya jika ada booking
+                    if (hasBook) {
+                        cellCls += `" onclick="openDayModal('${ds}', ${tsActiveId})"`;
+                        // Tutup quote dan tambah style kursor
+                    }
+                } else if (['off', 'sick', 'vacation', 'cuti_bersama'].includes(status)) {
                     cellCls += ' off';
                     dateCls += ' off-num';
                     const labels = {
@@ -2215,61 +2548,60 @@
                         vacation: 'Liburan',
                         cuti_bersama: 'Cuti'
                     };
-                    badge = `<span class="ts-badge off">${labels[status] ?? 'Libur'}</span>`;
+                    badge = `<span class="ts-badge off">${labels[status]}</span>`;
                 } else {
                     cellCls += ' off';
                     dateCls += ' off-num';
-                    badge = `<span class="ts-badge off" style="opacity:.4">—</span>`;
+                    badge = `<span class="ts-badge off" style="opacity:.35">—</span>`;
                 }
 
                 if (isToday) cellCls += ' today';
-                if (isPast) cellCls += ' past';
 
-                cells += `<div class="${cellCls}">
-                    <span class="${dateCls}">${d}</span>
-                    ${badge}${timeEl}
-                </div>`;
+                // Rebuild cellCls bersih (tanpa onclick di class)
+                const baseClass = cellCls.split('"')[0];
+                const hasBooking = (scheds[ds] === 'working') && (bookingMap[ds] || []).length > 0;
+                const clickAttr = hasBooking ? `onclick="openDayModal('${ds}', ${tsActiveId})"` : '';
+
+                cells += `<div class="${baseClass}" ${clickAttr}>
+            <span class="${dateCls}">${d}</span>
+            ${badge}
+            ${preview}
+        </div>`;
             }
 
-            const totalDays = workCount + offCount;
+            const bookedToday = Object.values(bookingMap).reduce((s, v) => s + v.length, 0);
 
             area.innerHTML = `
-                <div class="ts-cal-wrap">
-                    <div class="ts-cal-nav">
-                        <button class="ts-nav-btn" onclick="tsPrev()">&#8249;</button>
-                        <button class="ts-nav-btn" onclick="tsNext()">&#8250;</button>
-                        <span class="ts-month-label">${MONTH_NAMES[tsCurMonth]} ${tsCurYear}</span>
-                        <div class="ts-therapist-info">
-                            <div>
-                                <div class="ts-therapist-info-name">${t.name}</div>
-                                <div class="ts-therapist-info-spec">${t.spec}</div>
-                            </div>
-                            <div class="ts-therapist-mini-avatar">${t.name.charAt(0).toUpperCase()}</div>
-                        </div>
+        <div class="ts-cal-wrap">
+            <div class="ts-cal-nav">
+                <button class="ts-nav-btn" onclick="tsPrev()">&#8249;</button>
+                <button class="ts-nav-btn" onclick="tsNext()">&#8250;</button>
+                <span class="ts-month-label">${MONTH_NAMES[tsCurMonth]} ${tsCurYear}</span>
+                <div class="ts-therapist-info">
+                    <div>
+                        <div class="ts-therapist-info-name">${t.name}</div>
+                        <div class="ts-therapist-info-spec">${t.spec}</div>
                     </div>
-                    <div class="ts-day-header">${DAY_NAMES.map(n => `<div class="ts-day-name">${n}</div>`).join('')}</div>
-                    <div class="ts-grid">${cells}</div>
-                    <div class="ts-summary">
-                        <div class="ts-sum-card">
-                            <div class="ts-sum-num green">${workCount}</div>
-                            <div class="ts-sum-label">Hari Masuk</div>
-                        </div>
-                        <div class="ts-sum-card">
-                            <div class="ts-sum-num muted">${offCount}</div>
-                            <div class="ts-sum-label">Hari Libur</div>
-                        </div>
-                        <div class="ts-sum-card">
-                            <div class="ts-sum-num" style="color:var(--terracotta);font-size:1.1rem;padding-top:4px;">${t.start_time || '09:00'} – ${t.end_time || '17:00'}</div>
-                            <div class="ts-sum-label">Jam Kerja</div>
-                        </div>
-                    </div>
-                    <div class="ts-legend">
-                        <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#c0dd97;border:1px solid #9fe1cb;"></div> Hari masuk</div>
-                        <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#d9d7d0;border:1px solid #c4c2bb;"></div> Hari libur / sakit</div>
-                        <div class="ts-legend-item"><div class="ts-legend-dot" style="background:transparent;border:2px solid var(--terracotta);"></div> Hari ini</div>
-                    </div>
+                    <div class="ts-therapist-mini-avatar">${t.name.charAt(0).toUpperCase()}</div>
                 </div>
-            `;
+            </div>
+            <div class="ts-day-header">${DAY_NAMES.map(n=>`<div class="ts-day-name">${n}</div>`).join('')}</div>
+            <div class="ts-grid">${cells}</div>
+            <div class="ts-summary">
+                <div class="ts-sum-card"><div class="ts-sum-num green">${workCount}</div><div class="ts-sum-label">Hari Masuk</div></div>
+                <div class="ts-sum-card"><div class="ts-sum-num muted">${offCount}</div><div class="ts-sum-label">Hari Libur</div></div>
+                <div class="ts-sum-card">
+                    <div class="ts-sum-num" style="color:var(--terracotta);font-size:1.1rem;padding-top:4px;">${t.start_time||'09:00'} – ${t.end_time||'20:00'}</div>
+                    <div class="ts-sum-label">Jam Operasional</div>
+                </div>
+            </div>
+            <div class="ts-legend">
+                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#c0dd97;border:1px solid #9fe1cb;"></div> Tersedia</div>
+                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#fff8ed;border:1px solid #f5c87a;"></div> Ada booking (klik untuk detail)</div>
+                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#d9d7d0;border:1px solid #c4c2bb;"></div> Libur</div>
+                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:transparent;border:2px solid var(--terracotta);border-radius:50%;"></div> Hari ini</div>
+            </div>
+        </div>`;
         }
 
         function tsPrev() {
@@ -2289,6 +2621,239 @@
             }
             tsRenderCal();
         }
+
+        /* ── MODAL DETAIL SLOT ── */
+        async function openDayModal(dateStr, therapistId) {
+            modalActiveDate = dateStr;
+            modalActiveTherapistId = therapistId;
+
+            const t = TS_DATA[therapistId];
+
+            // Format tanggal Indonesia
+            const [y, m, d] = dateStr.split('-');
+            const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
+                'Oktober', 'November', 'Desember'
+            ];
+            const DAYS_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const dayName = DAYS_ID[new Date(dateStr).getDay()];
+            const formatted = `${dayName}, ${parseInt(d)} ${MONTHS_ID[parseInt(m)-1]} ${y}`;
+
+            document.getElementById('tsDayModalTitle').textContent = formatted;
+            document.getElementById('tsDayModalSub').textContent = `Jadwal ${t.name} · ${t.spec}`;
+            document.getElementById('tsDayModalSlots').innerHTML =
+            '<div class="slot-loading">Memuat data slot...</div>';
+            document.getElementById('tsDayModalOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+
+            // Bangun semua slot jam operasional
+            const startH = parseInt((t.start_time || '09:00').split(':')[0]);
+            const endH = parseInt((t.end_time || '20:00').split(':')[0]);
+            const allSlots = [];
+            for (let h = startH; h < endH; h++) allSlots.push(String(h).padStart(2, '0') + ':00');
+
+            // Ambil data booking via AJAX
+            let bookedRanges = [];
+            try {
+                const res = await fetch(`/api/bookings-by-date?therapist_id=${therapistId}&date=${dateStr}`);
+                const data = await res.json();
+                bookedRanges = data.bookings || [];
+            } catch (e) {
+                bookedRanges = [];
+            }
+
+            // Tentukan slot mana yang terisi berdasarkan range
+            function isSlotBooked(slot) {
+                const [sh, sm] = slot.split(':').map(Number);
+                const slotMin = sh * 60 + sm;
+                return bookedRanges.find(r => {
+                    const [rsh, rsm] = r.time.split(':').map(Number);
+                    const [reh, rem] = r.end_time.split(':').map(Number);
+                    return slotMin >= rsh * 60 + rsm && slotMin < reh * 60 + rem;
+                });
+            }
+
+            const slotsHtml = allSlots.map(slot => {
+                const booking = isSlotBooked(slot);
+                if (booking) {
+                    return `<div class="ts-slot-row booked">
+                <div class="ts-slot-row-icon">🔒</div>
+                <div class="ts-slot-row-time">${slot}</div>
+                <div class="ts-slot-row-label">${booking.service} (${booking.duration} mnt)</div>
+                <div class="ts-slot-row-status">Dipesan</div>
+            </div>`;
+                } else {
+                    return `<div class="ts-slot-row free">
+                <div class="ts-slot-row-icon">✓</div>
+                <div class="ts-slot-row-time">${slot}</div>
+                <div class="ts-slot-row-label">Slot tersedia</div>
+                <div class="ts-slot-row-status">Bebas</div>
+            </div>`;
+                }
+            }).join('');
+
+            document.getElementById('tsDayModalSlots').innerHTML = slotsHtml;
+        }
+
+        function closeDayModal(event) {
+            if (event.target === document.getElementById('tsDayModalOverlay')) closeDayModalDirect();
+        }
+
+        function closeDayModalDirect() {
+            document.getElementById('tsDayModalOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function bookFromModal() {
+            closeDayModalDirect();
+            // Isi tanggal di form booking otomatis
+            if (modalActiveDate) {
+                const dateInput = document.getElementById('bookingDate');
+                if (dateInput) dateInput.value = modalActiveDate;
+            }
+            if (modalActiveTherapistId) {
+                const sel = document.getElementById('bookingTherapistSelect');
+                if (sel) sel.value = modalActiveTherapistId;
+            }
+            // Fetch slot & render
+            fetchAndRenderSlots();
+            // Scroll ke booking
+            setTimeout(() => {
+                document.getElementById('booking').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           SLOT PICKER DI FORM BOOKING
+        ════════════════════════════════════════════════════════════ */
+        const JAM_START = 9;
+        const JAM_END = 20; // jam operasional
+
+        let bookedRangesForm = [];
+        let selectedSlot = null;
+
+        function buildAllSlotsForm() {
+            const slots = [];
+            for (let h = JAM_START; h < JAM_END; h++) slots.push(String(h).padStart(2, '0') + ':00');
+            return slots;
+        }
+
+        function isSlotBlockedForm(slot) {
+            const [sh, sm] = slot.split(':').map(Number);
+            const slotMin = sh * 60 + sm;
+
+            // Ambil durasi layanan yang dipilih
+            const serviceEl = document.getElementById('serviceSelect');
+            const duration = serviceEl ?
+                parseInt(serviceEl.options[serviceEl.selectedIndex]?.dataset?.duration || '60') :
+                60;
+            const slotEndMin = slotMin + duration;
+
+            return bookedRangesForm.some(r => {
+                const [rsh, rsm] = r.start.split(':').map(Number);
+                const [reh, rem] = r.end.split(':').map(Number);
+                const rStart = rsh * 60 + rsm;
+                const rEnd = reh * 60 + rem;
+                // Overlap check
+                return slotMin < rEnd && slotEndMin > rStart;
+            });
+        }
+
+        function renderSlotGrid() {
+            const area = document.getElementById('slotArea');
+            const therapistId = document.getElementById('bookingTherapistSelect').value;
+            const date = document.getElementById('bookingDate').value;
+
+            if (!therapistId || !date) {
+                area.innerHTML =
+                    `<div class="slot-loading" style="font-size:.82rem;">Pilih terapis dan tanggal untuk melihat ketersediaan jam.</div>`;
+                return;
+            }
+
+            const allSlots = buildAllSlotsForm();
+            const now = new Date();
+
+            const html = `<div class="slot-grid">` + allSlots.map(slot => {
+                const blocked = isSlotBlockedForm(slot);
+                const [sh] = slot.split(':').map(Number);
+                const slotDate = new Date(`${date}T${slot}`);
+                const isPast = slotDate <= now;
+                const disabled = blocked || isPast;
+                const isSelected = slot === selectedSlot;
+
+                if (disabled) {
+                    return `<button type="button" class="slot-btn" disabled>
+                <span class="slot-lock">${blocked ? '🔒' : '⏰'}</span>${slot}
+            </button>`;
+                }
+                return `<button type="button" class="slot-btn ${isSelected ? 'selected' : ''}" onclick="pickSlot('${slot}')">
+            ${slot}
+        </button>`;
+            }).join('') + `</div>`;
+
+            area.innerHTML = html;
+        }
+
+        function pickSlot(slot) {
+            selectedSlot = slot;
+            const date = document.getElementById('bookingDate').value;
+            document.getElementById('scheduledAt').value = `${date}T${slot}`;
+
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = `Kirim Reservasi Jam ${slot} →`;
+            }
+
+            renderSlotGrid(); // re-render untuk highlight
+        }
+
+        async function fetchAndRenderSlots() {
+            const therapistId = document.getElementById('bookingTherapistSelect')?.value;
+            const date = document.getElementById('bookingDate')?.value;
+
+            // Reset
+            selectedSlot = null;
+            document.getElementById('scheduledAt').value = '';
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Pilih jam terlebih dahulu';
+            }
+
+            if (!therapistId || !date) {
+                renderSlotGrid();
+                return;
+            }
+
+            document.getElementById('slotArea').innerHTML =
+            `<div class="slot-loading">Memuat ketersediaan jam...</div>`;
+
+            try {
+                const res = await fetch(`/api/booked-slots?therapist_id=${therapistId}&date=${date}`);
+                const data = await res.json();
+                bookedRangesForm = data.booked || [];
+            } catch (e) {
+                bookedRangesForm = [];
+            }
+
+            renderSlotGrid();
+        }
+
+        // Trigger saat terapis atau tanggal berubah
+        document.getElementById('bookingTherapistSelect')?.addEventListener('change', fetchAndRenderSlots);
+        document.getElementById('bookingDate')?.addEventListener('change', fetchAndRenderSlots);
+        document.getElementById('serviceSelect')?.addEventListener('change', renderSlotGrid); // durasi bisa berubah
+
+        // Render awal jika ada old value (setelah validasi gagal)
+        (function initSlots() {
+            const tid = document.getElementById('bookingTherapistSelect')?.value;
+            const date = document.getElementById('bookingDate')?.value;
+            if (tid && date) fetchAndRenderSlots();
+            else renderSlotGrid();
+        })();
 
         /* ── BOOKING SUCCESS SCROLL ── */
         @if (session('booking_success'))

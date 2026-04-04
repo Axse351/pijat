@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
         return match (auth()->user()->role) {
             'admin'   => redirect()->route('admin.dashboard'),
             'kasir'   => redirect()->route('kasir.dashboard'),
-            'terapis' => redirect()->route('terapis.dashboard'),
+            'therapist' => redirect()->route('terapis.dashboard'),
             default   => redirect()->route('user.dashboard'),
         };
     }

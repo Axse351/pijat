@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Therapist;
 use App\Models\Promo;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PublicBookingController extends Controller
@@ -25,41 +26,32 @@ class PublicBookingController extends Controller
             'notes'        => 'nullable|string|max:500',
         ]);
 
-        // Ambil / buat customer berdasarkan nomor HP
-        $customer = Customer::firstOrCreate(
-            ['phone' => $validated['phone']],
-            ['name'  => $validated['name']]
-        );
+        // Cek konflik hanya jika terapis dipilih
+        if (!empty($validated['therapist_id'])) {
+            $service  = \App\Models\Service::find($validated['service_id']);
+            $duration = $service->duration_minutes ?? 60;
+            $start    = Carbon::parse($validated['scheduled_at']);
+            $end      = $start->copy()->addMinutes($duration);
 
-        // Jika nama sudah ada tapi mau diupdate
-        if ($customer->name !== $validated['name']) {
-            $customer->update(['name' => $validated['name']]);
+            $conflict = \App\Models\Booking::where('therapist_id', $validated['therapist_id'])
+                ->whereIn('status', ['scheduled', 'ongoing'])
+                ->where(function ($q) use ($start, $end) {
+                    $q->whereRaw(
+                        'DATE_ADD(scheduled_at, INTERVAL COALESCE(
+                        (SELECT duration_minutes FROM services WHERE id = bookings.service_id), 60
+                    ) MINUTE) > ?',
+                        [$start]
+                    )->where('scheduled_at', '<', $end);
+                })
+                ->exists();
+
+            if ($conflict) {
+                return back()->withInput()->withErrors([
+                    'scheduled_at' => 'Maaf, terapis ini sudah dipesan pada jam tersebut. Silakan pilih jam lain.'
+                ]);
+            }
         }
 
-        $service    = Service::findOrFail($validated['service_id']);
-        $therapistId = $validated['therapist_id'] ?? null;
-
-        // Jika terapis tidak dipilih, assign otomatis (terapis aktif pertama yang available)
-        if (!$therapistId) {
-            $therapist = Therapist::where('is_active', 1)->first();
-            $therapistId = $therapist?->id;
-        }
-
-        Booking::create([
-            'customer_id'           => $customer->id,
-            'therapist_id'          => $therapistId,
-            'service_id'            => $service->id,
-            'scheduled_at'          => $validated['scheduled_at'],
-            'original_scheduled_at' => $validated['scheduled_at'],
-            'is_rescheduled'        => false,
-            'order_source'          => 'web',
-            'discount'              => 0,
-            'final_price'           => $service->price,
-            'promo_id'              => null,
-            'notes'                 => $validated['notes'] ?? null,
-            'status'                => 'scheduled',
-        ]);
-
-        return redirect()->back()->with('booking_success', true);
+        // ... lanjut simpan seperti biasa
     }
 }
