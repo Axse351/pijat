@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\TherapistFaceController;
 use App\Http\Controllers\Admin\TherapistAttendanceController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\TherapistScheduleController;
+use App\Http\Controllers\Admin\TherapistLeaveController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\WelcomeController;
@@ -12,19 +13,19 @@ use App\Http\Controllers\AtkCategoryController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================
-// ROOT — Welcome/Landing Page (tanpa auth)
+// ROOT
 // ============================================================================
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 // ============================================================================
-// PUBLIC BOOKING (tanpa auth)
+// PUBLIC BOOKING
 // ============================================================================
 
 Route::post('/booking', [PublicBookingController::class, 'store'])->name('public.booking.store');
 
 // ============================================================================
-// DASHBOARD (redirect setelah login)
+// DASHBOARD
 // ============================================================================
 
 Route::middleware('auth')->get('/dashboard', function () {
@@ -36,8 +37,24 @@ Route::middleware('auth')->get('/dashboard', function () {
     };
 })->name('dashboard');
 
+Route::middleware('auth')->get('/debug-role', function () {
+    $user = auth()->user();
+    dd([
+        'id'         => $user->id,
+        'name'       => $user->name,
+        'email'      => $user->email,
+        'role'       => $user->role,
+        'therapist'  => $user->therapist,
+        'role_check' => [
+            "=== 'therapist'"  => $user->role === 'therapist',
+            "=== 'terapis'"    => $user->role === 'terapis',
+            "=== 'Therapist'"  => $user->role === 'Therapist',
+        ],
+    ]);
+})->name('debug.role');
+
 // ============================================================================
-// ADMIN & KASIR ROUTES — prefix /admin, semua pakai nama admin.*
+// ADMIN & KASIR ROUTES
 // ============================================================================
 
 Route::middleware(['auth', 'role:admin,kasir'])
@@ -45,25 +62,20 @@ Route::middleware(['auth', 'role:admin,kasir'])
     ->name('admin.')
     ->group(function () {
 
-        // ── Dashboard ────────────────────────────────────────────────────
         Route::get('dashboard', function () {
             return auth()->user()->role === 'admin'
                 ? app(\App\Http\Controllers\Admin\AdminDashboardController::class)->index()
                 : app(\App\Http\Controllers\Kasir\KasirDashboardController::class)->index();
         })->name('dashboard');
 
-        // ── Laporan ─────────────────────────────────────────────────────
         Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('laporan.index');
 
-        // ── Booking ─────────────────────────────────────────────────────
         Route::get('bookings/calendar',      [BookingController::class, 'calendar'])->name('bookings.calendar');
         Route::get('bookings/calendar-data', [BookingController::class, 'calendarData'])->name('bookings.calendar-data');
         Route::resource('bookings', \App\Http\Controllers\Admin\BookingController::class);
 
-        // ── Pembayaran ──────────────────────────────────────────────────
         Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class);
 
-        // ── Kehadiran ───────────────────────────────────────────────────
         Route::get('/attendances', [TherapistAttendanceController::class, 'index'])->name('attendances.index');
         Route::get('/therapists/{therapist}/attendance/history', [TherapistAttendanceController::class, 'history'])->name('attendance.history');
         Route::get('/attendance/check-in', [TherapistAttendanceController::class, 'showCheckInCamera'])->name('attendance.check-in-camera');
@@ -71,7 +83,15 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::post('/attendance/check-in-ajax', [TherapistAttendanceController::class, 'checkInAjax'])->name('attendance.check-in-ajax');
         Route::post('/attendance/check-out-ajax', [TherapistAttendanceController::class, 'checkOutAjax'])->name('attendance.check-out-ajax');
 
-        // ── Master Data (admin only) ────────────────────────────────────
+        // ── Leave Requests Terapis (admin & kasir bisa lihat, admin bisa approve/reject) ──
+        Route::prefix('leaves')->name('leaves.')->group(function () {
+            Route::get('/',                           [TherapistLeaveController::class, 'index'])->name('index');
+            Route::get('/{leaveRequest}',             [TherapistLeaveController::class, 'show'])->name('show');
+            Route::patch('/{leaveRequest}/approve',   [TherapistLeaveController::class, 'approve'])->name('approve');
+            Route::patch('/{leaveRequest}/reject',    [TherapistLeaveController::class, 'reject'])->name('reject');
+            Route::delete('/{leaveRequest}',          [TherapistLeaveController::class, 'destroy'])->name('destroy');
+        });
+
         Route::middleware('role:admin')->group(function () {
 
             Route::resource('customers',   \App\Http\Controllers\Admin\CustomerController::class);
@@ -101,17 +121,13 @@ Route::middleware(['auth', 'role:admin,kasir'])
                     Route::delete('/{customerMembership}', [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'destroy'])->name('destroy');
                 });
 
-            // ATK ITEMS
             Route::resource('atk-items', \App\Http\Controllers\AtkController::class);
             Route::post('atk-items/{atk}/adjust-stock', [\App\Http\Controllers\AtkController::class, 'adjustStock'])
                 ->name('atk-items.adjust-stock');
-            Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])
-                ->name('laporan.index');
             Route::get('/laporan/export', [\App\Http\Controllers\Admin\LaporanController::class, 'export'])
                 ->name('laporan.export');
         });
 
-        // ATK PURCHASES (ADMIN + KASIR)
         Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
         Route::post('atk-purchases/{purchase}/confirm', [\App\Http\Controllers\AtkPurchaseController::class, 'confirm'])
             ->name('atk-purchases.confirm');
@@ -121,34 +137,10 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::get('/api/atk-detail/{atk}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']);
         Route::resource('atk-categories', AtkCategoryController::class);
 
-        // ── Schedule ────────────────────────────────────────────────────
-        // ⚠️  URUTAN PENTING: route statis ('all', 'generate-month') harus
-        //     didaftarkan SEBELUM Route::resource agar tidak dianggap {schedule}
-        Route::get(
-            'schedules/all',
-            [TherapistScheduleController::class, 'allSchedules']
-        )->name('schedules.all');                          // → admin.schedules.all
+        Route::get('schedules/all', [TherapistScheduleController::class, 'allSchedules'])->name('schedules.all');
+        Route::post('schedules/generate-month', [TherapistScheduleController::class, 'generateMonthSchedule'])->name('schedules.generate');
+        Route::resource('schedules', TherapistScheduleController::class);
 
-        Route::post(
-            'schedules/generate-month',
-            [TherapistScheduleController::class, 'generateMonthSchedule']
-        )->name('schedules.generate');                     // → admin.schedules.generate
-
-        Route::resource(
-            'schedules',
-            TherapistScheduleController::class
-        );
-
-        // Resource di atas menghasilkan nama:
-        //   admin.schedules.index   GET  /admin/schedules
-        //   admin.schedules.create  GET  /admin/schedules/create
-        //   admin.schedules.store   POST /admin/schedules
-        //   admin.schedules.show    GET  /admin/schedules/{schedule}
-        //   admin.schedules.edit    GET  /admin/schedules/{schedule}/edit
-        //   admin.schedules.update  PUT  /admin/schedules/{schedule}
-        //   admin.schedules.destroy DEL  /admin/schedules/{schedule}
-
-        // ── Commission ──────────────────────────────────────────────────
         Route::get('/commissions', [\App\Http\Controllers\Admin\CommissionController::class, 'index'])->name('commissions.index');
         Route::patch('/commissions/{commission}/mark-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
         Route::post('/commissions/bulk-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markBulkPaid'])->name('commissions.bulk-paid');
@@ -167,70 +159,47 @@ Route::middleware(['auth', 'role:kasir'])
             ->name('dashboard');
     });
 
-Route::prefix('terapis')->name('terapis.')->group(function () {
+// ============================================================================
+// THERAPIST ROUTES
+// ============================================================================
 
-    // Dashboard
-    Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'index'])
-        ->name('dashboard')
-        ->middleware('role:terapis');
+Route::middleware(['auth', 'role:therapist'])
+    ->prefix('terapis')
+    ->name('terapis.')
+    ->group(function () {
 
-    // Bookings
-    Route::prefix('bookings')->name('bookings.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'bookings'])
-            ->name('index')
-            ->middleware('role:terapis');
-    });
+        Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'index'])
+            ->name('dashboard');
 
-    // Jadwal Terapis
-    // Hapus seluruh blok Route::prefix('terapis') yang lama, ganti dengan ini:
-
-    Route::middleware(['auth', 'role:therapist'])
-        ->prefix('terapis')
-        ->name('terapis.')
-        ->group(function () {
-
-            Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'index'])
-                ->name('dashboard');
-
-            Route::prefix('bookings')->name('bookings.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'bookings'])
-                    ->name('index');
-            });
-
-            Route::prefix('schedules')->name('schedules.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'schedules'])
-                    ->name('index');
-            });
-
-            Route::prefix('leaves')->name('leaves.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'leaveRequests'])->name('index');
-                Route::get('/create', [App\Http\Controllers\Terapis\DashboardController::class, 'createLeaveRequest'])->name('create');
-                Route::post('/', [App\Http\Controllers\Terapis\DashboardController::class, 'storeLeaveRequest'])->name('store');
-                Route::get('/{leaveRequest}', [App\Http\Controllers\Terapis\DashboardController::class, 'showLeaveRequest'])->name('show');
-                Route::delete('/{leaveRequest}', [App\Http\Controllers\Terapis\DashboardController::class, 'cancelLeaveRequest'])->name('destroy');
-            });
-
-            Route::prefix('profile')->name('profile.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'profile'])->name('show');
-                Route::post('/', [App\Http\Controllers\Terapis\DashboardController::class, 'updateProfile'])->name('update');
-                Route::post('/change-password', [App\Http\Controllers\Terapis\DashboardController::class, 'changePassword'])->name('change-password');
-            });
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'bookings'])
+                ->name('index');
         });
-    // Profile
-    Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'profile'])
-            ->name('show')
-            ->middleware('role:terapis');
 
-        Route::post('/', [App\Http\Controllers\Terapis\DashboardController::class, 'updateProfile'])
-            ->name('update')
-            ->middleware('role:terapis');
+        Route::prefix('schedules')->name('schedules.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Terapis\DashboardController::class, 'schedules'])
+                ->name('index');
+        });
 
-        Route::post('/change-password', [App\Http\Controllers\Terapis\DashboardController::class, 'changePassword'])
-            ->name('change-password')
-            ->middleware('role:terapis');
+        Route::prefix('leaves')->name('leaves.')->group(function () {
+            Route::get('/',               [App\Http\Controllers\Terapis\DashboardController::class, 'leaveRequests'])
+                ->name('index');
+            Route::get('/create',         [App\Http\Controllers\Terapis\DashboardController::class, 'createLeaveRequest'])
+                ->name('create');
+            Route::post('/',              [App\Http\Controllers\Terapis\DashboardController::class, 'storeLeaveRequest'])
+                ->name('store');
+            Route::get('/{leaveRequest}', [App\Http\Controllers\Terapis\DashboardController::class, 'showLeaveRequest'])
+                ->name('show');
+            Route::delete('/{leaveRequest}', [App\Http\Controllers\Terapis\DashboardController::class, 'cancelLeaveRequest'])
+                ->name('destroy');
+        });
+
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/',                 [App\Http\Controllers\Terapis\DashboardController::class, 'profile'])->name('show');
+            Route::post('/',                [App\Http\Controllers\Terapis\DashboardController::class, 'updateProfile'])->name('update');
+            Route::post('/change-password', [App\Http\Controllers\Terapis\DashboardController::class, 'changePassword'])->name('change-password');
+        });
     });
-});
 
 // ============================================================================
 // USER ROUTES
@@ -250,8 +219,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/api/booked-slots',    [App\Http\Controllers\WelcomeController::class, 'bookedSlots']);
-Route::get('/api/bookings-by-date', [App\Http\Controllers\WelcomeController::class, 'bookingsByDate']);
+Route::get('/api/booked-slots',     [WelcomeController::class, 'bookedSlots']);
+Route::get('/api/bookings-by-date', [WelcomeController::class, 'bookingsByDate']);
 
 // ============================================================================
 // AUTH ROUTES

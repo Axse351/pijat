@@ -1,191 +1,214 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                Pengajuan Izin
+                Daftar Pengajuan Izin
             </h2>
             <a href="{{ route('terapis.leaves.create') }}"
-                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
+                class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition">
                 + Ajukan Izin Baru
             </a>
         </div>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            {{-- Success/Error Messages --}}
+        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+
+            {{-- Success Message --}}
             @if (session('success'))
-                <div class="mb-6 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
-                    ✓ {{ session('success') }}
+                <div
+                    class="mb-6 px-4 py-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 mr-2" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-emerald-800 dark:text-emerald-300">{{ session('success') }}</span>
+                    </div>
                 </div>
             @endif
 
-            {{-- Filter Buttons --}}
-            <div class="mb-6 flex gap-2 flex-wrap">
-                <form method="GET" class="flex gap-2 flex-wrap">
-                    <button type="submit" name="status" value=""
-                        class="px-4 py-2 text-sm font-medium rounded-lg transition {{ !request('status') ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        Semua ({{ $leaves->total() }})
-                    </button>
-                    <button type="submit" name="status" value="pending"
-                        class="px-4 py-2 text-sm font-medium rounded-lg transition {{ request('status') === 'pending' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        ⏳ Menunggu ({{ $therapist->leaveRequests()->pending()->count() }})
-                    </button>
-                    <button type="submit" name="status" value="approved"
-                        class="px-4 py-2 text-sm font-medium rounded-lg transition {{ request('status') === 'approved' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        ✅ Disetujui ({{ $therapist->leaveRequests()->approved()->count() }})
-                    </button>
-                    <button type="submit" name="status" value="rejected"
-                        class="px-4 py-2 text-sm font-medium rounded-lg transition {{ request('status') === 'rejected' ? 'bg-red-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        ❌ Ditolak ({{ $therapist->leaveRequests()->rejected()->count() }})
-                    </button>
-                </form>
+            {{-- Filter Tabs --}}
+            <div class="mb-6 flex gap-2 border-b border-gray-200 dark:border-gray-700">
+                <a href="{{ route('terapis.leaves.index') }}"
+                    class="px-4 py-2 font-medium transition {{ !request('status') ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300' }}">
+                    Semua
+                </a>
+                <a href="{{ route('terapis.leaves.index', ['status' => 'pending']) }}"
+                    class="px-4 py-2 font-medium transition {{ request('status') === 'pending' ? 'border-b-2 border-yellow-600 text-yellow-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300' }}">
+                    ⏳ Menunggu
+                </a>
+                <a href="{{ route('terapis.leaves.index', ['status' => 'approved']) }}"
+                    class="px-4 py-2 font-medium transition {{ request('status') === 'approved' ? 'border-b-2 border-emerald-600 text-emerald-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300' }}">
+                    ✓ Disetujui
+                </a>
+                <a href="{{ route('terapis.leaves.index', ['status' => 'rejected']) }}"
+                    class="px-4 py-2 font-medium transition {{ request('status') === 'rejected' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300' }}">
+                    ✗ Ditolak
+                </a>
             </div>
 
-            {{-- Leave Requests List --}}
-            @if ($leaves->count())
-                <div class="space-y-3 mb-6">
-                    @foreach ($leaves as $leave)
+            {{-- No Data Message --}}
+            @if ($leaveRequests->isEmpty())
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-12 text-center">
+                    <div class="text-5xl mb-4">📋</div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tidak ada data pengajuan izin
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">
+                        @if (request('status'))
+                            Anda tidak memiliki pengajuan izin dengan status ini.
+                        @else
+                            Mulai dengan mengajukan izin baru untuk tidak masuk.
+                        @endif
+                    </p>
+                    @if (!request('status') || request('status') === '')
+                        <a href="{{ route('terapis.leaves.create') }}"
+                            class="inline-flex items-center px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition">
+                            + Ajukan Izin Baru
+                        </a>
+                    @endif
+                </div>
+            @else
+                {{-- Leave Requests Grid --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($leaveRequests as $leave)
                         <div
-                            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition {{ $leave->status === 'pending' ? 'border-l-4 border-l-blue-500' : ($leave->status === 'approved' ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-red-500') }}">
-                            <div class="p-6">
-                                {{-- Type & Status Badges --}}
-                                <div class="flex items-start justify-between mb-4">
-                                    <div>
-                                        @php
-                                            $typeColor = match ($leave->type) {
-                                                'sakit' => 'bg-red-100 text-red-700',
-                                                'pribadi' => 'bg-blue-100 text-blue-700',
-                                                'cuti' => 'bg-green-100 text-green-700',
-                                                'izin_khusus' => 'bg-amber-100 text-amber-700',
-                                                default => 'bg-gray-100 text-gray-700',
-                                            };
-                                        @endphp
-                                        <span
-                                            class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $typeColor }} mb-3">
-                                            {{ TherapistLeaveRequest::getTypeLabel($leave->type) }}
-                                        </span>
-                                    </div>
-                                    @php
-                                        $statusColor = match ($leave->status) {
-                                            'pending' => 'bg-blue-100 text-blue-700',
-                                            'approved' => 'bg-emerald-100 text-emerald-700',
-                                            'rejected' => 'bg-red-100 text-red-700',
-                                            default => 'bg-gray-100 text-gray-700',
-                                        };
-                                    @endphp
-                                    <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusColor }}">
-                                        {{ TherapistLeaveRequest::getStatusLabel($leave->status) }}
-                                    </span>
-                                </div>
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 hover:shadow-lg transition overflow-hidden">
+                            {{-- Header with Status Badge --}}
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 dark:text-white">
+                                        @switch($leave->type)
+                                            @case('sakit')
+                                                🏥 Sakit
+                                            @break
 
+                                            @case('pribadi')
+                                                👤 Pribadi
+                                            @break
+
+                                            @case('cuti')
+                                                🏖️ Cuti
+                                            @break
+
+                                            @case('izin_khusus')
+                                                ⭐ Izin Khusus
+                                            @break
+
+                                            @default
+                                                📋 Izin
+                                        @endswitch
+                                    </h3>
+                                </div>
+                                <span
+                                    class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full
+                                @switch($leave->status)
+                                    @case('pending')
+                                        bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300
+                                    @break
+
+                                    @case('approved')
+                                        bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300
+                                    @break
+
+                                    @case('rejected')
+                                        bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300
+                                    @break
+                                @endswitch
+                            ">
+                                    @switch($leave->status)
+                                        @case('pending')
+                                            ⏳ Menunggu
+                                        @break
+
+                                        @case('approved')
+                                            ✓ Disetujui
+                                        @break
+
+                                        @case('rejected')
+                                            ✗ Ditolak
+                                        @break
+                                    @endswitch
+                                </span>
+                            </div>
+
+                            {{-- Body --}}
+                            <div class="px-6 py-4 space-y-3">
                                 {{-- Date Range --}}
-                                <div class="mb-4">
-                                    <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {{ $leave->start_date->translatedFormat('d F Y') }} -
-                                        {{ $leave->end_date->translatedFormat('d F Y') }}
-                                    </div>
-                                    <div class="text-sm text-gray-500 mt-1">
-                                        {{ $leave->day_count }} hari · Diajukan
-                                        {{ $leave->created_at->diffForHumans() }}
-                                    </div>
-                                </div>
-
-                                {{-- Details Grid --}}
-                                <div
-                                    class="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                                    <div>
-                                        <div class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Mulai
-                                        </div>
-                                        <div class="text-sm font-semibold text-gray-900 dark:text-white mt-1">
-                                            {{ $leave->start_date->format('d M Y') }}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Selesai
-                                        </div>
-                                        <div class="text-sm font-semibold text-gray-900 dark:text-white mt-1">
-                                            {{ $leave->end_date->format('d M Y') }}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Durasi
-                                        </div>
-                                        <div class="text-sm font-semibold text-gray-900 dark:text-white mt-1">
-                                            {{ $leave->day_count }} Hari
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Reason --}}
-                                <div class="mb-4">
-                                    <div class="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">Alasan
-                                    </div>
-                                    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                                        {{ $leave->reason }}
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Periode</p>
+                                    <p class="font-semibold text-gray-900 dark:text-white">
+                                        {{ $leave->start_date->format('d M Y') }} -
+                                        {{ $leave->end_date->format('d M Y') }}
                                     </p>
                                 </div>
 
-                                {{-- Approval Notes (if not pending) --}}
-                                @if ($leave->status !== 'pending' && $leave->approval_notes)
-                                    <div
-                                        class="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded">
-                                        <div
-                                            class="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-400 font-semibold mb-1">
-                                            Catatan Admin</div>
-                                        <p class="text-sm text-amber-900 dark:text-amber-300 leading-relaxed">
-                                            {{ $leave->approval_notes }}
+                                {{-- Duration --}}
+                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">
+                                        📅 Durasi: {{ $leave->duration }} hari
+                                    </p>
+                                </div>
+
+                                {{-- Reason --}}
+                                @if ($leave->reason)
+                                    <div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Alasan</p>
+                                        <p class="text-sm text-gray-900 dark:text-gray-100 line-clamp-2">
+                                            {{ $leave->reason }}
                                         </p>
                                     </div>
                                 @endif
 
-                                {{-- Actions --}}
-                                <div class="flex gap-2 flex-wrap">
-                                    <a href="{{ route('terapis.leaves.show', $leave) }}"
-                                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
-                                        👁️ Detail
-                                    </a>
+                                {{-- Approved Info --}}
+                                @if ($leave->status === 'approved' && $leave->approved_at)
+                                    <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                                        <p class="text-xs text-emerald-700 dark:text-emerald-300">
+                                            Disetujui pada {{ $leave->approved_at->format('d M Y H:i') }}
+                                        </p>
+                                    </div>
+                                @endif
 
-                                    @if ($leave->status === 'pending')
-                                        <button type="button"
-                                            onclick="if(confirm('Yakin ingin membatalkan pengajuan ini?')) { document.getElementById('cancel-form-{{ $leave->id }}').submit(); }"
-                                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition">
-                                            🗑️ Batalkan
+                                {{-- Rejection Info --}}
+                                @if ($leave->status === 'rejected' && $leave->rejection_reason)
+                                    <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                        <p class="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">Alasan
+                                            Penolakan:</p>
+                                        <p class="text-xs text-red-600 dark:text-red-400">
+                                            {{ $leave->rejection_reason }}</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Footer with Actions --}}
+                            <div
+                                class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex gap-2">
+                                <a href="{{ route('terapis.leaves.show', $leave) }}"
+                                    class="flex-1 px-3 py-2 text-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition">
+                                    Lihat Detail
+                                </a>
+
+                                @if ($leave->status === 'pending')
+                                    <form action="{{ route('terapis.leaves.destroy', $leave) }}" method="POST"
+                                        class="flex-1" onsubmit="return confirm('Yakin ingin membatalkan izin ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="w-full px-3 py-2 text-center text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+                                            Batalkan
                                         </button>
-
-                                        <form id="cancel-form-{{ $leave->id }}"
-                                            action="{{ route('terapis.leaves.destroy', $leave) }}" method="POST"
-                                            style="display:none;">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
-                                    @endif
-                                </div>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     @endforeach
                 </div>
-
-                {{-- Pagination --}}
-                <div class="mt-6">
-                    {{ $leaves->links() }}
-                </div>
-            @else
-                <div
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
-                    <div class="text-4xl mb-4">📋</div>
-                    <h3 class="font-semibold text-gray-900 dark:text-white text-lg mb-2">
-                        Belum Ada Pengajuan Izin
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-6">
-                        Mulai dengan mengajukan izin/cuti Anda untuk disetujui admin.
-                    </p>
-                    <a href="{{ route('terapis.leaves.create') }}"
-                        class="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition">
-                        + Ajukan Izin Baru
-                    </a>
-                </div>
             @endif
+
         </div>
     </div>
 </x-app-layout>

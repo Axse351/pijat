@@ -18,7 +18,6 @@
                     </ul>
                 </div>
             @endif
-
             @if (session('success'))
                 <div
                     class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
@@ -26,15 +25,13 @@
                 </div>
             @endif
 
-            {{-- ── Filter Card ─────────────────────────────────────────── --}}
+            {{-- ── Filter Card ─────────────────────────────────── --}}
             <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <form method="GET" class="flex flex-col md:flex-row gap-4 items-end">
-
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Pilih Terapis') }}
-                            </label>
+                            <label
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Pilih Terapis') }}</label>
                             <select name="therapist_id"
                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
                                 onchange="this.form.submit()">
@@ -47,14 +44,12 @@
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Bulan & Tahun') }}
-                            </label>
+                            <label
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Bulan & Tahun') }}</label>
                             <div class="flex gap-2">
                                 <select name="month"
-                                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100"
                                     onchange="this.form.submit()">
                                     @for ($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
@@ -63,7 +58,7 @@
                                     @endfor
                                 </select>
                                 <select name="year"
-                                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100"
                                     onchange="this.form.submit()">
                                     @for ($y = now()->year - 1; $y <= now()->year + 2; $y++)
                                         <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
@@ -72,12 +67,11 @@
                                 </select>
                             </div>
                         </div>
-
                         @if ($selectedTherapist)
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 flex-wrap">
                                 <button type="button" onclick="openGenerateModal()"
                                     class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-semibold transition">
-                                    🗓 {{ __('Atur Jadwal Bulan Ini') }}
+                                    🗓 {{ __('Atur Jadwal') }}
                                 </button>
                                 <a href="{{ route('admin.schedules.create', ['therapist_id' => $selectedTherapist, 'month' => $month, 'year' => $year]) }}"
                                     class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition">
@@ -87,13 +81,69 @@
                                     class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition">
                                     👥 Semua Terapis
                                 </a>
+                                {{-- ★ Tombol baru: Kelola Pengajuan Izin Terapis ini --}}
+                                <a href="{{ route('admin.leaves.index', ['therapist_id' => $selectedTherapist]) }}"
+                                    class="relative px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition inline-flex items-center gap-1.5">
+                                    📋 Pengajuan Izin
+                                    @if (isset($pendingLeaveCount) && $pendingLeaveCount > 0)
+                                        <span
+                                            class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full leading-none">
+                                            {{ $pendingLeaveCount }}
+                                        </span>
+                                    @endif
+                                </a>
                             </div>
                         @endif
                     </form>
                 </div>
             </div>
 
-            {{-- ── Calendar ─────────────────────────────────────────────── --}}
+            {{-- ★ Leave Request Banner (jika ada pending) --}}
+            @if ($selectedTherapist && isset($pendingLeaves) && $pendingLeaves->count() > 0)
+                <div
+                    class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg flex items-start gap-3">
+                    <span class="text-xl shrink-0">⚠️</span>
+                    <div class="flex-1">
+                        <p class="font-semibold text-yellow-800 dark:text-yellow-300">
+                            Ada {{ $pendingLeaves->count() }} pengajuan izin yang menunggu persetujuan
+                        </p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            @foreach ($pendingLeaves as $pl)
+                                <a href="{{ route('admin.leaves.show', $pl) }}"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded-lg text-xs font-medium text-yellow-800 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition">
+                                    @switch($pl->type)
+                                        @case('sakit')
+                                            🏥
+                                        @break
+
+                                        @case('pribadi')
+                                            👤
+                                        @break
+
+                                        @case('cuti')
+                                            🏖️
+                                        @break
+
+                                        @case('izin_khusus')
+                                            ⭐
+                                        @break
+
+                                        @default
+                                            📋
+                                        @break
+                                    @endswitch
+                                    {{ $pl->start_date->format('d M') }} – {{ $pl->end_date->format('d M Y') }}
+                                    <span
+                                        class="px-1.5 py-0.5 bg-yellow-200 dark:bg-yellow-800 rounded text-yellow-900 dark:text-yellow-200">Proses
+                                        →</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Calendar ─────────────────────────────────────── --}}
             @if ($selectedTherapist)
                 <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
                     <div class="p-6">
@@ -111,6 +161,20 @@
                             @endforeach
                         </div>
 
+                        {{-- ★ Build leave lookup: date => leave object --}}
+                        @php
+                            $leaveLookup = [];
+                            if (isset($monthLeaves)) {
+                                foreach ($monthLeaves as $leave) {
+                                    $cursor = $leave->start_date->copy();
+                                    while ($cursor <= $leave->end_date) {
+                                        $leaveLookup[$cursor->format('Y-m-d')] = $leave;
+                                        $cursor->addDay();
+                                    }
+                                }
+                            }
+                        @endphp
+
                         {{-- Calendar days --}}
                         <div class="grid grid-cols-7 gap-2">
                             @foreach ($calendarDays as $day)
@@ -118,9 +182,15 @@
                                     $schedule = $day['schedule'];
                                     $status = $schedule?->status;
                                     $isEmpty = is_null($day['date']);
+                                    $dateKey = $day['date'] ? $day['date']->format('Y-m-d') : null;
+                                    $leave = $dateKey ? $leaveLookup[$dateKey] ?? null : null;
 
                                     $cellClass = match (true) {
                                         $isEmpty => 'bg-gray-50 dark:bg-gray-900/30',
+                                        $leave && $leave->status === 'pending'
+                                            => 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700',
+                                        $leave && $leave->status === 'approved'
+                                            => 'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700',
                                         $status === 'working'
                                             => 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
                                         $status === 'working_afternoon'
@@ -141,66 +211,138 @@
                                     class="min-h-24 border rounded-lg p-2 {{ $cellClass }} {{ !$isEmpty ? 'hover:shadow-md transition' : '' }}">
                                     @if ($day['date'])
                                         <div class="flex justify-between items-start mb-1">
-                                            <span class="text-sm font-bold
-                                                {{ $status === 'working' ? 'text-green-700 dark:text-green-300' : ($status === 'working_afternoon' ? 'text-amber-700 dark:text-amber-300' : 'text-gray-600 dark:text-gray-400') }}">
+                                            <span
+                                                class="text-sm font-bold
+                                                {{ $leave && $leave->status === 'pending'
+                                                    ? 'text-yellow-700 dark:text-yellow-400'
+                                                    : ($leave && $leave->status === 'approved'
+                                                        ? 'text-orange-700 dark:text-orange-400'
+                                                        : ($status === 'working'
+                                                            ? 'text-green-700 dark:text-green-300'
+                                                            : ($status === 'working_afternoon'
+                                                                ? 'text-amber-700 dark:text-amber-300'
+                                                                : 'text-gray-600 dark:text-gray-400'))) }}">
                                                 {{ $day['date']->format('d') }}
                                             </span>
-                                            @if ($schedule)
+                                            @if ($schedule && !$leave)
                                                 <a href="{{ route('admin.schedules.edit', $schedule) }}"
                                                     class="text-gray-400 hover:text-blue-500 text-xs"
                                                     title="Edit">✎</a>
+                                            @elseif ($leave)
+                                                {{-- Ikon link ke detail leave --}}
+                                                <a href="{{ route('admin.leaves.show', $leave) }}"
+                                                    class="{{ $leave->status === 'pending' ? 'text-yellow-500 hover:text-yellow-700' : 'text-orange-500 hover:text-orange-700' }} text-xs"
+                                                    title="{{ $leave->status === 'pending' ? 'Proses pengajuan izin' : 'Lihat detail izin' }}">
+                                                    {{ $leave->status === 'pending' ? '⚠' : '📋' }}
+                                                </a>
                                             @endif
                                         </div>
 
-                                        @if ($schedule)
-                                            @if ($status === 'working')
-                                                <span class="inline-block px-1.5 py-0.5 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold rounded mb-1">
-                                                    🌅 Pagi
+                                        {{-- ★ Leave Badge (prioritas tampil) --}}
+                                        @if ($leave)
+                                            @if ($leave->status === 'pending')
+                                                <span
+                                                    class="inline-block px-1.5 py-0.5 bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded mb-1">
+                                                    ⏳ Menunggu
                                                 </span>
+                                                <div class="text-xs text-yellow-700 dark:text-yellow-400">
+                                                    @switch($leave->type)
+                                                        @case('sakit')
+                                                            🏥 Sakit
+                                                        @break
+
+                                                        @case('pribadi')
+                                                            👤 Pribadi
+                                                        @break
+
+                                                        @case('cuti')
+                                                            🏖️ Cuti
+                                                        @break
+
+                                                        @case('izin_khusus')
+                                                            ⭐ Khusus
+                                                        @break
+                                                    @endswitch
+                                                </div>
+                                                <a href="{{ route('admin.leaves.show', $leave) }}"
+                                                    class="mt-1 inline-block text-xs text-yellow-600 dark:text-yellow-400 hover:underline font-medium">
+                                                    Proses →
+                                                </a>
+                                            @elseif ($leave->status === 'approved')
+                                                <span
+                                                    class="inline-block px-1.5 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-semibold rounded mb-1">
+                                                    📋 Izin
+                                                </span>
+                                                <div class="text-xs text-orange-700 dark:text-orange-400">
+                                                    @switch($leave->type)
+                                                        @case('sakit')
+                                                            🏥 Sakit
+                                                        @break
+
+                                                        @case('pribadi')
+                                                            👤 Pribadi
+                                                        @break
+
+                                                        @case('cuti')
+                                                            🏖️ Cuti
+                                                        @break
+
+                                                        @case('izin_khusus')
+                                                            ⭐ Khusus
+                                                        @break
+                                                    @endswitch
+                                                </div>
+                                            @endif
+
+                                            {{-- Schedule Badge (jika tidak ada leave) --}}
+                                        @elseif ($schedule)
+                                            @if ($status === 'working')
+                                                <span
+                                                    class="inline-block px-1.5 py-0.5 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold rounded mb-1">🌅
+                                                    Pagi</span>
                                                 <div class="text-xs text-green-700 dark:text-green-400 font-medium">
                                                     {{ $schedule->getStartTimeFormatted() }} –
                                                     {{ $schedule->getEndTimeFormatted() }}
                                                 </div>
                                                 @if ($schedule->working_hours)
                                                     <div class="text-xs text-gray-500 dark:text-gray-500">
-                                                        {{ $schedule->working_hours }} jam
-                                                    </div>
+                                                        {{ $schedule->working_hours }} jam</div>
                                                 @endif
-
                                             @elseif ($status === 'working_afternoon')
-                                                <span class="inline-block px-1.5 py-0.5 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-xs font-semibold rounded mb-1">
-                                                    🌤 Siang
-                                                </span>
+                                                <span
+                                                    class="inline-block px-1.5 py-0.5 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-xs font-semibold rounded mb-1">🌤
+                                                    Siang</span>
                                                 <div class="text-xs text-amber-700 dark:text-amber-400 font-medium">
                                                     {{ $schedule->getStartTimeFormatted() }} –
                                                     {{ $schedule->getEndTimeFormatted() }}
                                                 </div>
                                                 @if ($schedule->working_hours)
                                                     <div class="text-xs text-gray-500 dark:text-gray-500">
-                                                        {{ $schedule->working_hours }} jam
-                                                    </div>
+                                                        {{ $schedule->working_hours }} jam</div>
                                                 @endif
-
                                             @else
                                                 @php
                                                     $badgeClass = match ($status) {
-                                                        'off'           => 'bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200',
-                                                        'sick'          => 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200',
-                                                        'vacation'      => 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200',
-                                                        'cuti_bersama'  => 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200',
-                                                        default         => 'bg-gray-200 text-gray-700',
+                                                        'off'
+                                                            => 'bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200',
+                                                        'sick'
+                                                            => 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200',
+                                                        'vacation'
+                                                            => 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200',
+                                                        'cuti_bersama'
+                                                            => 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200',
+                                                        default => 'bg-gray-200 text-gray-700',
                                                     };
                                                     $label = match ($status) {
-                                                        'off'           => 'Libur',
-                                                        'sick'          => 'Sakit',
-                                                        'vacation'      => 'Ijin',
-                                                        'cuti_bersama'  => 'Cuti Bersama',
-                                                        default         => $status,
+                                                        'off' => 'Libur',
+                                                        'sick' => 'Sakit',
+                                                        'vacation' => 'Ijin',
+                                                        'cuti_bersama' => 'Cuti Bersama',
+                                                        default => $status,
                                                     };
                                                 @endphp
-                                                <span class="inline-block px-1.5 py-0.5 {{ $badgeClass }} text-xs font-semibold rounded">
-                                                    {{ $label }}
-                                                </span>
+                                                <span
+                                                    class="inline-block px-1.5 py-0.5 {{ $badgeClass }} text-xs font-semibold rounded">{{ $label }}</span>
                                             @endif
                                         @else
                                             <div class="text-xs text-gray-400 italic mt-1">Belum ada</div>
@@ -211,7 +353,8 @@
                         </div>
 
                         {{-- Summary --}}
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div
+                            class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                             <div class="text-center">
                                 <p class="text-2xl font-bold text-green-600">
                                     {{ $schedules->where('status', 'working')->count() }}</p>
@@ -232,8 +375,16 @@
                                     {{ $schedules->where('status', 'sick')->count() }}</p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Sakit</p>
                             </div>
+                            {{-- ★ Summary leave --}}
                             <div class="text-center">
-                                <p class="text-2xl font-bold text-purple-600">{{ $schedules->sum('working_hours') }}</p>
+                                <p class="text-2xl font-bold text-yellow-500">
+                                    {{ isset($monthLeaves) ? $monthLeaves->where('status', 'pending')->count() : 0 }}
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Izin Pending</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-purple-600">{{ $schedules->sum('working_hours') }}
+                                </p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Total Jam</p>
                             </div>
                         </div>
@@ -250,31 +401,35 @@
 
             {{-- Legend --}}
             <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-green-200 inline-block"></span> Kerja Pagi</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-amber-200 inline-block"></span> Kerja Siang</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-orange-200 inline-block"></span> Libur</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-gray-300 inline-block"></span> Sakit</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-blue-200 inline-block"></span> Ijin</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-red-200 inline-block"></span> Cuti Bersama</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-green-200 inline-block"></span>
+                    Kerja Pagi</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-amber-200 inline-block"></span>
+                    Kerja Siang</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-orange-200 inline-block"></span>
+                    Libur/Izin Disetujui</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-yellow-200 inline-block"></span>
+                    Izin Menunggu ⏳</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-gray-300 inline-block"></span>
+                    Sakit</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-blue-200 inline-block"></span>
+                    Ijin</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-red-200 inline-block"></span>
+                    Cuti Bersama</div>
             </div>
         </div>
     </div>
 
-    {{-- ═══════════════════════════════════════════════════════════════════
-         MODAL: Atur Jadwal Bulan Ini
-    ════════════════════════════════════════════════════════════════════ --}}
+    {{-- ═══════════════ MODAL Atur Jadwal ═══════════════ --}}
     <div id="generateModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
         onclick="if(event.target===this) closeGenerateModal()">
-
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-6">
-
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        🗓 Atur Jadwal —
-                        {{ \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y') }}
+                        🗓 Atur Jadwal — {{ \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y') }}
                     </h3>
-                    <button onclick="closeGenerateModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+                    <button onclick="closeGenerateModal()"
+                        class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
                 </div>
 
                 <form id="generateForm" action="{{ route('admin.schedules.generate') }}" method="POST">
@@ -283,44 +438,26 @@
                     <input type="hidden" name="month" value="{{ $month }}">
                     <input type="hidden" name="year" value="{{ $year }}">
 
-                    {{-- Step 1: Shift & Jam Kerja --}}
+                    {{-- Shift --}}
                     <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                            1️⃣ Shift & Jam Kerja Default
-                        </p>
-
-                        {{-- Pilihan shift preset --}}
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">1️⃣ Shift & Jam Kerja
+                            Default</p>
                         <div class="flex gap-3 mb-4">
-                            <label class="cursor-pointer flex-1">
-                                <input type="radio" name="shift_type" value="morning" checked class="sr-only peer"
-                                    onchange="applyShiftPreset(this.value)">
-                                <span class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition
-                                    peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:text-green-700 dark:peer-checked:bg-green-900/30 dark:peer-checked:text-green-300
-                                    border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-400">
-                                    🌅 Pagi
-                                </span>
-                            </label>
-                            <label class="cursor-pointer flex-1">
-                                <input type="radio" name="shift_type" value="afternoon" class="sr-only peer"
-                                    onchange="applyShiftPreset(this.value)">
-                                <span class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition
-                                    peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:text-amber-700 dark:peer-checked:bg-amber-900/30 dark:peer-checked:text-amber-300
-                                    border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-amber-400">
-                                    🌤 Siang
-                                </span>
-                            </label>
-                            <label class="cursor-pointer flex-1">
-                                <input type="radio" name="shift_type" value="custom" class="sr-only peer"
-                                    onchange="applyShiftPreset(this.value)">
-                                <span class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition
-                                    peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 dark:peer-checked:bg-indigo-900/30 dark:peer-checked:text-indigo-300
-                                    border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400">
-                                    ✏️ Custom
-                                </span>
-                            </label>
+                            @foreach ([['morning', '🌅 Pagi', 'green'], ['afternoon', '🌤 Siang', 'amber'], ['custom', '✏️ Custom', 'indigo']] as [$val, $lbl, $col])
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="shift_type" value="{{ $val }}"
+                                        {{ $val === 'morning' ? 'checked' : '' }} class="sr-only peer"
+                                        onchange="applyShiftPreset(this.value)">
+                                    <span
+                                        class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition
+                                        peer-checked:border-{{ $col }}-500 peer-checked:bg-{{ $col }}-50 peer-checked:text-{{ $col }}-700
+                                        dark:peer-checked:bg-{{ $col }}-900/30 dark:peer-checked:text-{{ $col }}-300
+                                        border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-{{ $col }}-400">
+                                        {{ $lbl }}
+                                    </span>
+                                </label>
+                            @endforeach
                         </div>
-
-                        {{-- Input jam --}}
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jam Masuk</label>
@@ -335,11 +472,10 @@
                         </div>
                     </div>
 
-                    {{-- Step 2: Pola Hari Kerja --}}
+                    {{-- Hari Kerja --}}
                     <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                            2️⃣ Hari Kerja dalam Seminggu
-                        </p>
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">2️⃣ Hari Kerja dalam
+                            Seminggu</p>
                         <div class="flex flex-wrap gap-2">
                             @php
                                 $dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -350,10 +486,10 @@
                                     <input type="checkbox" name="working_days[]" value="{{ $idx }}"
                                         {{ in_array($idx, $defaultWork) ? 'checked' : '' }} class="sr-only peer"
                                         onchange="refreshMiniCalendar()">
-                                    <span class="inline-block px-3 py-1.5 rounded-full text-sm font-medium border transition
+                                    <span
+                                        class="inline-block px-3 py-1.5 rounded-full text-sm font-medium border transition
                                         peer-checked:bg-indigo-500 peer-checked:text-white peer-checked:border-indigo-500
-                                        border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400
-                                        hover:border-indigo-400">
+                                        border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400">
                                         {{ $lbl }}
                                     </span>
                                 </label>
@@ -361,35 +497,32 @@
                         </div>
                     </div>
 
-                    {{-- Step 3: Mini-kalender --}}
+                    {{-- Mini Calendar --}}
                     <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            3️⃣ Tandai Hari Libur Khusus
-                        </p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">
-                            Klik tanggal untuk toggle <span class="font-semibold text-red-500">Libur</span> — hari yang
-                            tidak diklik mengikuti pola kerja di atas.
-                        </p>
-
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">3️⃣ Tandai Hari Libur
+                            Khusus</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Klik tanggal untuk toggle <span
+                                class="font-semibold text-red-500">Libur</span></p>
                         <div class="grid grid-cols-7 gap-1 mb-1">
                             @foreach ($dayLabels as $lbl)
-                                <div class="text-center text-xs font-bold text-gray-400 py-1">{{ $lbl }}</div>
+                                <div class="text-center text-xs font-bold text-gray-400 py-1">{{ $lbl }}
+                                </div>
                             @endforeach
                         </div>
-
                         <div id="miniCalendar" class="grid grid-cols-7 gap-1"></div>
                         <div id="offDatesInputs"></div>
-
                         <p class="text-xs text-gray-400 mt-2 flex flex-wrap gap-x-3 gap-y-1">
                             <span><span class="inline-block w-3 h-3 rounded bg-red-400 mr-1"></span>Libur manual</span>
                             <span><span class="inline-block w-3 h-3 rounded bg-green-400 mr-1"></span>Kerja Pagi</span>
-                            <span><span class="inline-block w-3 h-3 rounded bg-amber-400 mr-1"></span>Kerja Siang</span>
-                            <span><span class="inline-block w-3 h-3 rounded bg-gray-300 mr-1"></span>Libur (pola)</span>
+                            <span><span class="inline-block w-3 h-3 rounded bg-amber-400 mr-1"></span>Kerja
+                                Siang</span>
+                            <span><span class="inline-block w-3 h-3 rounded bg-gray-300 mr-1"></span>Libur
+                                (pola)</span>
                         </p>
                     </div>
 
-                    {{-- Warning --}}
-                    <div class="mb-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <div
+                        class="mb-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                         <p class="text-xs text-amber-700 dark:text-amber-300">
                             ⚠️ Generate akan <strong>menghapus & membuat ulang</strong> semua jadwal bulan
                             {{ \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y') }} untuk terapis ini.
@@ -412,16 +545,20 @@
     </div>
 
     <script>
-        const CAL_YEAR  = {{ $year }};
+        const CAL_YEAR = {{ $year }};
         const CAL_MONTH = {{ $month }};
-
-        let offDates    = new Set();
+        let offDates = new Set();
         let currentShift = 'morning';
-
         const SHIFT_PRESETS = {
-            morning:   { start: '09:00', end: '17:00' },
-            afternoon: { start: '13:00', end: '21:00' },
-            custom:    null,
+            morning: {
+                start: '09:00',
+                end: '17:00'
+            },
+            afternoon: {
+                start: '13:00',
+                end: '21:00'
+            },
+            custom: null
         };
 
         function applyShiftPreset(shift) {
@@ -429,7 +566,7 @@
             const preset = SHIFT_PRESETS[shift];
             if (preset) {
                 document.getElementById('startTime').value = preset.start;
-                document.getElementById('endTime').value   = preset.end;
+                document.getElementById('endTime').value = preset.end;
             }
             refreshMiniCalendar();
         }
@@ -444,66 +581,43 @@
         }
 
         function getWorkingDays() {
-            return Array.from(
-                document.querySelectorAll('input[name="working_days[]"]:checked')
-            ).map(el => parseInt(el.value));
+            return Array.from(document.querySelectorAll('input[name="working_days[]"]:checked')).map(el => parseInt(el
+                .value));
         }
 
         function refreshMiniCalendar() {
             const workingDays = getWorkingDays();
             const isAfternoon = currentShift === 'afternoon';
-            const container   = document.getElementById('miniCalendar');
+            const container = document.getElementById('miniCalendar');
             container.innerHTML = '';
-
             const firstDay = new Date(CAL_YEAR, CAL_MONTH - 1, 1);
-            const lastDay  = new Date(CAL_YEAR, CAL_MONTH, 0);
-            const startDow = firstDay.getDay();
-
-            for (let i = 0; i < startDow; i++) {
-                container.appendChild(document.createElement('div'));
-            }
-
+            const lastDay = new Date(CAL_YEAR, CAL_MONTH, 0);
+            for (let i = 0; i < firstDay.getDay(); i++) container.appendChild(document.createElement('div'));
             for (let d = 1; d <= lastDay.getDate(); d++) {
-                const date     = new Date(CAL_YEAR, CAL_MONTH - 1, d);
-                const dateStr  = formatDate(date);
-                const dow      = date.getDay();
-
-                const isWorkDay   = workingDays.includes(dow);
+                const date = new Date(CAL_YEAR, CAL_MONTH - 1, d);
+                const dateStr = formatDate(date);
+                const dow = date.getDay();
+                const isWorkDay = workingDays.includes(dow);
                 const isManualOff = offDates.has(dateStr);
-                const isWorking   = isWorkDay && !isManualOff;
-
+                const isWorking = isWorkDay && !isManualOff;
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.dataset.date = dateStr;
-                btn.textContent  = String(d).padStart(2, '0');
-
+                btn.textContent = String(d).padStart(2, '0');
                 btn.className = [
-                    'w-full aspect-square rounded-lg text-xs font-semibold transition',
-                    'focus:outline-none focus:ring-2 focus:ring-indigo-400',
-                    isManualOff
-                        ? 'bg-red-400 text-white hover:bg-red-500'
-                        : isWorking
-                            ? (isAfternoon
-                                ? 'bg-amber-400 text-white hover:bg-amber-500'
-                                : 'bg-green-400 text-white hover:bg-green-500')
-                            : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300',
+                    'w-full aspect-square rounded-lg text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400',
+                    isManualOff ? 'bg-red-400 text-white hover:bg-red-500' :
+                    isWorking ? (isAfternoon ? 'bg-amber-400 text-white hover:bg-amber-500' :
+                        'bg-green-400 text-white hover:bg-green-500') :
+                    'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300'
                 ].join(' ');
-
-                btn.title = isManualOff
-                    ? 'Libur Manual — klik untuk batalkan'
-                    : isWorking
-                        ? `Kerja ${isAfternoon ? 'Siang' : 'Pagi'} — klik untuk jadikan libur`
-                        : 'Libur (pola) — klik untuk jadikan libur manual';
-
                 btn.addEventListener('click', () => {
                     offDates.has(dateStr) ? offDates.delete(dateStr) : offDates.add(dateStr);
                     refreshMiniCalendar();
                     syncOffDateInputs();
                 });
-
                 container.appendChild(btn);
             }
-
             syncOffDateInputs();
         }
 
@@ -512,18 +626,15 @@
             container.innerHTML = '';
             offDates.forEach(date => {
                 const input = document.createElement('input');
-                input.type  = 'hidden';
-                input.name  = 'off_dates[]';
+                input.type = 'hidden';
+                input.name = 'off_dates[]';
                 input.value = date;
                 container.appendChild(input);
             });
         }
 
         function formatDate(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
         }
     </script>
 </x-app-layout>

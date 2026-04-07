@@ -8,58 +8,56 @@ use App\Models\Therapist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * Controller untuk mengelola pengajuan izin terapis
- * 
- * Tambahkan ke: app/Http/Controllers/Admin/TherapistLeaveController.php
- */
 class TherapistLeaveController extends Controller
 {
-    /**
-     * Tampilkan daftar pengajuan izin
-     */
     public function index(Request $request)
     {
         $query = TherapistLeaveRequest::with('therapist', 'approver');
 
-        // Filter berdasarkan status
-        if ($request->has('status') && $request->status !== '') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter berdasarkan terapis
-        if ($request->has('therapist_id') && $request->therapist_id !== '') {
+        if ($request->filled('therapist_id')) {
             $query->where('therapist_id', $request->therapist_id);
         }
 
-        // Filter berdasarkan bulan
-        if ($request->has('month') && $request->month !== '') {
-            $month = $request->month;
-            $query->whereMonth('start_date', $month);
+        if ($request->filled('month')) {
+            $query->whereMonth('start_date', $request->month);
         }
 
-        $leaves = $query->orderBy('created_at', 'desc')->paginate(15);
+        $leaves     = $query->orderBy('created_at', 'desc')->paginate(15);
         $therapists = Therapist::orderBy('name')->get();
 
-        return view('admin.leaves.index', [
-            'leaves'     => $leaves,
-            'therapists' => $therapists,
-        ]);
+        // Summary dari DB agar akurat lintas halaman
+        $summaryQuery = TherapistLeaveRequest::query();
+        if ($request->filled('therapist_id')) {
+            $summaryQuery->where('therapist_id', $request->therapist_id);
+        }
+        if ($request->filled('status')) {
+            $summaryQuery->where('status', $request->status);
+        }
+        if ($request->filled('month')) {
+            $summaryQuery->whereMonth('start_date', $request->month);
+        }
+
+        $summary = [
+            'pending'  => (clone $summaryQuery)->where('status', 'pending')->count(),
+            'approved' => (clone $summaryQuery)->where('status', 'approved')->count(),
+            'rejected' => (clone $summaryQuery)->where('status', 'rejected')->count(),
+            'total'    => $summaryQuery->count(),
+        ];
+
+        return view('admin.leaves.index', compact('leaves', 'therapists', 'summary'));
     }
 
-    /**
-     * Tampilkan detail pengajuan izin
-     */
     public function show(TherapistLeaveRequest $leaveRequest)
     {
-        return view('admin.leaves.show', [
-            'leaveRequest' => $leaveRequest,
-        ]);
+        $leaveRequest->load('therapist', 'approver');
+
+        return view('admin.leaves.show', compact('leaveRequest'));
     }
 
-    /**
-     * Approve pengajuan izin
-     */
     public function approve(Request $request, TherapistLeaveRequest $leaveRequest)
     {
         if ($leaveRequest->status !== 'pending') {
@@ -71,18 +69,15 @@ class TherapistLeaveController extends Controller
         ]);
 
         $leaveRequest->update([
-            'status'       => 'approved',
-            'approved_by'  => Auth::id(),
+            'status'         => 'approved',
+            'approved_by'    => Auth::id(),
             'approval_notes' => $validated['approval_notes'] ?? null,
-            'approved_at'  => now(),
+            'approved_at'    => now(),
         ]);
 
         return back()->with('success', 'Pengajuan izin berhasil disetujui.');
     }
 
-    /**
-     * Reject pengajuan izin
-     */
     public function reject(Request $request, TherapistLeaveRequest $leaveRequest)
     {
         if ($leaveRequest->status !== 'pending') {
@@ -103,9 +98,6 @@ class TherapistLeaveController extends Controller
         return back()->with('success', 'Pengajuan izin berhasil ditolak.');
     }
 
-    /**
-     * Hapus pengajuan izin
-     */
     public function destroy(TherapistLeaveRequest $leaveRequest)
     {
         $leaveRequest->delete();
@@ -113,9 +105,6 @@ class TherapistLeaveController extends Controller
         return back()->with('success', 'Pengajuan izin berhasil dihapus.');
     }
 
-    /**
-     * Dashboard widget - Pending leaves
-     */
     public static function getPendingLeaves($limit = 5)
     {
         return TherapistLeaveRequest::pending()
@@ -125,22 +114,16 @@ class TherapistLeaveController extends Controller
             ->get();
     }
 
-    /**
-     * Dashboard widget - Leaves summary
-     */
     public static function getLeavesSummary()
     {
         return [
-            'pending'   => TherapistLeaveRequest::pending()->count(),
-            'approved'  => TherapistLeaveRequest::approved()->count(),
-            'rejected'  => TherapistLeaveRequest::rejected()->count(),
-            'total'     => TherapistLeaveRequest::count(),
+            'pending'  => TherapistLeaveRequest::pending()->count(),
+            'approved' => TherapistLeaveRequest::approved()->count(),
+            'rejected' => TherapistLeaveRequest::rejected()->count(),
+            'total'    => TherapistLeaveRequest::count(),
         ];
     }
 
-    /**
-     * API - Get therapist active leaves
-     */
     public function getTherapistActiveLeaves(Therapist $therapist)
     {
         $leaves = $therapist->leaveRequests()

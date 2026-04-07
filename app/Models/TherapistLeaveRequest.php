@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class TherapistLeaveRequest extends Model
 {
@@ -13,14 +11,15 @@ class TherapistLeaveRequest extends Model
 
     protected $fillable = [
         'therapist_id',
+        'type',
         'start_date',
         'end_date',
-        'type',
         'reason',
         'status',
         'approved_by',
-        'approval_notes',
         'approved_at',
+        'approval_notes',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -29,101 +28,78 @@ class TherapistLeaveRequest extends Model
         'approved_at' => 'datetime',
     ];
 
-    /**
-     * Relasi ke Therapist
-     */
-    public function therapist(): BelongsTo
+    // ──────────────────────────────────────────────
+    // RELATIONSHIPS
+    // ──────────────────────────────────────────────
+
+    public function therapist()
     {
         return $this->belongsTo(Therapist::class);
     }
 
-    /**
-     * Relasi ke User (yang approve)
-     */
-    public function approver(): BelongsTo
+    public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**
-     * Scope: Izin yang pending
+     * Alias — dipakai di view & with('approver')
      */
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    // ──────────────────────────────────────────────
+    // SCOPES
+    // ──────────────────────────────────────────────
+
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
     }
 
-    /**
-     * Scope: Izin yang approved
-     */
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');
     }
 
-    /**
-     * Scope: Izin yang rejected
-     */
     public function scopeRejected($query)
     {
         return $query->where('status', 'rejected');
     }
 
-    /**
-     * Scope: Izin yang aktif (berdasarkan tanggal sekarang)
-     */
     public function scopeActive($query)
     {
-        $today = Carbon::today();
         return $query->where('status', 'approved')
-            ->where('start_date', '<=', $today)
-            ->where('end_date', '>=', $today);
+            ->where('start_date', '<=', now()->toDateString())
+            ->where('end_date', '>=', now()->toDateString());
     }
 
-    /**
-     * Check apakah izin ini berlaku pada tanggal tertentu
-     */
-    public function appliesToDate($date)
-    {
-        $checkDate = Carbon::parse($date)->toDateString();
-        $startDate = $this->start_date->toDateString();
-        $endDate = $this->end_date->toDateString();
+    // ──────────────────────────────────────────────
+    // ACCESSORS
+    // ──────────────────────────────────────────────
 
-        return $checkDate >= $startDate && $checkDate <= $endDate && $this->status === 'approved';
-    }
-
-    /**
-     * Jumlah hari izin
-     */
-    public function getDayCountAttribute()
+    public function getDurationAttribute(): int
     {
         return $this->end_date->diffInDays($this->start_date) + 1;
     }
 
     /**
-     * Label tipe izin
+     * Alias day_count — dipakai di view
      */
-    public static function getTypeLabel($type)
+    public function getDayCountAttribute(): int
     {
-        return match ($type) {
-            'sakit' => '🏥 Sakit',
-            'pribadi' => '👤 Pribadi',
-            'cuti' => '🏖️ Cuti',
-            'izin_khusus' => '⭐ Izin Khusus',
-            default => $type,
-        };
+        return $this->duration;
     }
 
-    /**
-     * Label status
-     */
-    public static function getStatusLabel($status)
+    public function getStatusBadgeAttribute(): string
     {
-        return match ($status) {
-            'pending' => '⏳ Menunggu Persetujuan',
-            'approved' => '✅ Disetujui',
-            'rejected' => '❌ Ditolak',
-            default => $status,
+        return match ($this->status) {
+            'pending'  => 'yellow',
+            'approved' => 'green',
+            'rejected' => 'red',
+            default    => 'gray',
         };
     }
 }

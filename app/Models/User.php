@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -12,11 +11,6 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -27,41 +21,25 @@ class User extends Authenticatable
         'face_liveness_enabled',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
-        'face_embedding', // Jangan expose ke API
+        'face_embedding',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'face_registered_at' => 'datetime',
+        'email_verified_at'     => 'datetime',
+        'password'              => 'hashed',
+        'face_registered_at'    => 'datetime',
         'face_liveness_enabled' => 'boolean',
     ];
 
-    /**
-     * Cek apakah user adalah admin
-     */
-    public function isAdmin()
+    public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    /**
-     * Cek apakah user adalah user biasa
-     */
-    public function isUser()
+    public function isUser(): bool
     {
         return $this->role === 'user';
     }
@@ -70,43 +48,37 @@ class User extends Authenticatable
     {
         return $this->role === 'kasir';
     }
-    public function isTerapis(): bool
+
+    public function isTherapist(): bool
     {
-        return $this->role === 'terapis';
+        return $this->role === 'therapist';
     }
 
-    /**
-     * Relasi dengan Customer
-     */
     public function customer()
     {
         return $this->hasOne(Customer::class);
     }
 
-    /**
-     * Cek apakah user sudah registrasi wajah
-     */
+    public function therapist()
+    {
+        return $this->hasOne(\App\Models\Therapist::class);
+    }
+
     public function hasFaceRegistered(): bool
     {
         return !is_null($this->face_embedding);
     }
 
-    /**
-     * Cek apakah face login aktif
-     */
     public function isFaceLoginEnabled(): bool
     {
         return $this->face_liveness_enabled && $this->hasFaceRegistered();
     }
 
-    /**
-     * Reset face data - gunakan jika user ingin mendaftar ulang wajahnya
-     */
     public function resetFaceData(): void
     {
         $this->update([
-            'face_embedding' => null,
-            'face_registered_at' => null,
+            'face_embedding'        => null,
+            'face_registered_at'    => null,
             'face_liveness_enabled' => false,
         ]);
     }

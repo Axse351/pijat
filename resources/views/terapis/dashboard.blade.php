@@ -7,19 +7,21 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {{-- Alert Status --}}
+
+            {{-- Alert: Sedang Cuti --}}
             @if ($activeLeave)
                 <div
                     class="mb-6 px-4 py-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg text-amber-800 dark:text-amber-300">
                     <div class="font-semibold mb-1">🏖️ Anda sedang dalam periode izin</div>
                     <p class="text-sm">
-                        {{ TherapistLeaveRequest::getTypeLabel($activeLeave->type) }}
-                        dari {{ $activeLeave->start_date->format('d M') }} hingga
-                        {{ $activeLeave->end_date->format('d M Y') }}
+                        {{ $activeLeave->type }}
+                        dari {{ \Carbon\Carbon::parse($activeLeave->start_date)->format('d M') }}
+                        hingga {{ \Carbon\Carbon::parse($activeLeave->end_date)->format('d M Y') }}
                     </p>
                 </div>
             @endif
 
+            {{-- Alert: Pengajuan Pending --}}
             @if ($pendingLeaves->count() > 0)
                 <div
                     class="mb-6 px-4 py-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-800 dark:text-blue-300">
@@ -36,7 +38,7 @@
 
             {{-- Stats Grid --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {{-- Booking Hari Ini --}}
+
                 <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between mb-2">
                         <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $todayBookingsCount }}</div>
@@ -45,27 +47,26 @@
                     <p class="text-sm text-gray-500">Booking Hari Ini</p>
                 </div>
 
-                {{-- Pendapatan Hari Ini --}}
                 <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="text-3xl font-bold text-emerald-600">Rp
-                            {{ number_format($todayRevenue / 1000, 0) }}rb</div>
+                        <div class="text-3xl font-bold text-emerald-600">
+                            Rp {{ number_format($todayRevenue / 1000, 0) }}rb
+                        </div>
                         <div class="text-2xl">💰</div>
                     </div>
                     <p class="text-sm text-gray-500">Pendapatan Hari Ini</p>
                 </div>
 
-                {{-- Pendapatan Bulan Ini --}}
                 <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="text-3xl font-bold text-indigo-600">Rp
-                            {{ number_format($monthRevenue / 1000000, 1) }}jt</div>
+                        <div class="text-3xl font-bold text-indigo-600">
+                            Rp {{ number_format($monthRevenue / 1000000, 1) }}jt
+                        </div>
                         <div class="text-2xl">📈</div>
                     </div>
                     <p class="text-sm text-gray-500">Pendapatan Bulan Ini</p>
                 </div>
 
-                {{-- Komisi --}}
                 <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between mb-2">
                         <div class="text-3xl font-bold text-amber-600">{{ $therapist->commission_percent }}%</div>
@@ -73,10 +74,12 @@
                     </div>
                     <p class="text-sm text-gray-500">Komisi</p>
                 </div>
+
             </div>
 
             {{-- Main Content Grid --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
                 {{-- Jadwal Hari Ini --}}
                 <div
                     class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -141,56 +144,27 @@
                     </div>
                     <div class="p-6">
                         <div class="space-y-3">
-                            @php
-                                $statuses = [
-                                    [
-                                        'label' => 'Terjadwal',
-                                        'value' => $statusSummary['scheduled'],
-                                        'icon' => '⏰',
-                                        'color' => 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-                                    ],
-                                    [
-                                        'label' => 'Berlangsung',
-                                        'value' => $statusSummary['ongoing'],
-                                        'icon' => '▶️',
-                                        'color' =>
-                                            'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-                                    ],
-                                    [
-                                        'label' => 'Selesai',
-                                        'value' => $statusSummary['completed'],
-                                        'icon' => '✅',
-                                        'color' =>
-                                            'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
-                                    ],
-                                    [
-                                        'label' => 'Batal',
-                                        'value' => $statusSummary['cancelled'],
-                                        'icon' => '❌',
-                                        'color' => 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-                                    ],
-                                ];
-                            @endphp
-
-                            @foreach ($statuses as $status)
-                                <div class="p-3 {{ $status['color'] }} rounded-lg">
+                            @foreach ([['label' => 'Terjadwal', 'value' => $statusSummary['scheduled'], 'icon' => '⏰', 'color' => 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'], ['label' => 'Berlangsung', 'value' => $statusSummary['ongoing'], 'icon' => '▶️', 'color' => 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'], ['label' => 'Selesai', 'value' => $statusSummary['completed'], 'icon' => '✅', 'color' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'], ['label' => 'Batal', 'value' => $statusSummary['cancelled'], 'icon' => '❌', 'color' => 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300']] as $st)
+                                <div class="p-3 {{ $st['color'] }} rounded-lg">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
-                                            <span class="text-lg">{{ $status['icon'] }}</span>
-                                            <span class="text-sm font-medium">{{ $status['label'] }}</span>
+                                            <span class="text-lg">{{ $st['icon'] }}</span>
+                                            <span class="text-sm font-medium">{{ $st['label'] }}</span>
                                         </div>
-                                        <span class="font-bold text-lg">{{ $status['value'] }}</span>
+                                        <span class="font-bold text-lg">{{ $st['value'] }}</span>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     </div>
                 </div>
+
             </div>
 
             {{-- Booking & Services Grid --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {{-- Booking Mendatang --}}
+
+                {{-- Booking Mendatang — data dari controller, TIDAK ada @php query di sini --}}
                 <div
                     class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div
@@ -202,13 +176,6 @@
                         </a>
                     </div>
                     <div class="overflow-x-auto">
-                        @php
-                            $upcomingBookings = Booking::where('therapist_id', $therapist->id)
-                                ->where('scheduled_at', '>=', now())
-                                ->orderBy('scheduled_at')
-                                ->take(5)
-                                ->get();
-                        @endphp
                         @if ($upcomingBookings->count())
                             <table class="w-full text-sm">
                                 <thead>
@@ -229,6 +196,22 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                     @foreach ($upcomingBookings as $booking)
+                                        @php
+                                            $sc = match ($booking->status) {
+                                                'scheduled' => 'bg-blue-100 text-blue-700',
+                                                'completed' => 'bg-emerald-100 text-emerald-700',
+                                                'cancelled' => 'bg-red-100 text-red-700',
+                                                'ongoing' => 'bg-purple-100 text-purple-700',
+                                                default => 'bg-gray-100 text-gray-700',
+                                            };
+                                            $sl = match ($booking->status) {
+                                                'scheduled' => 'Terjadwal',
+                                                'completed' => 'Selesai',
+                                                'cancelled' => 'Batal',
+                                                'ongoing' => 'Berlangsung',
+                                                default => $booking->status,
+                                            };
+                                        @endphp
                                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                             <td class="px-6 py-3 font-medium text-gray-900 dark:text-white">
                                                 {{ $booking->customer->name ?? '-' }}
@@ -240,22 +223,6 @@
                                                 {{ \Carbon\Carbon::parse($booking->scheduled_at)->format('d M, H:i') }}
                                             </td>
                                             <td class="px-6 py-3">
-                                                @php
-                                                    $sc = match ($booking->status) {
-                                                        'scheduled' => 'bg-blue-100 text-blue-700',
-                                                        'completed' => 'bg-emerald-100 text-emerald-700',
-                                                        'cancelled' => 'bg-red-100 text-red-700',
-                                                        'ongoing' => 'bg-purple-100 text-purple-700',
-                                                        default => 'bg-gray-100 text-gray-700',
-                                                    };
-                                                    $sl = match ($booking->status) {
-                                                        'scheduled' => 'Terjadwal',
-                                                        'completed' => 'Selesai',
-                                                        'cancelled' => 'Batal',
-                                                        'ongoing' => 'Berlangsung',
-                                                        default => $booking->status,
-                                                    };
-                                                @endphp
                                                 <span
                                                     class="px-2.5 py-1 rounded-full text-xs font-semibold {{ $sc }}">
                                                     {{ $sl }}
@@ -312,6 +279,7 @@
                         @endif
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
