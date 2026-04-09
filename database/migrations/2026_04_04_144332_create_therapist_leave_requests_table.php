@@ -38,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('therapist_leave_requests');
+         Schema::dropIfExists('therapist_leave_requests');
     }
 };

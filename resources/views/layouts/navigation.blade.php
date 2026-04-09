@@ -39,7 +39,7 @@
                                 Pembayaran
                             </x-nav-link>
 
-                            {{-- COA DROPDOWN (admin + kasir) --}}
+                            {{-- PENGELUARAN DROPDOWN (admin + kasir) --}}
                             <div class="hidden sm:flex sm:items-center" x-data="{ openCoa: false }"
                                 @click.outside="openCoa = false">
                                 <div class="relative">
@@ -72,10 +72,6 @@
                                             class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                             Transaksi
                                         </div>
-                                        {{-- <a href="{{ route('admin.atk-purchases.index') }}"
-                                            class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-purchases.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
-                                            Catat Pengeluaran
-                                        </a> --}}
 
                                         @if (Auth::user()->role === 'admin')
                                             <div
@@ -141,10 +137,11 @@
                                                 request()->routeIs('admin.therapists.*') ||
                                                 request()->routeIs('admin.customers.*') ||
                                                 request()->routeIs('admin.memberships.*') ||
-                                                request()->routeIs('admin.customer-memberships.*') ||
+                                                request()->routeIs('admin.customers.membership.*') ||
                                                 request()->routeIs('admin.promos.*') ||
                                                 request()->routeIs('admin.programs.*') ||
-                                                request()->routeIs('admin.barang.*')
+                                                request()->routeIs('admin.barang.*') ||
+                                                request()->routeIs('admin.content.*')
                                                     ? 'true'
                                                     : 'false' }} ?
                                                 'border-indigo-500 text-gray-900 dark:text-gray-100' :
@@ -189,6 +186,13 @@
                                             <a href="{{ route('admin.barang.index') }}"
                                                 class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.barang.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
                                                 Barang
+                                            </a>
+
+                                            <div class="border-t border-gray-100 dark:border-gray-600 my-1"></div>
+
+                                            <a href="{{ route('admin.content.index') }}"
+                                                class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.content.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+                                                ⚙️ Pengaturan Konten
                                             </a>
 
                                             @if (isset($customer))
@@ -275,11 +279,8 @@
                         Pembayaran
                     </x-responsive-nav-link>
 
-                    {{-- COA MOBILE --}}
+                    {{-- PENGELUARAN MOBILE --}}
                     <div class="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">Pengeluaran</div>
-                    {{-- <x-responsive-nav-link :href="route('admin.atk-purchases.index')" :active="request()->routeIs('admin.atk-purchases.*')">
-                        Catat Pengeluaran
-                    </x-responsive-nav-link> --}}
 
                     @if (Auth::user()->role === 'admin')
                         @if (Route::has('admin.atk-categories.index'))
@@ -315,6 +316,12 @@
                         <x-responsive-nav-link :href="route('admin.promos.index')" :active="request()->routeIs('admin.promos.*')">Promo</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.programs.index')" :active="request()->routeIs('admin.programs.*')">Program</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.barang.index')" :active="request()->routeIs('admin.barang.*')">Barang</x-responsive-nav-link>
+
+                        <div class="border-t border-gray-100 dark:border-gray-600 mt-2"></div>
+
+                        <x-responsive-nav-link :href="route('admin.content.index')" :active="request()->routeIs('admin.content.*')">
+                            ⚙️ Pengaturan Konten
+                        </x-responsive-nav-link>
                     @endif
                 @elseif (Auth::user()->role === 'therapist')
                     {{-- ========================================================================== --}}

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BookingController;
+use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\TherapistFaceController;
 use App\Http\Controllers\Admin\TherapistAttendanceController;
 use App\Http\Controllers\Admin\ProgramController;
@@ -126,6 +127,11 @@ Route::middleware(['auth', 'role:admin,kasir'])
                 ->name('atk-items.adjust-stock');
             Route::get('/laporan/export', [\App\Http\Controllers\Admin\LaporanController::class, 'export'])
                 ->name('laporan.export');
+
+            // ── CONTENT ROUTES (PERBAIKAN) ──
+            Route::get('content',    [ContentController::class, 'index'])->name('content.index');
+            Route::put('content',    [ContentController::class, 'update'])->name('content.update');
+            Route::delete('content', [ContentController::class, 'reset'])->name('content.reset');
         });
 
         Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);

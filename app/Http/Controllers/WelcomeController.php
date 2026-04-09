@@ -7,6 +7,7 @@ use App\Models\Therapist;
 use App\Models\Booking;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class WelcomeController extends Controller
 {
@@ -16,7 +17,14 @@ class WelcomeController extends Controller
         $therapists = Therapist::where('is_active', 1)->get();
         $therapistSchedules = $this->buildTherapistSchedules($therapists);
 
-        return view('welcome', compact('services', 'therapists', 'therapistSchedules'));
+        // Muat konten dari storage/app/content.json (cache 10 menit)
+        $content = Cache::remember('site_content', 600, function () {
+            $path = storage_path('app/content.json');
+            if (!file_exists($path)) return [];
+            return json_decode(file_get_contents($path), true) ?? [];
+        });
+
+        return view('welcome', compact('services', 'therapists', 'therapistSchedules', 'content'));
     }
 
     // ── Endpoint AJAX: slot yang sudah dipesan per terapis per tanggal ──
@@ -80,7 +88,6 @@ class WelcomeController extends Controller
             ->get()
             ->groupBy('therapist_id');
 
-        // Ambil semua booking dalam rentang, group per "therapist_id|tanggal"
         $allBookings = Booking::whereIn('status', ['scheduled', 'ongoing'])
             ->whereBetween('scheduled_at', [$from->startOfDay(), $to->endOfDay()])
             ->with('service')
@@ -99,7 +106,6 @@ class WelcomeController extends Controller
                 $schedMap[$dateKey] = $row->status;
             }
 
-            // Bangun booking_map: { "2026-04-04": ["09:00","11:00"], ... }
             $bookingMap = [];
             foreach ($allBookings as $key => $bookings) {
                 [$tid, $dateStr] = explode('|', $key);

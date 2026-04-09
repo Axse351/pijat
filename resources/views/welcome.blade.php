@@ -1824,32 +1824,37 @@
         <div class="hero-bg"></div>
         <div class="hero-inner">
             <div class="hero-content">
-                <div class="hero-badge">Buka Setiap Hari · 09.00 – 20.00</div>
-                <h1 class="hero-title">Temukan <em>Kedamaian</em><br>di Tengah Kesibukan</h1>
-                <p class="hero-subtitle">Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa
-                    Anda. Dipercaya lebih dari 500 pelanggan setia.</p>
+                <div class="hero-badge">{{ $content['hero_badge'] ?? 'Buka Setiap Hari · 09.00 – 20.00' }}</div>
+                <h1 class="hero-title">
+                    {{ $content['hero_title_plain'] ?? 'Temukan' }}
+                    <em>{{ $content['hero_title_italic'] ?? 'Kedamaian' }}</em><br>
+                    {{ $content['hero_title_line2'] ?? 'di Tengah Kesibukan' }}
+                </h1>
+                <p class="hero-subtitle">
+                    {{ $content['hero_subtitle'] ?? 'Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda. Dipercaya lebih dari 500 pelanggan setia.' }}
+                </p>
                 <div class="hero-actions">
                     <a href="#booking" class="btn-primary">
-                        Booking Sekarang
+                        {{ $content['hero_btn_primary'] ?? 'Booking Sekarang' }}
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5"
                                 stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                     </a>
-                    <a href="#layanan" class="btn-outline">Lihat Layanan</a>
+                    <a href="#layanan" class="btn-outline">{{ $content['hero_btn_secondary'] ?? 'Lihat Layanan' }}</a>
                 </div>
                 <div class="hero-stats">
                     <div>
-                        <div class="hero-stat-num">500+</div>
-                        <div class="hero-stat-label">Pelanggan Puas</div>
+                        <div class="hero-stat-num">{{ $content['stat_1_num'] ?? '500+' }}</div>
+                        <div class="hero-stat-label">{{ $content['stat_1_label'] ?? 'Pelanggan Puas' }}</div>
                     </div>
                     <div>
-                        <div class="hero-stat-num">15+</div>
-                        <div class="hero-stat-label">Terapis Bersertifikat</div>
+                        <div class="hero-stat-num">{{ $content['stat_2_num'] ?? '15+' }}</div>
+                        <div class="hero-stat-label">{{ $content['stat_2_label'] ?? 'Terapis Bersertifikat' }}</div>
                     </div>
                     <div>
-                        <div class="hero-stat-num">8+</div>
-                        <div class="hero-stat-label">Jenis Layanan</div>
+                        <div class="hero-stat-num">{{ $content['stat_3_num'] ?? '8+' }}</div>
+                        <div class="hero-stat-label">{{ $content['stat_3_label'] ?? 'Jenis Layanan' }}</div>
                     </div>
                 </div>
             </div>
@@ -1912,7 +1917,8 @@
                                 @endphp
                                 <div class="promo-slide {{ $i === 0 ? 'active' : '' }}">
                                     @if ($exists)
-                                        <img class="promo-slide-img" src="{{ asset('images/promos/' . $slide['file']) }}"
+                                        <img class="promo-slide-img"
+                                            src="{{ asset('images/promos/' . $slide['file']) }}"
                                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
                                     @else
                                         <div class="promo-placeholder"
@@ -1956,7 +1962,8 @@
                 <div class="promo-thumbs" id="promoThumbs">
                     @foreach ($slides as $i => $slide)
                         @php $exists = file_exists(public_path('images/promos/'.$slide['file'])); @endphp
-                        <div class="promo-thumb {{ $i === 0 ? 'active' : '' }}" onclick="promoGoTo({{ $i }})"
+                        <div class="promo-thumb {{ $i === 0 ? 'active' : '' }}"
+                            onclick="promoGoTo({{ $i }})"
                             style="{{ !$exists ? 'background:' . $placeholderColors[$i % count($placeholderColors)] . ';display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:16px;' : '' }}">
                             @if ($exists)
                                 <img src="{{ asset('images/promos/' . $slide['file']) }}" loading="lazy">
@@ -1975,10 +1982,14 @@
     <section id="layanan">
         <div class="section-inner">
             <div class="fade-up">
-                <div class="section-eyebrow">Layanan Kami</div>
-                <h2 class="section-title">Pilihan Terapi<br>Terbaik untuk Anda</h2>
-                <p class="section-sub">Setiap layanan dirancang oleh terapis bersertifikat menggunakan teknik terbaik
-                    dan bahan alami pilihan.</p>
+                <div class="section-eyebrow">{{ $content['layanan_eyebrow'] ?? 'Layanan Kami' }}</div>
+                <h2 class="section-title">
+                    {{ $content['layanan_title_1'] ?? 'Pilihan Terapi' }}<br>
+                    {{ $content['layanan_title_2'] ?? 'Terbaik untuk Anda' }}
+                </h2>
+                <p class="section-sub">
+                    {{ $content['layanan_sub'] ?? 'Setiap layanan dirancang oleh terapis bersertifikat menggunakan teknik terbaik dan bahan alami pilihan.' }}
+                </p>
             </div>
             <div class="services-grid">
                 @forelse ($services ?? [] as $service)
@@ -2011,10 +2022,14 @@
     <section id="terapis">
         <div class="section-inner">
             <div class="fade-up">
-                <div class="section-eyebrow">Tim Kami</div>
-                <h2 class="section-title">Terapis Profesional<br>& Bersertifikat</h2>
-                <p class="section-sub">Setiap terapis kami telah melewati pelatihan intensif dan memiliki sertifikasi
-                    resmi.</p>
+                <div class="section-eyebrow">{{ $content['terapis_eyebrow'] ?? 'Tim Kami' }}</div>
+                <h2 class="section-title">
+                    {{ $content['terapis_title_1'] ?? 'Terapis Profesional' }}<br>
+                    {{ $content['terapis_title_2'] ?? '& Bersertifikat' }}
+                </h2>
+                <p class="section-sub">
+                    {{ $content['terapis_sub'] ?? 'Setiap terapis kami telah melewati pelatihan intensif dan memiliki sertifikasi resmi.' }}
+                </p>
             </div>
             <div class="therapists-grid">
                 @forelse ($therapists ?? [] as $therapist)
@@ -2098,17 +2113,67 @@
     <section id="tentang">
         <div class="section-inner">
             <div class="fade-up" style="text-align:center;max-width:600px;margin:0 auto;">
-                <div class="section-eyebrow" style="justify-content:center;">Kenapa Kami</div>
-                <h2 class="section-title">Pengalaman Spa yang<br>Berbeda dari yang Lain</h2>
-                <p class="section-sub" style="margin:0 auto;">Kami berkomitmen memberikan pengalaman wellness terbaik
-                    dengan standar pelayanan tertinggi.</p>
+                <div class="section-eyebrow" style="justify-content:center;">
+                    {{ $content['tentang_eyebrow'] ?? 'Kenapa Kami' }}</div>
+                <h2 class="section-title">
+                    {{ $content['tentang_title_1'] ?? 'Pengalaman Spa yang' }}<br>
+                    {{ $content['tentang_title_2'] ?? 'Berbeda dari yang Lain' }}
+                </h2>
+                <p class="section-sub" style="margin:0 auto;">
+                    {{ $content['tentang_sub'] ?? 'Kami berkomitmen memberikan pengalaman wellness terbaik dengan standar pelayanan tertinggi.' }}
+                </p>
             </div>
             <div class="why-grid">
-                @foreach ([['🏅', 'Terapis Bersertifikat', 'Semua terapis kami bersertifikat nasional & internasional dengan pengalaman minimal 3 tahun.'], ['🌿', 'Bahan Alami Premium', 'Kami hanya menggunakan produk organik berkualitas tinggi yang aman untuk kulit Anda.'], ['📅', 'Booking Mudah', 'Pesan layanan kapan saja, di mana saja — tanpa perlu daftar akun terlebih dahulu.'], ['💆', 'Privasi Terjaga', 'Ruangan terapi privat yang tenang dan nyaman untuk pengalaman terbaik Anda.'], ['⏰', 'Fleksibel', 'Tersedia dari pukul 09.00–20.00 setiap hari, termasuk akhir pekan dan hari libur.'], ['💎', 'Harga Transparan', 'Tidak ada biaya tersembunyi. Harga yang Anda lihat adalah harga yang Anda bayar.']] as [$icon, $title, $text])
+                @php
+                    $whyCards = [
+                        [
+                            'key' => 'why_1',
+                            'icon' => '🏅',
+                            'title' => 'Terapis Bersertifikat',
+                            'text' =>
+                                'Semua terapis kami bersertifikat nasional & internasional dengan pengalaman minimal 3 tahun.',
+                        ],
+                        [
+                            'key' => 'why_2',
+                            'icon' => '🌿',
+                            'title' => 'Bahan Alami Premium',
+                            'text' =>
+                                'Kami hanya menggunakan produk organik berkualitas tinggi yang aman untuk kulit Anda.',
+                        ],
+                        [
+                            'key' => 'why_3',
+                            'icon' => '📅',
+                            'title' => 'Booking Mudah',
+                            'text' =>
+                                'Pesan layanan kapan saja, di mana saja — tanpa perlu daftar akun terlebih dahulu.',
+                        ],
+                        [
+                            'key' => 'why_4',
+                            'icon' => '💆',
+                            'title' => 'Privasi Terjaga',
+                            'text' => 'Ruangan terapi privat yang tenang dan nyaman untuk pengalaman terbaik Anda.',
+                        ],
+                        [
+                            'key' => 'why_5',
+                            'icon' => '⏰',
+                            'title' => 'Fleksibel',
+                            'text' =>
+                                'Tersedia dari pukul 09.00–20.00 setiap hari, termasuk akhir pekan dan hari libur.',
+                        ],
+                        [
+                            'key' => 'why_6',
+                            'icon' => '💎',
+                            'title' => 'Harga Transparan',
+                            'text' =>
+                                'Tidak ada biaya tersembunyi. Harga yang Anda lihat adalah harga yang Anda bayar.',
+                        ],
+                    ];
+                @endphp
+                @foreach ($whyCards as $card)
                     <div class="why-card fade-up">
-                        <div class="why-icon">{{ $icon }}</div>
-                        <div class="why-title">{{ $title }}</div>
-                        <div class="why-text">{{ $text }}</div>
+                        <div class="why-icon">{{ $content[$card['key'] . '_icon'] ?? $card['icon'] }}</div>
+                        <div class="why-title">{{ $content[$card['key'] . '_title'] ?? $card['title'] }}</div>
+                        <div class="why-text">{{ $content[$card['key'] . '_text'] ?? $card['text'] }}</div>
                     </div>
                 @endforeach
             </div>
@@ -2120,35 +2185,49 @@
         <div class="section-inner">
             <div class="booking-wrapper">
                 <div class="booking-info fade-up">
-                    <div class="section-eyebrow">Reservasi Online</div>
-                    <h2 class="section-title">Booking Tanpa<br>Perlu Daftar Akun</h2>
-                    <p class="section-sub">Cukup isi formulir di samping dan tim kami akan mengkonfirmasi jadwal Anda
-                        via WhatsApp dalam 30 menit.</p>
+                    <div class="section-eyebrow">{{ $content['booking_eyebrow'] ?? 'Reservasi Online' }}</div>
+                    <h2 class="section-title">
+                        {{ $content['booking_title_1'] ?? 'Booking Tanpa' }}<br>
+                        {{ $content['booking_title_2'] ?? 'Perlu Daftar Akun' }}
+                    </h2>
+                    <p class="section-sub">
+                        {{ $content['booking_sub'] ?? 'Cukup isi formulir di samping dan tim kami akan mengkonfirmasi jadwal Anda via WhatsApp dalam 30 menit.' }}
+                    </p>
                     <div class="booking-features">
-                        <div class="booking-feature">
-                            <div class="booking-feature-icon">⚡</div>
-                            <div>
-                                <div class="booking-feature-title">Konfirmasi Cepat</div>
-                                <div class="booking-feature-desc">Tim kami menghubungi Anda dalam 30 menit setelah
-                                    booking diterima.</div>
+                        @php
+                            $bookingFeatures = [
+                                [
+                                    'key' => 'bf_1',
+                                    'icon' => '⚡',
+                                    'title' => 'Konfirmasi Cepat',
+                                    'desc' => 'Tim kami menghubungi Anda dalam 30 menit setelah booking diterima.',
+                                ],
+                                [
+                                    'key' => 'bf_2',
+                                    'icon' => '🔒',
+                                    'title' => 'Data Aman',
+                                    'desc' => 'Informasi Anda hanya digunakan untuk keperluan konfirmasi booking.',
+                                ],
+                                [
+                                    'key' => 'bf_3',
+                                    'icon' => '🔄',
+                                    'title' => 'Reschedule Gratis',
+                                    'desc' => 'Ubah jadwal maksimal H-1 sebelum sesi dimulai, tanpa biaya.',
+                                ],
+                            ];
+                        @endphp
+                        @foreach ($bookingFeatures as $feat)
+                            <div class="booking-feature">
+                                <div class="booking-feature-icon">
+                                    {{ $content[$feat['key'] . '_icon'] ?? $feat['icon'] }}</div>
+                                <div>
+                                    <div class="booking-feature-title">
+                                        {{ $content[$feat['key'] . '_title'] ?? $feat['title'] }}</div>
+                                    <div class="booking-feature-desc">
+                                        {{ $content[$feat['key'] . '_desc'] ?? $feat['desc'] }}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="booking-feature">
-                            <div class="booking-feature-icon">🔒</div>
-                            <div>
-                                <div class="booking-feature-title">Data Aman</div>
-                                <div class="booking-feature-desc">Informasi Anda hanya digunakan untuk keperluan
-                                    konfirmasi booking.</div>
-                            </div>
-                        </div>
-                        <div class="booking-feature">
-                            <div class="booking-feature-icon">🔄</div>
-                            <div>
-                                <div class="booking-feature-title">Reschedule Gratis</div>
-                                <div class="booking-feature-desc">Ubah jadwal maksimal H-1 sebelum sesi dimulai, tanpa
-                                    biaya.</div>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -2166,8 +2245,10 @@
                                 Booking Lain</a>
                         </div>
                     @else
-                        <h3 class="form-title">Buat Reservasi</h3>
-                        <p class="form-sub">Isi data di bawah ini. Anda tidak perlu membuat akun.</p>
+                        <h3 class="form-title">{{ $content['booking_form_title'] ?? 'Buat Reservasi' }}</h3>
+                        <p class="form-sub">
+                            {{ $content['booking_form_sub'] ?? 'Isi data di bawah ini. Anda tidak perlu membuat akun.' }}
+                        </p>
 
                         @if ($errors->any())
                             <div
@@ -2280,9 +2361,12 @@
         <div class="footer-inner">
             <div class="footer-top">
                 <div>
-                    <div class="footer-brand">Koichi<span>Spa</span></div>
-                    <div class="footer-tagline">Wellness & Terapi Profesional. Hadir untuk memulihkan keseimbangan
-                        tubuh dan pikiran Anda.</div>
+                    <div class="footer-brand">
+                        {{ $content['footer_brand'] ?? 'Koichi' }}<span>{{ $content['footer_brand_accent'] ?? 'Spa' }}</span>
+                    </div>
+                    <div class="footer-tagline">
+                        {{ $content['footer_tagline'] ?? 'Wellness & Terapi Profesional. Hadir untuk memulihkan keseimbangan tubuh dan pikiran Anda.' }}
+                    </div>
                 </div>
                 <div class="footer-links">
                     <h4>Navigasi</h4>
@@ -2306,16 +2390,17 @@
                 <div class="footer-links">
                     <h4>Kontak</h4>
                     <ul>
-                        <li><a href="#">📍 Jl. Melati Raya No. 47, Cirebon</a></li>
-                        <li><a href="#">📞 0821-5567-3894</a></li>
-                        <li><a href="#">✉ hello@koichispa.id</a></li>
-                        <li><a href="#">⏰ 09.00 – 20.00</a></li>
+                        <li><a href="#">📍
+                                {{ $content['footer_address'] ?? 'Jl. Melati Raya No. 47, Cirebon' }}</a></li>
+                        <li><a href="#">📞 {{ $content['footer_phone'] ?? '0821-5567-3894' }}</a></li>
+                        <li><a href="#">✉ {{ $content['footer_email'] ?? 'hello@koichispa.id' }}</a></li>
+                        <li><a href="#">⏰ {{ $content['footer_hours'] ?? '09.00 – 20.00' }}</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
                 <span>© {{ date('Y') }} KoichiSpa. Hak cipta dilindungi.</span>
-                <span>Dibuat dengan ❤ untuk kesehatan Anda</span>
+                <span>{{ $content['footer_copyright'] ?? 'Dibuat dengan ❤ untuk kesehatan Anda' }}</span>
             </div>
         </div>
     </footer>
@@ -2533,12 +2618,6 @@
                     } else {
                         preview = `<div class="ts-time">${t.start_time||'09:00'} – ${t.end_time||'20:00'}</div>`;
                     }
-
-                    // Klik buka modal hanya jika ada booking
-                    if (hasBook) {
-                        cellCls += `" onclick="openDayModal('${ds}', ${tsActiveId})"`;
-                        // Tutup quote dan tambah style kursor
-                    }
                 } else if (['off', 'sick', 'vacation', 'cuti_bersama'].includes(status)) {
                     cellCls += ' off';
                     dateCls += ' off-num';
@@ -2557,19 +2636,15 @@
 
                 if (isToday) cellCls += ' today';
 
-                // Rebuild cellCls bersih (tanpa onclick di class)
-                const baseClass = cellCls.split('"')[0];
                 const hasBooking = (scheds[ds] === 'working') && (bookingMap[ds] || []).length > 0;
                 const clickAttr = hasBooking ? `onclick="openDayModal('${ds}', ${tsActiveId})"` : '';
 
-                cells += `<div class="${baseClass}" ${clickAttr}>
+                cells += `<div class="${cellCls}" ${clickAttr}>
             <span class="${dateCls}">${d}</span>
             ${badge}
             ${preview}
         </div>`;
             }
-
-            const bookedToday = Object.values(bookingMap).reduce((s, v) => s + v.length, 0);
 
             area.innerHTML = `
         <div class="ts-cal-wrap">
@@ -2641,7 +2716,7 @@
             document.getElementById('tsDayModalTitle').textContent = formatted;
             document.getElementById('tsDayModalSub').textContent = `Jadwal ${t.name} · ${t.spec}`;
             document.getElementById('tsDayModalSlots').innerHTML =
-            '<div class="slot-loading">Memuat data slot...</div>';
+                '<div class="slot-loading">Memuat data slot...</div>';
             document.getElementById('tsDayModalOverlay').classList.add('open');
             document.body.style.overflow = 'hidden';
 
@@ -2777,7 +2852,6 @@
 
             const html = `<div class="slot-grid">` + allSlots.map(slot => {
                 const blocked = isSlotBlockedForm(slot);
-                const [sh] = slot.split(':').map(Number);
                 const slotDate = new Date(`${date}T${slot}`);
                 const isPast = slotDate <= now;
                 const disabled = blocked || isPast;
@@ -2829,7 +2903,7 @@
             }
 
             document.getElementById('slotArea').innerHTML =
-            `<div class="slot-loading">Memuat ketersediaan jam...</div>`;
+                `<div class="slot-loading">Memuat ketersediaan jam...</div>`;
 
             try {
                 const res = await fetch(`/api/booked-slots?therapist_id=${therapistId}&date=${date}`);
