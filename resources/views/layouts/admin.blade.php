@@ -62,6 +62,7 @@
                     <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Booking Hari Ini</div>
                 </div>
 
+                {{-- ✅ DIPERBAIKI: dari "/ 1000000, 1) }}jt" → number_format penuh --}}
                 <div class="stat-card green bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
                     <div class="flex items-center justify-between mb-3">
                         <div class="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
@@ -71,7 +72,7 @@
                         </div>
                     </div>
                     <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                        Rp {{ number_format($monthRevenue / 1000000, 1) }}jt
+                        Rp {{ number_format($monthRevenue, 0, ',', '.') }}
                     </div>
                     <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pendapatan Bulan Ini</div>
                 </div>

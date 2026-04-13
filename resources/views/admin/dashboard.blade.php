@@ -133,7 +133,7 @@
                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
-            <div class="stat-value">{{ number_format($monthRevenue / 1000000, 1) }}jt</div>
+            <div class="stat-value">Rp {{ number_format($monthRevenue, 0, ',', '.') }}</div>
             <div class="stat-label">Pendapatan Bulan Ini</div>
         </div>
 
@@ -446,8 +446,7 @@
                     <div style="display:flex;flex-direction:column;gap:8px;">
                         @foreach ($lowStock as $barang)
                             @php
-                                // Gunakan accessor & field dari model Barang
-                                $stokSistem = $barang->stok_sistem; // accessor: stok_awal + stok_masuk - stok_keluar
+                                $stokSistem = $barang->stok_sistem;
                                 $stokMin = $barang->stok_minimum ?? 5;
                                 $maxStock = max($stokMin * 5, 50);
                                 $pct = $maxStock > 0 ? min(100, ($stokSistem / $maxStock) * 100) : 0;
@@ -475,7 +474,6 @@
                                         style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;color:{{ $badgeColor }};background:{{ $badgeBg }};border:1px solid {{ $badgeColor }}33;flex-shrink:0;margin-left:6px;">
                                         {{ $label }}</span>
                                 </div>
-                                {{-- Kode & kategori --}}
                                 <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">
                                     {{ $barang->kode_barang }}
                                     @if ($barang->kategori)
@@ -538,8 +536,9 @@
                                 <tr>
                                     <td class="text-main">{{ $booking->customer->name ?? '-' }}</td>
                                     <td>{{ $booking->service->name ?? '-' }}</td>
-                                    <td style="color:var(--gold);font-weight:600;">Rp
-                                        {{ number_format($booking->final_price, 0, ',', '.') }}</td>
+                                    <td style="color:var(--gold);font-weight:600;">
+                                        Rp {{ number_format($booking->final_price, 0, ',', '.') }}
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -575,8 +574,9 @@
                                     <div
                                         style="font-size:12px;font-weight:600;color:#F0EDE8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                                         {{ $svc->name }}</div>
-                                    <div style="font-size:10px;color:var(--text-muted);">Rp
-                                        {{ number_format($svc->price, 0, ',', '.') }}</div>
+                                    <div style="font-size:10px;color:var(--text-muted);">
+                                        Rp {{ number_format($svc->price, 0, ',', '.') }}
+                                    </div>
                                 </div>
                                 <span class="badge badge-gold" style="flex-shrink:0;">{{ $svc->bookings_count }}
                                     sesi</span>
@@ -601,55 +601,48 @@
 
 
     {{-- ── CHART.JS ── --}}
-    {{-- Chart.js CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         @php
-            // Fallback semua variabel chart agar @json tidak melempar error
-            $chartLabelsHarian = $chartLabelsHarian ?? array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23));
-            $chartHarian = $chartHarian ?? array_fill(0, 24, 0);
-            $chartHarianPrev = $chartHarianPrev ?? array_fill(0, 24, 0);
+            $chartLabelsHarian   = $chartLabelsHarian   ?? array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23));
+            $chartHarian         = $chartHarian         ?? array_fill(0, 24, 0);
+            $chartHarianPrev     = $chartHarianPrev     ?? array_fill(0, 24, 0);
             $chartLabelsMingguan = $chartLabelsMingguan ?? ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-            $chartMingguan = $chartMingguan ?? array_fill(0, 7, 0);
-            $chartMingguanPrev = $chartMingguanPrev ?? array_fill(0, 7, 0);
-            $chartLabelsBulanan = $chartLabelsBulanan ?? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-            $chartBulanan = $chartBulanan ?? array_fill(0, 12, 0);
-            $chartBulananPrev = $chartBulananPrev ?? array_fill(0, 12, 0);
+            $chartMingguan       = $chartMingguan       ?? array_fill(0, 7, 0);
+            $chartMingguanPrev   = $chartMingguanPrev   ?? array_fill(0, 7, 0);
+            $chartLabelsBulanan  = $chartLabelsBulanan  ?? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            $chartBulanan        = $chartBulanan        ?? array_fill(0, 12, 0);
+            $chartBulananPrev    = $chartBulananPrev    ?? array_fill(0, 12, 0);
         @endphp
+
         const chartData = {
             harian: {
                 labels: @json($chartLabelsHarian),
                 current: @json($chartHarian),
                 previous: @json($chartHarianPrev),
                 rangeLabel: '{{ now()->format('d M Y') }}',
-                totalLabel: 'Hari Ini',
             },
             mingguan: {
                 labels: @json($chartLabelsMingguan),
                 current: @json($chartMingguan),
                 previous: @json($chartMingguanPrev),
                 rangeLabel: '{{ now()->startOfWeek()->format('d M') }} - {{ now()->endOfWeek()->format('d M Y') }}',
-                totalLabel: 'Minggu Ini',
             },
             bulanan: {
                 labels: @json($chartLabelsBulanan),
                 current: @json($chartBulanan),
                 previous: @json($chartBulananPrev),
                 rangeLabel: '{{ now()->format('Y') }}',
-                totalLabel: 'Tahun Ini',
             },
         };
 
-        // ─── Inisialisasi Chart ────────────────────────────────────────────────────────
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-
-        // Gradient emas untuk fill
-        function makeGradient(ctx, color) {
-            const grad = ctx.createLinearGradient(0, 0, 0, 220);
-            grad.addColorStop(0, color.replace(')', ', 0.25)').replace('rgb', 'rgba'));
-            grad.addColorStop(1, color.replace(')', ', 0)').replace('rgb', 'rgba'));
-            return grad;
+        // ─── Format angka sebagai Rupiah penuh ────────────────────────────
+        function formatRupiah(val) {
+            return 'Rp ' + new Intl.NumberFormat('id-ID').format(val);
         }
+
+        // ─── Inisialisasi Chart ───────────────────────────────────────────
+        const ctx = document.getElementById('revenueChart').getContext('2d');
 
         const goldGrad = (() => {
             const g = ctx.createLinearGradient(0, 0, 0, 220);
@@ -691,14 +684,9 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
+                interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
                         backgroundColor: 'rgba(26,26,26,0.95)',
                         titleColor: '#C9A84C',
@@ -707,39 +695,24 @@
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
-                            label: ctx => {
-                                const val = ctx.parsed.y;
-                                return ' Rp ' + new Intl.NumberFormat('id-ID').format(val);
-                            }
+                            label: ctx => ' ' + formatRupiah(ctx.parsed.y),
                         }
                     }
                 },
                 scales: {
                     x: {
-                        grid: {
-                            color: 'rgba(255,255,255,0.04)'
-                        },
-                        ticks: {
-                            color: 'rgba(255,255,255,0.35)',
-                            font: {
-                                size: 10
-                            }
-                        },
+                        grid: { color: 'rgba(255,255,255,0.04)' },
+                        ticks: { color: 'rgba(255,255,255,0.35)', font: { size: 10 } },
                     },
                     y: {
-                        grid: {
-                            color: 'rgba(255,255,255,0.04)'
-                        },
+                        grid: { color: 'rgba(255,255,255,0.04)' },
                         ticks: {
                             color: 'rgba(255,255,255,0.35)',
-                            font: {
-                                size: 10
-                            },
-                            callback: v => v >= 1000000 ?
-                                (v / 1000000).toFixed(1) + 'jt' :
-                                v >= 1000 ?
-                                (v / 1000).toFixed(0) + 'rb' :
-                                v,
+                            font: { size: 10 },
+                            // Sumbu Y tetap disingkat agar tidak terlalu panjang di grid
+                            callback: v =>
+                                v >= 1_000_000 ? (v / 1_000_000).toFixed(1) + 'jt' :
+                                v >= 1_000     ? (v / 1_000).toFixed(0) + 'rb' : v,
                         },
                         beginAtZero: true,
                     }
@@ -747,31 +720,26 @@
             }
         });
 
-        // ─── Switch period ─────────────────────────────────────────────────────────────
+        // ─── Switch period ────────────────────────────────────────────────
         function switchPeriod(period, btn) {
-            // Update tab active state
             document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
             const d = chartData[period];
 
-            // Update chart
             revenueChart.data.labels = d.labels;
             revenueChart.data.datasets[0].data = d.current;
             revenueChart.data.datasets[1].data = d.previous;
             revenueChart.update('active');
 
-            // Update range label
             document.getElementById('chartRangeLabel').textContent = d.rangeLabel;
 
-            // Recalculate summary
             const total = d.current.reduce((a, b) => a + b, 0);
-            const trx = d.current.filter(v => v > 0).length;
-            document.getElementById('summaryTotal').textContent =
-                'Rp ' + new Intl.NumberFormat('id-ID').format(total);
-            document.getElementById('summaryTrx').textContent = trx;
-            document.getElementById('summaryAvg').textContent =
-                'Rp ' + new Intl.NumberFormat('id-ID').format(trx > 0 ? Math.round(total / trx) : 0);
+            const trx   = d.current.filter(v => v > 0).length;
+
+            document.getElementById('summaryTotal').textContent = formatRupiah(total);
+            document.getElementById('summaryTrx').textContent   = trx;
+            document.getElementById('summaryAvg').textContent   = formatRupiah(trx > 0 ? Math.round(total / trx) : 0);
         }
     </script>
 
