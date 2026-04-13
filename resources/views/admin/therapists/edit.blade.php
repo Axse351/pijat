@@ -76,6 +76,20 @@
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                         </div>
 
+                        {{-- Email --}}
+                        <div>
+                            <label
+                                class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                Email *
+                            </label>
+                            <input type="email" name="email"
+                                value="{{ old('email', $therapist->user?->email) }}" required
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="email@example.com">
+                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Email digunakan untuk login
+                                terapis.</p>
+                        </div>
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             {{-- Spesialisasi --}}
                             <div>
@@ -124,6 +138,28 @@
                                     <option value="0" {{ !$therapist->is_active ? 'selected' : '' }}>Nonaktif
                                     </option>
                                 </select>
+                            </div>
+                        </div>
+
+                        {{-- Reset Password --}}
+                        <div class="pt-1 border-t border-gray-100 dark:border-gray-700">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                                Reset Password
+                            </p>
+                            <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        Reset password terapis ke default <strong class="text-gray-800 dark:text-gray-200">123456</strong>.
+                                    </p>
+                                </div>
+                                <form method="POST" action="{{ route('admin.therapists.resetPassword', $therapist) }}"
+                                    onsubmit="return confirm('Reset password {{ $therapist->name }} ke 123456?')">
+                                    @csrf
+                                    <button type="submit"
+                                        class="flex-shrink-0 px-4 py-2 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400 text-xs font-semibold rounded-lg transition-colors border border-amber-200 dark:border-amber-700">
+                                        Reset Password
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
