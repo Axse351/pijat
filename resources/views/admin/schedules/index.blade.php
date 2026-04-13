@@ -18,6 +18,7 @@
                     </ul>
                 </div>
             @endif
+
             @if (session('success'))
                 <div
                     class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
@@ -25,7 +26,7 @@
                 </div>
             @endif
 
-            {{-- ── Filter Card ─────────────────────────────────── --}}
+            {{-- ── Filter Card ── --}}
             <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <form method="GET" class="flex flex-col md:flex-row gap-4 items-end">
@@ -81,7 +82,6 @@
                                     class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition">
                                     👥 Semua Terapis
                                 </a>
-                                {{-- ★ Tombol baru: Kelola Pengajuan Izin Terapis ini --}}
                                 <a href="{{ route('admin.leaves.index', ['therapist_id' => $selectedTherapist]) }}"
                                     class="relative px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition inline-flex items-center gap-1.5">
                                     📋 Pengajuan Izin
@@ -98,7 +98,7 @@
                 </div>
             </div>
 
-            {{-- ★ Leave Request Banner (jika ada pending) --}}
+            {{-- ★ Leave Request Banner --}}
             @if ($selectedTherapist && isset($pendingLeaves) && $pendingLeaves->count() > 0)
                 <div
                     class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg flex items-start gap-3">
@@ -110,7 +110,7 @@
                         <div class="mt-2 flex flex-wrap gap-2">
                             @foreach ($pendingLeaves as $pl)
                                 <a href="{{ route('admin.leaves.show', $pl) }}"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded-lg text-xs font-medium text-yellow-800 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition">
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded-lg text-xs font-medium text-yellow-800 dark:text-yellow-300 hover:bg-yellow-100 transition">
                                     @switch($pl->type)
                                         @case('sakit')
                                             🏥
@@ -143,8 +143,152 @@
                 </div>
             @endif
 
-            {{-- ── Calendar ─────────────────────────────────────── --}}
             @if ($selectedTherapist)
+
+                {{-- ════════════════════════════════════════════════
+                     SCHEDULE VALIDATION WARNINGS
+                     Muncul setelah jadwal bulan ini sudah di-generate
+                ════════════════════════════════════════════════ --}}
+                @php
+                    $warningList = [];
+
+                    // Hitung hari libur (off, sick, vacation, cuti_bersama)
+                    $offCount = $schedules->whereIn('status', ['off', 'sick', 'vacation', 'cuti_bersama'])->count();
+
+                    // Hitung kerja siang
+                    $afternoonCount = $schedules->where('status', 'working_afternoon')->count();
+
+                    // Hitung hari piket = hari kerja (pagi + siang) yang jatuh pada Sabtu atau Minggu
+                    $piketCount = $schedules
+                        ->filter(function ($s) {
+                            if (!in_array($s->status, ['working', 'working_afternoon'])) {
+                                return false;
+                            }
+                            $dow = \Carbon\Carbon::parse($s->schedule_date)->dayOfWeek;
+                            return in_array($dow, [0, 6]); // 0 = Minggu, 6 = Sabtu
+                        })
+                        ->count();
+
+                    // Cek kerja siang di Sabtu/Minggu
+                    $afternoonWeekend = $schedules->filter(function ($s) {
+                        if ($s->status !== 'working_afternoon') {
+                            return false;
+                        }
+                        $dow = \Carbon\Carbon::parse($s->schedule_date)->dayOfWeek;
+                        return in_array($dow, [0, 6]);
+                    });
+
+                    if ($offCount > 2) {
+                        $warningList[] = [
+                            'level' => 'orange',
+                            'icon' => '🏖️',
+                            'title' => 'Hari Libur Terlalu Banyak',
+                            'message' => "Terapis memiliki <strong>{$offCount} hari libur</strong> bulan ini (batas wajar: 2 hari). Pastikan ini sudah sesuai.",
+                        ];
+                    }
+
+                    if ($afternoonCount > 1) {
+                        $warningList[] = [
+                            'level' => 'amber',
+                            'icon' => '🌤',
+                            'title' => 'Shift Siang Lebih dari 1 Kali',
+                            'message' => "Ada <strong>{$afternoonCount} hari shift siang</strong> dalam bulan ini. Pastikan tidak melebihi batas yang ditetapkan.",
+                        ];
+                    }
+
+                    if ($piketCount < 2 && $schedules->count() > 0) {
+                        $warningList[] = [
+                            'level' => 'blue',
+                            'icon' => '📅',
+                            'title' => 'Piket Akhir Pekan Kurang',
+                            'message' => "Hanya ada <strong>{$piketCount} hari piket</strong> (Sabtu/Minggu) bulan ini. Minimal 2 hari piket per bulan.",
+                        ];
+                    }
+
+                    if ($afternoonWeekend->count() > 0) {
+                        $dates = $afternoonWeekend
+                            ->map(fn($s) => \Carbon\Carbon::parse($s->schedule_date)->format('d M'))
+                            ->implode(', ');
+                        $warningList[] = [
+                            'level' => 'red',
+                            'icon' => '🚫',
+                            'title' => 'Shift Siang di Akhir Pekan Dilarang',
+                            'message' => "Ditemukan shift siang pada hari Sabtu/Minggu: <strong>{$dates}</strong>. Sabtu &amp; Minggu hanya boleh shift pagi.",
+                        ];
+                    }
+                @endphp
+
+                @if (count($warningList) > 0)
+                    <div class="mb-6 space-y-3">
+                        @foreach ($warningList as $w)
+                            @php
+                                $styles = match ($w['level']) {
+                                    'red' => [
+                                        'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700',
+                                        'bg-red-100 dark:bg-red-800/40',
+                                        'text-red-700 dark:text-red-300',
+                                        'text-red-800 dark:text-red-200',
+                                    ],
+                                    'orange' => [
+                                        'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700',
+                                        'bg-orange-100 dark:bg-orange-800/40',
+                                        'text-orange-700 dark:text-orange-300',
+                                        'text-orange-800 dark:text-orange-200',
+                                    ],
+                                    'amber' => [
+                                        'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700',
+                                        'bg-amber-100 dark:bg-amber-800/40',
+                                        'text-amber-700 dark:text-amber-300',
+                                        'text-amber-800 dark:text-amber-200',
+                                    ],
+                                    'blue' => [
+                                        'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700',
+                                        'bg-blue-100 dark:bg-blue-800/40',
+                                        'text-blue-700 dark:text-blue-300',
+                                        'text-blue-800 dark:text-blue-200',
+                                    ],
+                                    default => [
+                                        'bg-gray-50 border-gray-300',
+                                        'bg-gray-100',
+                                        'text-gray-700',
+                                        'text-gray-800',
+                                    ],
+                                };
+                            @endphp
+                            <div class="flex items-start gap-3 p-4 rounded-xl border {{ $styles[0] }}">
+                                <div
+                                    class="w-9 h-9 flex-shrink-0 rounded-lg {{ $styles[1] }} flex items-center justify-center text-lg">
+                                    {{ $w['icon'] }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-sm {{ $styles[3] }}">{{ $w['title'] }}</p>
+                                    <p class="text-sm mt-0.5 {{ $styles[2] }} leading-relaxed">
+                                        {!! $w['message'] !!}</p>
+                                </div>
+                                {{-- Badge level --}}
+                                <span
+                                    class="flex-shrink-0 text-xs font-bold px-2 py-1 rounded-full {{ $styles[1] }} {{ $styles[3] }} uppercase tracking-wide">
+                                    {{ $w['level'] === 'red' ? 'Larangan' : 'Perhatian' }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @elseif ($schedules->count() > 0)
+                    {{-- Semua OK --}}
+                    <div
+                        class="mb-6 flex items-center gap-3 p-4 rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+                        <div
+                            class="w-9 h-9 flex-shrink-0 rounded-lg bg-green-100 dark:bg-green-800/40 flex items-center justify-center text-lg">
+                            ✅</div>
+                        <div>
+                            <p class="font-semibold text-sm text-green-800 dark:text-green-200">Jadwal Sudah Sesuai</p>
+                            <p class="text-sm text-green-700 dark:text-green-300">Tidak ada pelanggaran aturan jadwal
+                                ditemukan untuk bulan ini.</p>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ── Calendar ── --}}
                 <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -161,7 +305,6 @@
                             @endforeach
                         </div>
 
-                        {{-- ★ Build leave lookup: date => leave object --}}
                         @php
                             $leaveLookup = [];
                             if (isset($monthLeaves)) {
@@ -175,7 +318,6 @@
                             }
                         @endphp
 
-                        {{-- Calendar days --}}
                         <div class="grid grid-cols-7 gap-2">
                             @foreach ($calendarDays as $day)
                                 @php
@@ -185,8 +327,17 @@
                                     $dateKey = $day['date'] ? $day['date']->format('Y-m-d') : null;
                                     $leave = $dateKey ? $leaveLookup[$dateKey] ?? null : null;
 
+                                    // Tandai sel yang melanggar aturan
+                                    $isAfternoonWeekend = false;
+                                    if ($day['date'] && $status === 'working_afternoon') {
+                                        $dow = $day['date']->dayOfWeek;
+                                        $isAfternoonWeekend = in_array($dow, [0, 6]);
+                                    }
+
                                     $cellClass = match (true) {
                                         $isEmpty => 'bg-gray-50 dark:bg-gray-900/30',
+                                        $isAfternoonWeekend
+                                            => 'bg-red-50 dark:bg-red-900/30 border-red-400 dark:border-red-600 ring-2 ring-red-400',
                                         $leave && $leave->status === 'pending'
                                             => 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700',
                                         $leave && $leave->status === 'approved'
@@ -213,23 +364,27 @@
                                         <div class="flex justify-between items-start mb-1">
                                             <span
                                                 class="text-sm font-bold
-                                                {{ $leave && $leave->status === 'pending'
-                                                    ? 'text-yellow-700 dark:text-yellow-400'
-                                                    : ($leave && $leave->status === 'approved'
-                                                        ? 'text-orange-700 dark:text-orange-400'
-                                                        : ($status === 'working'
-                                                            ? 'text-green-700 dark:text-green-300'
-                                                            : ($status === 'working_afternoon'
-                                                                ? 'text-amber-700 dark:text-amber-300'
-                                                                : 'text-gray-600 dark:text-gray-400'))) }}">
+                                                {{ $isAfternoonWeekend
+                                                    ? 'text-red-600 dark:text-red-400'
+                                                    : ($leave && $leave->status === 'pending'
+                                                        ? 'text-yellow-700 dark:text-yellow-400'
+                                                        : ($leave && $leave->status === 'approved'
+                                                            ? 'text-orange-700 dark:text-orange-400'
+                                                            : ($status === 'working'
+                                                                ? 'text-green-700 dark:text-green-300'
+                                                                : ($status === 'working_afternoon'
+                                                                    ? 'text-amber-700 dark:text-amber-300'
+                                                                    : 'text-gray-600 dark:text-gray-400')))) }}">
                                                 {{ $day['date']->format('d') }}
                                             </span>
-                                            @if ($schedule && !$leave)
+                                            @if ($isAfternoonWeekend)
+                                                <span class="text-red-500 text-xs font-bold"
+                                                    title="Dilarang: shift siang di akhir pekan">🚫</span>
+                                            @elseif ($schedule && !$leave)
                                                 <a href="{{ route('admin.schedules.edit', $schedule) }}"
                                                     class="text-gray-400 hover:text-blue-500 text-xs"
                                                     title="Edit">✎</a>
                                             @elseif ($leave)
-                                                {{-- Ikon link ke detail leave --}}
                                                 <a href="{{ route('admin.leaves.show', $leave) }}"
                                                     class="{{ $leave->status === 'pending' ? 'text-yellow-500 hover:text-yellow-700' : 'text-orange-500 hover:text-orange-700' }} text-xs"
                                                     title="{{ $leave->status === 'pending' ? 'Proses pengajuan izin' : 'Lihat detail izin' }}">
@@ -238,13 +393,24 @@
                                             @endif
                                         </div>
 
-                                        {{-- ★ Leave Badge (prioritas tampil) --}}
-                                        @if ($leave)
+                                        {{-- Violation badge --}}
+                                        @if ($isAfternoonWeekend)
+                                            <span
+                                                class="inline-block px-1.5 py-0.5 bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-bold rounded mb-1">🚫
+                                                Dilarang</span>
+                                            <div class="text-xs text-red-600 dark:text-red-400">Siang akhir pekan</div>
+                                            @if ($schedule)
+                                                <a href="{{ route('admin.schedules.edit', $schedule) }}"
+                                                    class="mt-1 inline-block text-xs text-red-600 dark:text-red-400 hover:underline font-medium">Perbaiki
+                                                    →</a>
+                                            @endif
+
+                                            {{-- Leave badge --}}
+                                        @elseif ($leave)
                                             @if ($leave->status === 'pending')
                                                 <span
-                                                    class="inline-block px-1.5 py-0.5 bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded mb-1">
-                                                    ⏳ Menunggu
-                                                </span>
+                                                    class="inline-block px-1.5 py-0.5 bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded mb-1">⏳
+                                                    Menunggu</span>
                                                 <div class="text-xs text-yellow-700 dark:text-yellow-400">
                                                     @switch($leave->type)
                                                         @case('sakit')
@@ -265,14 +431,12 @@
                                                     @endswitch
                                                 </div>
                                                 <a href="{{ route('admin.leaves.show', $leave) }}"
-                                                    class="mt-1 inline-block text-xs text-yellow-600 dark:text-yellow-400 hover:underline font-medium">
-                                                    Proses →
-                                                </a>
+                                                    class="mt-1 inline-block text-xs text-yellow-600 dark:text-yellow-400 hover:underline font-medium">Proses
+                                                    →</a>
                                             @elseif ($leave->status === 'approved')
                                                 <span
-                                                    class="inline-block px-1.5 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-semibold rounded mb-1">
-                                                    📋 Izin
-                                                </span>
+                                                    class="inline-block px-1.5 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 text-xs font-semibold rounded mb-1">📋
+                                                    Izin</span>
                                                 <div class="text-xs text-orange-700 dark:text-orange-400">
                                                     @switch($leave->type)
                                                         @case('sakit')
@@ -294,7 +458,7 @@
                                                 </div>
                                             @endif
 
-                                            {{-- Schedule Badge (jika tidak ada leave) --}}
+                                            {{-- Schedule badge --}}
                                         @elseif ($schedule)
                                             @if ($status === 'working')
                                                 <span
@@ -361,21 +525,37 @@
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Kerja Pagi</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-2xl font-bold text-amber-500">
-                                    {{ $schedules->where('status', 'working_afternoon')->count() }}</p>
+                                @php $afCount = $schedules->where('status', 'working_afternoon')->count(); @endphp
+                                <p
+                                    class="text-2xl font-bold {{ $afCount > 1 ? 'text-amber-600' : 'text-amber-500' }}">
+                                    {{ $afCount }}
+                                    @if ($afCount > 1)
+                                        <span class="text-base">⚠️</span>
+                                    @endif
+                                </p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Kerja Siang</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-2xl font-bold text-orange-500">
-                                    {{ $schedules->where('status', 'off')->count() }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Libur</p>
+                                @php $offTotalCount = $schedules->whereIn('status', ['off','sick','vacation','cuti_bersama'])->count(); @endphp
+                                <p
+                                    class="text-2xl font-bold {{ $offTotalCount > 2 ? 'text-orange-600' : 'text-orange-500' }}">
+                                    {{ $offTotalCount }}
+                                    @if ($offTotalCount > 2)
+                                        <span class="text-base">⚠️</span>
+                                    @endif
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Libur / Izin</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-2xl font-bold text-gray-500">
-                                    {{ $schedules->where('status', 'sick')->count() }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Sakit</p>
+                                <p
+                                    class="text-2xl font-bold {{ $piketCount < 2 && $schedules->count() > 0 ? 'text-blue-700' : 'text-blue-500' }}">
+                                    {{ $piketCount }}
+                                    @if ($piketCount < 2 && $schedules->count() > 0)
+                                        <span class="text-base">⚠️</span>
+                                    @endif
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Piket Wknd</p>
                             </div>
-                            {{-- ★ Summary leave --}}
                             <div class="text-center">
                                 <p class="text-2xl font-bold text-yellow-500">
                                     {{ isset($monthLeaves) ? $monthLeaves->where('status', 'pending')->count() : 0 }}
@@ -415,6 +595,9 @@
                     Ijin</div>
                 <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-red-200 inline-block"></span>
                     Cuti Bersama</div>
+                <div class="flex items-center gap-2"><span
+                        class="w-4 h-4 rounded bg-red-100 ring-2 ring-red-400 inline-block"></span> <span
+                        class="text-red-600 font-medium">Pelanggaran</span></div>
             </div>
         </div>
     </div>
@@ -477,15 +660,12 @@
                         <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">2️⃣ Hari Kerja dalam
                             Seminggu</p>
                         <div class="flex flex-wrap gap-2">
-                            @php
-                                $dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-                                $defaultWork = [1, 2, 3, 4, 5];
-                            @endphp
-                            @foreach ($dayLabels as $idx => $lbl)
+                            @php $defaultWork = [1, 2, 3, 4, 5]; @endphp
+                            @foreach (['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'] as $idx => $lbl)
                                 <label class="cursor-pointer">
                                     <input type="checkbox" name="working_days[]" value="{{ $idx }}"
                                         {{ in_array($idx, $defaultWork) ? 'checked' : '' }} class="sr-only peer"
-                                        onchange="refreshMiniCalendar()">
+                                        onchange="refreshMiniCalendar(); validateScheduleRules()">
                                     <span
                                         class="inline-block px-3 py-1.5 rounded-full text-sm font-medium border transition
                                         peer-checked:bg-indigo-500 peer-checked:text-white peer-checked:border-indigo-500
@@ -504,7 +684,7 @@
                         <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Klik tanggal untuk toggle <span
                                 class="font-semibold text-red-500">Libur</span></p>
                         <div class="grid grid-cols-7 gap-1 mb-1">
-                            @foreach ($dayLabels as $lbl)
+                            @foreach (['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'] as $lbl)
                                 <div class="text-center text-xs font-bold text-gray-400 py-1">{{ $lbl }}
                                 </div>
                             @endforeach
@@ -521,6 +701,9 @@
                         </p>
                     </div>
 
+                    {{-- ── Validation Warnings (live, di dalam modal) ── --}}
+                    <div id="modalWarnings" class="mb-5 space-y-2 hidden"></div>
+
                     <div
                         class="mb-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                         <p class="text-xs text-amber-700 dark:text-amber-300">
@@ -534,7 +717,7 @@
                             class="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm">
                             Batal
                         </button>
-                        <button type="submit"
+                        <button type="submit" id="generateSubmitBtn"
                             class="px-5 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold text-sm transition">
                             Generate Jadwal
                         </button>
@@ -549,6 +732,7 @@
         const CAL_MONTH = {{ $month }};
         let offDates = new Set();
         let currentShift = 'morning';
+
         const SHIFT_PRESETS = {
             morning: {
                 start: '09:00',
@@ -561,6 +745,7 @@
             custom: null
         };
 
+        // ── Shift preset ──────────────────────────────────────────────
         function applyShiftPreset(shift) {
             currentShift = shift;
             const preset = SHIFT_PRESETS[shift];
@@ -569,52 +754,81 @@
                 document.getElementById('endTime').value = preset.end;
             }
             refreshMiniCalendar();
+            validateScheduleRules();
         }
 
+        // ── Modal open/close ──────────────────────────────────────────
         function openGenerateModal() {
             document.getElementById('generateModal').classList.remove('hidden');
             refreshMiniCalendar();
+            validateScheduleRules();
         }
 
         function closeGenerateModal() {
             document.getElementById('generateModal').classList.add('hidden');
         }
 
+        // ── Working days ──────────────────────────────────────────────
         function getWorkingDays() {
-            return Array.from(document.querySelectorAll('input[name="working_days[]"]:checked')).map(el => parseInt(el
-                .value));
+            return Array.from(document.querySelectorAll('input[name="working_days[]"]:checked'))
+                .map(el => parseInt(el.value));
         }
 
+        // ── Mini calendar ─────────────────────────────────────────────
         function refreshMiniCalendar() {
             const workingDays = getWorkingDays();
             const isAfternoon = currentShift === 'afternoon';
             const container = document.getElementById('miniCalendar');
             container.innerHTML = '';
+
             const firstDay = new Date(CAL_YEAR, CAL_MONTH - 1, 1);
             const lastDay = new Date(CAL_YEAR, CAL_MONTH, 0);
-            for (let i = 0; i < firstDay.getDay(); i++) container.appendChild(document.createElement('div'));
+
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                container.appendChild(document.createElement('div'));
+            }
+
             for (let d = 1; d <= lastDay.getDate(); d++) {
                 const date = new Date(CAL_YEAR, CAL_MONTH - 1, d);
                 const dateStr = formatDate(date);
                 const dow = date.getDay();
+                const isWeekend = dow === 0 || dow === 6;
                 const isWorkDay = workingDays.includes(dow);
-                const isManualOff = offDates.has(dateStr);
-                const isWorking = isWorkDay && !isManualOff;
+                const isManOff = offDates.has(dateStr);
+                const isWorking = isWorkDay && !isManOff;
+
+                // Cek pelanggaran: shift siang di akhir pekan
+                const isViolation = isAfternoon && isWeekend && isWorking;
+
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.dataset.date = dateStr;
                 btn.textContent = String(d).padStart(2, '0');
-                btn.className = [
-                    'w-full aspect-square rounded-lg text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400',
-                    isManualOff ? 'bg-red-400 text-white hover:bg-red-500' :
-                    isWorking ? (isAfternoon ? 'bg-amber-400 text-white hover:bg-amber-500' :
-                        'bg-green-400 text-white hover:bg-green-500') :
-                    'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300'
-                ].join(' ');
+
+                let cls =
+                    'w-full aspect-square rounded-lg text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400 ';
+                if (isViolation) {
+                    cls += 'bg-red-500 text-white ring-2 ring-red-600 hover:bg-red-600';
+                } else if (isManOff) {
+                    cls += 'bg-red-400 text-white hover:bg-red-500';
+                } else if (isWorking) {
+                    cls += isAfternoon ?
+                        'bg-amber-400 text-white hover:bg-amber-500' :
+                        'bg-green-400 text-white hover:bg-green-500';
+                } else {
+                    cls += 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300';
+                }
+                btn.className = cls;
+
+                if (isViolation) {
+                    btn.title = '🚫 Shift siang tidak boleh di akhir pekan!';
+                }
+
                 btn.addEventListener('click', () => {
                     offDates.has(dateStr) ? offDates.delete(dateStr) : offDates.add(dateStr);
                     refreshMiniCalendar();
                     syncOffDateInputs();
+                    validateScheduleRules();
                 });
                 container.appendChild(btn);
             }
@@ -633,8 +847,131 @@
             });
         }
 
+        // ── Live validation ───────────────────────────────────────────
+        function validateScheduleRules() {
+            const workingDays = getWorkingDays();
+            const isAfternoon = currentShift === 'afternoon';
+            const firstDay = new Date(CAL_YEAR, CAL_MONTH - 1, 1);
+            const lastDay = new Date(CAL_YEAR, CAL_MONTH, 0);
+            const WEEKEND = [0, 6];
+
+            let offDayCount = 0; // total hari non-kerja
+            let afternoonCount = 0; // hari shift siang
+            let piketCount = 0; // hari kerja Sab/Min
+            let afternoonWeekend = []; // pelanggaran siang + wknd
+
+            for (let d = 1; d <= lastDay.getDate(); d++) {
+                const date = new Date(CAL_YEAR, CAL_MONTH - 1, d);
+                const ds = formatDate(date);
+                const dow = date.getDay();
+                const isWknd = WEEKEND.includes(dow);
+                const isManOff = offDates.has(ds);
+                const isWork = workingDays.includes(dow) && !isManOff;
+
+                if (!isWork) {
+                    offDayCount++;
+                } else {
+                    if (isAfternoon) afternoonCount++;
+                    if (isWknd) {
+                        piketCount++;
+                        if (isAfternoon) afternoonWeekend.push(formatDateID(date));
+                    }
+                }
+            }
+
+            const warnings = [];
+
+            if (offDayCount > 2) {
+                warnings.push({
+                    level: 'orange',
+                    icon: '🏖️',
+                    msg: `Ada <strong>${offDayCount} hari libur</strong> dalam pola ini (batas: 2 hari). Tambahkan lebih banyak hari kerja.`
+                });
+            }
+            if (afternoonCount > 1) {
+                warnings.push({
+                    level: 'amber',
+                    icon: '🌤',
+                    msg: `Shift siang akan diterapkan <strong>${afternoonCount} hari</strong>. Pastikan tidak melebihi batas 1 kali.`
+                });
+            }
+            if (piketCount < 2) {
+                warnings.push({
+                    level: 'blue',
+                    icon: '📅',
+                    msg: `Hanya <strong>${piketCount} hari piket</strong> (Sabtu/Minggu) dalam pola ini. Minimal 2 hari piket per bulan.`
+                });
+            }
+            if (afternoonWeekend.length > 0) {
+                warnings.push({
+                    level: 'red',
+                    icon: '🚫',
+                    msg: `Shift siang di akhir pekan <strong>DILARANG</strong>: ${afternoonWeekend.join(', ')}. Ganti ke shift pagi atau hapus hari ini dari daftar kerja.`
+                });
+            }
+
+            renderModalWarnings(warnings);
+
+            // Disable submit jika ada pelanggaran merah
+            const hasError = warnings.some(w => w.level === 'red');
+            const submitBtn = document.getElementById('generateSubmitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = hasError;
+                submitBtn.classList.toggle('opacity-50', hasError);
+                submitBtn.classList.toggle('cursor-not-allowed', hasError);
+            }
+        }
+
+        function renderModalWarnings(warnings) {
+            const container = document.getElementById('modalWarnings');
+            if (!container) return;
+
+            if (warnings.length === 0) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            const colorMap = {
+                red: ['bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700',
+                    'bg-red-100 dark:bg-red-800/40', 'text-red-800 dark:text-red-200',
+                    'text-red-700 dark:text-red-300'
+                ],
+                orange: ['bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700',
+                    'bg-orange-100 dark:bg-orange-800/40', 'text-orange-800 dark:text-orange-200',
+                    'text-orange-700 dark:text-orange-300'
+                ],
+                amber: ['bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700',
+                    'bg-amber-100 dark:bg-amber-800/40', 'text-amber-800 dark:text-amber-200',
+                    'text-amber-700 dark:text-amber-300'
+                ],
+                blue: ['bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700',
+                    'bg-blue-100 dark:bg-blue-800/40', 'text-blue-800 dark:text-blue-200',
+                    'text-blue-700 dark:text-blue-300'
+                ],
+            };
+
+            container.innerHTML = warnings.map(w => {
+                const c = colorMap[w.level] || colorMap.blue;
+                return `<div class="flex items-start gap-2.5 p-3 rounded-lg ${c[0]}">
+                    <div class="w-7 h-7 flex-shrink-0 rounded-md ${c[1]} flex items-center justify-center text-sm">${w.icon}</div>
+                    <p class="text-xs leading-relaxed ${c[3]}">${w.msg}</p>
+                </div>`;
+            }).join('');
+
+            container.classList.remove('hidden');
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────
         function formatDate(date) {
             return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        }
+
+        const ID_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const ID_DAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+        function formatDateID(date) {
+            return `${ID_DAYS[date.getDay()]} ${date.getDate()} ${ID_MONTHS[date.getMonth()]}`;
         }
     </script>
 </x-app-layout>

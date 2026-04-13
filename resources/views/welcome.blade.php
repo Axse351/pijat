@@ -662,7 +662,7 @@
         }
 
         .section-eyebrow {
-            font-size: .75rem;
+            font-size: 2rem;
             font-weight: 600;
             letter-spacing: .15em;
             text-transform: uppercase;

@@ -21,29 +21,13 @@
 
             {{-- Stats --}}
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                <div
-                    class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 text-center">
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $bookings->count() }}</div>
-                    <div class="text-xs text-gray-500 mt-1">Total</div>
-                </div>
-                <div
-                    class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 text-center">
-                    <div class="text-2xl font-bold text-amber-500">
-                        {{ $bookings->where('status', 'scheduled')->count() }}</div>
-                    <div class="text-xs text-gray-500 mt-1">Terjadwal</div>
-                </div>
-                <div
-                    class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 text-center">
-                    <div class="text-2xl font-bold text-emerald-500">
-                        {{ $bookings->where('status', 'completed')->count() }}</div>
-                    <div class="text-xs text-gray-500 mt-1">Selesai</div>
-                </div>
-                <div
-                    class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 text-center">
-                    <div class="text-2xl font-bold text-red-500">{{ $bookings->where('status', 'cancelled')->count() }}
+                @foreach ([['Total', $bookings->count(), 'text-gray-900 dark:text-white'], ['Terjadwal', $bookings->where('status', 'scheduled')->count(), 'text-amber-500'], ['Selesai', $bookings->where('status', 'completed')->count(), 'text-emerald-500'], ['Batal', $bookings->where('status', 'cancelled')->count(), 'text-red-500']] as [$lbl, $cnt, $cls])
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                        <div class="text-2xl font-bold {{ $cls }}">{{ $cnt }}</div>
+                        <div class="text-xs text-gray-500 mt-1">{{ $lbl }}</div>
                     </div>
-                    <div class="text-xs text-gray-500 mt-1">Batal</div>
-                </div>
+                @endforeach
             </div>
 
             {{-- Kalender --}}
@@ -59,7 +43,6 @@
                                     class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>Berlangsung</span>
                             <span class="flex items-center gap-1"><span
                                     class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>Selesai</span>
-                            {{-- Legend baru --}}
                             <span class="flex items-center gap-1"><span
                                     class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>Dijadwal Ulang</span>
                         </div>
@@ -97,11 +80,15 @@
                 <div
                     class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
                     <h3 class="font-semibold text-gray-800 dark:text-gray-200">Semua Booking</h3>
-                    <div class="flex items-center gap-4 text-xs text-gray-400 flex-wrap">
+                    <div class="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                         <span class="flex items-center gap-1.5"><span
                                 class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>WA muncul H-0 & H-1</span>
                         <span class="flex items-center gap-1.5"><span
                                 class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>Dijadwal Ulang</span>
+                        <a href="{{ route('admin.wa-templates.index') }}"
+                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 rounded-lg font-medium transition-colors">
+                            📱 Kelola Template WA
+                        </a>
                     </div>
                 </div>
 
@@ -110,30 +97,11 @@
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="bg-gray-50 dark:bg-gray-700/50">
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        #</th>
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Pelanggan</th>
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Terapis</th>
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Layanan</th>
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Jadwal</th>
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Total</th>
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Status</th>
-                                    <th
-                                        class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Aksi</th>
+                                    @foreach (['#', 'Pelanggan', 'Terapis', 'Layanan', 'Jadwal', 'Total', 'Status', 'Aksi'] as $th)
+                                        <th
+                                            class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            {{ $th }}</th>
+                                    @endforeach
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -143,42 +111,43 @@
                                         $originalDate = $booking->original_scheduled_at
                                             ? \Carbon\Carbon::parse($booking->original_scheduled_at)
                                             : null;
-
-                                        // Tandai reschedule: original ada DAN berbeda hari/jam dengan jadwal sekarang
                                         $isRescheduled = $originalDate && $originalDate->ne($scheduledDate);
 
                                         $today = \Carbon\Carbon::today();
                                         $tomorrow = \Carbon\Carbon::tomorrow();
                                         $isToday = $scheduledDate->isSameDay($today);
                                         $isTomorrow = $scheduledDate->isSameDay($tomorrow);
-
                                         $showWa =
                                             ($isToday || $isTomorrow) &&
                                             $booking->status === 'scheduled' &&
-                                            !empty($booking->customer->phone);
+                                            !empty($booking->customer?->phone);
 
+                                        $waUrl = null;
                                         if ($showWa) {
-                                            $phone = preg_replace('/\D/', '', $booking->customer->phone);
-                                            if (str_starts_with($phone, '0')) {
-                                                $phone = '62' . substr($phone, 1);
-                                            }
                                             $jadwalFormatted = $scheduledDate->translatedFormat(
                                                 'l, d F Y \p\u\k\u\l H:i',
                                             );
-                                            $rescheduleNote = $isRescheduled
-                                                ? "\n⚠️ *Jadwal diubah* dari " .
-                                                    $originalDate->translatedFormat('d F Y H:i') .
-                                                    "\n"
-                                                : '';
-                                            $waMsg = urlencode(
-                                                "Halo {$booking->customer->name}, kami ingin mengingatkan booking Anda:\n\n" .
-                                                    "📋 Layanan : {$booking->service->name}\n" .
-                                                    "👤 Terapis : {$booking->therapist->name}\n" .
-                                                    "🗓 Jadwal  : {$jadwalFormatted}\n" .
-                                                    $rescheduleNote .
-                                                    "\nMohon hadir tepat waktu. Terima kasih! 🙏",
-                                            );
-                                            $waUrl = "https://wa.me/{$phone}?text={$waMsg}";
+                                            $vars = [
+                                                'nama_pelanggan' => $booking->customer->name,
+                                                'layanan' => $booking->service->name,
+                                                'terapis' => $booking->therapist->name,
+                                                'jadwal' => $jadwalFormatted,
+                                            ];
+                                            $templateKey = $isRescheduled
+                                                ? 'booking_reminder_reschedule'
+                                                : 'booking_reminder';
+                                            if ($isRescheduled && $originalDate) {
+                                                $vars['jadwal_lama'] = $originalDate->translatedFormat('d F Y H:i');
+                                            }
+                                            $waMsg = \App\Models\WaMessageTemplate::render($templateKey, $vars);
+                                            if ($waMsg) {
+                                                $phone = \App\Models\WaMessageTemplate::normalizePhone(
+                                                    $booking->customer->phone,
+                                                );
+                                                $waUrl = $phone
+                                                    ? "https://wa.me/{$phone}?text=" . urlencode($waMsg)
+                                                    : null;
+                                            }
                                         }
 
                                         $cls = match ($booking->status) {
@@ -196,12 +165,10 @@
                                             default => $booking->status,
                                         };
                                     @endphp
-
-                                    {{-- Border kiri ungu jika dijadwal ulang --}}
                                     <tr
                                         class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors
-                                    {{ $isRescheduled ? 'border-l-4 border-l-purple-400' : '' }}
-                                    {{ $isToday ? 'bg-amber-50/30 dark:bg-amber-900/5' : ($isTomorrow ? 'bg-blue-50/30 dark:bg-blue-900/5' : '') }}">
+                                        {{ $isRescheduled ? 'border-l-4 border-l-purple-400' : '' }}
+                                        {{ $isToday ? 'bg-amber-50/30 dark:bg-amber-900/5' : ($isTomorrow ? 'bg-blue-50/30 dark:bg-blue-900/5' : '') }}">
 
                                         <td class="px-5 py-3.5 text-gray-400">{{ $i + 1 }}</td>
 
@@ -223,28 +190,23 @@
                                         <td class="px-5 py-3.5 text-gray-600 dark:text-gray-400">
                                             {{ $booking->service->name ?? '—' }}</td>
 
-                                        {{-- Kolom jadwal: tampilkan badge + jadwal lama jika reschedule --}}
                                         <td class="px-5 py-3.5">
                                             <div class="text-gray-700 dark:text-gray-300 font-medium">
-                                                {{ $scheduledDate->format('d M Y, H:i') }}
-                                            </div>
+                                                {{ $scheduledDate->format('d M Y, H:i') }}</div>
                                             @if ($isRescheduled)
                                                 <div class="mt-1 flex items-center gap-1.5">
                                                     <span
-                                                        class="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-0.5 rounded-full">
-                                                        🔄 Dijadwal Ulang
-                                                    </span>
+                                                        class="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-0.5 rounded-full">🔄
+                                                        Dijadwal Ulang</span>
                                                 </div>
-                                                <div class="text-[11px] text-gray-400 mt-0.5 line-through">
-                                                    Semula: {{ $originalDate->format('d M Y, H:i') }}
-                                                </div>
+                                                <div class="text-[11px] text-gray-400 mt-0.5 line-through">Semula:
+                                                    {{ $originalDate->format('d M Y, H:i') }}</div>
                                             @endif
                                         </td>
 
                                         <td class="px-5 py-3.5">
-                                            <div class="font-semibold text-amber-600 dark:text-amber-400">
-                                                Rp {{ number_format($booking->final_price, 0, ',', '.') }}
-                                            </div>
+                                            <div class="font-semibold text-amber-600 dark:text-amber-400">Rp
+                                                {{ number_format($booking->final_price, 0, ',', '.') }}</div>
                                             @if ($booking->promo_id)
                                                 <div class="text-[10px] text-emerald-500 mt-0.5">🎟 Promo</div>
                                             @endif
@@ -257,7 +219,7 @@
 
                                         <td class="px-5 py-3.5">
                                             <div class="flex items-center gap-2 flex-wrap">
-                                                @if ($showWa)
+                                                @if ($waUrl)
                                                     <a href="{{ $waUrl }}" target="_blank"
                                                         class="inline-flex items-center gap-1 px-3 py-1 bg-green-50 hover:bg-green-100 text-green-600 text-xs font-medium rounded-lg transition-colors border border-green-200">
                                                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
@@ -271,20 +233,18 @@
                                                         @if ($isRescheduled)
                                                             <span
                                                                 class="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block"
-                                                                title="Pesan sudah mencantumkan info reschedule"></span>
+                                                                title="Pesan mencantumkan info reschedule"></span>
                                                         @endif
                                                     </a>
                                                 @endif
-
                                                 <a href="{{ route('admin.bookings.edit', $booking) }}"
                                                     class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-medium rounded-lg transition-colors">Edit</a>
-
                                                 <form method="POST"
                                                     action="{{ route('admin.bookings.destroy', $booking) }}"
                                                     onsubmit="return confirm('Hapus booking ini?')">
                                                     @csrf @method('DELETE')
                                                     <button type="submit"
-                                                        class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg transition-colors">Hapus</button>
+                                                        class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg">Hapus</button>
                                                 </form>
                                             </div>
                                         </td>
@@ -351,8 +311,7 @@
                                 <option value="">-- Pilih --</option>
                                 @foreach ($services as $s)
                                     <option value="{{ $s->id }}" data-price="{{ $s->price }}">
-                                        {{ $s->name }} — Rp {{ number_format($s->price, 0, ',', '.') }}
-                                    </option>
+                                        {{ $s->name }} — Rp {{ number_format($s->price, 0, ',', '.') }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -375,20 +334,17 @@
                                 class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                                Diskon (Rp)
-                            </label>
+                            <label
+                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Diskon
+                                (Rp)</label>
                             <input type="number" name="discount" id="modalDiscount" value="0" min="0"
                                 class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
                                 oninput="calcModalTotal()">
                         </div>
-
-                        {{-- Promo --}}
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                                Promo
-                                <span class="font-normal normal-case text-emerald-500 ml-1">(Opsional — jika ada promo,
-                                    total boleh Rp 0)</span>
+                                Promo <span class="font-normal normal-case text-emerald-500 ml-1">(Opsional — jika ada
+                                    promo, total boleh Rp 0)</span>
                             </label>
                             <select name="promo_id" id="modalPromo"
                                 class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
@@ -407,8 +363,6 @@
                                 @endforeach
                             </select>
                         </div>
-
-                        {{-- Price summary --}}
                         <div
                             class="sm:col-span-2 px-3 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-lg flex gap-6 items-center text-sm">
                             <div>
@@ -426,8 +380,6 @@
                                 <div id="mDisplayTotal" class="font-bold text-amber-600 text-base">Rp 0</div>
                             </div>
                         </div>
-
-                        {{-- Peringatan total 0 tanpa promo --}}
                         <div id="zeroPriceWarning"
                             class="hidden sm:col-span-2 flex items-start gap-2 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-xs text-red-600 dark:text-red-400">
                             <span class="text-base leading-none">⚠️</span>
@@ -435,16 +387,12 @@
                                 nilai diskon.</span>
                         </div>
                     </div>
-
                     <div class="flex gap-3 mt-5">
                         <button type="submit" id="modalSubmitBtn"
-                            class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors">
-                            Buat Booking
-                        </button>
+                            class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors">Buat
+                            Booking</button>
                         <button type="button" id="cancelModal"
-                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">
-                            Batal
-                        </button>
+                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">Batal</button>
                     </div>
                 </form>
             </div>
@@ -456,15 +404,11 @@
         const HOURS = Array.from({
             length: 13
         }, (_, i) => i + 10);
-
         let currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
 
         function toLocalISO(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
         }
 
         function formatDisplayDate(date) {
@@ -499,18 +443,12 @@
             setDate(d);
         });
         document.getElementById('datePicker').addEventListener('change', function() {
-            const d = new Date(this.value + 'T00:00:00');
-            setDate(d);
+            setDate(new Date(this.value + 'T00:00:00'));
         });
 
         async function loadCalendar(dateStr) {
-            document.getElementById('calendarGrid').innerHTML = `
-            <div class="flex items-center justify-center py-12 text-gray-400 text-sm gap-2">
-                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg> Memuat...
-            </div>`;
+            document.getElementById('calendarGrid').innerHTML =
+                `<div class="flex items-center justify-center py-12 text-gray-400 text-sm gap-2"><svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Memuat...</div>`;
             try {
                 const res = await fetch(`{{ route('admin.bookings.calendar-data') }}?date=${dateStr}`);
                 const data = await res.json();
@@ -544,31 +482,31 @@
             });
 
             let html =
-                `<table class="w-full text-sm border-collapse" style="min-width:${THERAPISTS.length * 140 + 80}px">
+                `<table class="w-full text-sm border-collapse" style="min-width:${THERAPISTS.length*140+80}px">
             <thead><tr class="bg-gray-50 dark:bg-gray-700/60 sticky top-0 z-10">
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider w-20 border-b border-r border-gray-100 dark:border-gray-700">Jam</th>`;
 
             THERAPISTS.forEach(t => {
                 const s = summary[t.id];
-                html += `<th class="px-3 py-3 text-center border-b border-r border-gray-100 dark:border-gray-700 last:border-r-0">
+                html +=
+                    `<th class="px-3 py-3 text-center border-b border-r border-gray-100 dark:border-gray-700 last:border-r-0">
                     <div class="text-xs font-semibold text-gray-700 dark:text-gray-200">${t.name}</div>
                     <div class="mt-1">${s.booked > 0
                         ? `<span class="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-full">${s.booked} booking</span>`
-                        : `<span class="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded-full">✓ Bebas</span>`}
-                    </div></th>`;
+                        : `<span class="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded-full">✓ Bebas</span>`}</div></th>`;
             });
             html += `</tr></thead><tbody>`;
 
             HOURS.forEach(hour => {
-                const timeLabel = `${String(hour).padStart(2,'0')}:00`;
-                const timeEnd = `${String(hour+1).padStart(2,'0')}:00`;
+                const timeLabel = `${String(hour).padStart(2,'00')}:00`;
+                const timeEnd = `${String(hour+1).padStart(2,'00')}:00`;
                 const isPast = dateStr === todayStr && hour < currentHour;
                 const isNow = dateStr === todayStr && hour === currentHour;
                 const rowBg = isNow ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : (isPast ? 'opacity-40' : '');
 
                 html += `<tr class="border-b border-gray-100 dark:border-gray-700 ${rowBg} hover:bg-gray-50/80 dark:hover:bg-gray-700/20 transition-colors">
                 <td class="px-4 py-2 border-r border-gray-100 dark:border-gray-700 whitespace-nowrap">
-                    <div class="font-mono text-xs font-semibold ${isNow ? 'text-indigo-600' : 'text-gray-400'}">${timeLabel}</div>
+                    <div class="font-mono text-xs font-semibold ${isNow?'text-indigo-600':'text-gray-400'}">${timeLabel}</div>
                     <div class="font-mono text-[10px] text-gray-300">${timeEnd}</div>
                 </td>`;
 
@@ -612,7 +550,6 @@
                             label: booking.status
                         };
 
-                        // Badge dijadwal ulang di kalender
                         const rescheduleBadge = booking.is_rescheduled ?
                             `<div class="mt-0.5 text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full inline-block">🔄 Dijadwal Ulang</div>` :
                             '';
@@ -625,13 +562,9 @@
 
                         const rescheduleStyle = booking.is_rescheduled ? 'border-l-2 border-l-purple-400' :
                             '';
-
                         html += `<td class="px-2 py-1.5 border-r border-gray-100 dark:border-gray-700 last:border-r-0 ${rescheduleStyle}">
                             <a href="${booking.edit_url}" class="block rounded-lg border px-2.5 py-1.5 ${cfg.bg} ${cfg.border} hover:shadow-sm transition-shadow">
-                                <div class="flex items-center gap-1 mb-0.5">
-                                    <span class="w-1.5 h-1.5 rounded-full ${cfg.dot} flex-shrink-0"></span>
-                                    <span class="text-[10px] font-semibold ${cfg.text}">${cfg.label}</span>
-                                </div>
+                                <div class="flex items-center gap-1 mb-0.5"><span class="w-1.5 h-1.5 rounded-full ${cfg.dot} flex-shrink-0"></span><span class="text-[10px] font-semibold ${cfg.text}">${cfg.label}</span></div>
                                 <div class="text-xs font-medium text-gray-700 dark:text-gray-200 truncate">${booking.customer_name}</div>
                                 <div class="text-[10px] text-gray-400 truncate">${booking.service_name}</div>
                             </a>
@@ -655,14 +588,13 @@
             document.getElementById('calendarGrid').innerHTML = html;
         }
 
-        // ── Modal: validasi total tidak boleh 0 kecuali ada promo ──
         let modalServicePrice = 0;
         let hasPromo = false;
 
         function openModal(dateStr, hour, therapistId, therapistName) {
             document.getElementById('modalDatetime').value = `${dateStr}T${String(hour).padStart(2,'0')}:00`;
             document.getElementById('modalTitle').textContent =
-                `Booking — ${therapistName}, ${String(hour).padStart(2,'0')}:00`;
+                `Booking — ${therapistName}, ${String(hour).padStart(2,'00')}:00`;
             document.getElementById('modalDiscount').value = 0;
             document.getElementById('modalService').selectedIndex = 0;
             document.getElementById('modalPromo').selectedIndex = 0;
@@ -680,7 +612,6 @@
             document.getElementById('bookingModal').classList.add('hidden');
             document.body.style.overflow = '';
         }
-
         document.getElementById('closeModal').addEventListener('click', closeModal);
         document.getElementById('cancelModal').addEventListener('click', closeModal);
         document.getElementById('modalBackdrop').addEventListener('click', closeModal);
@@ -706,12 +637,9 @@
             const disc = parseInt(document.getElementById('modalDiscount').value) || 0;
             const total = Math.max(0, modalServicePrice - disc);
             const fmt = n => 'Rp ' + n.toLocaleString('id-ID');
-
             document.getElementById('mDisplayPrice').textContent = fmt(modalServicePrice);
             document.getElementById('mDisplayDiscount').textContent = fmt(disc);
             document.getElementById('mDisplayTotal').textContent = fmt(total);
-
-            // Total 0 hanya boleh jika ada promo aktif
             const isInvalid = (total === 0 && modalServicePrice > 0 && !hasPromo);
             document.getElementById('zeroPriceWarning').classList.toggle('hidden', !isInvalid);
             document.getElementById('modalSubmitBtn').disabled = isInvalid;

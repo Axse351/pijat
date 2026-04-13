@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\TherapistAttendanceController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\TherapistScheduleController;
 use App\Http\Controllers\Admin\TherapistLeaveController;
+use App\Http\Controllers\Admin\WaMessageTemplateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\WelcomeController;
@@ -128,10 +129,19 @@ Route::middleware(['auth', 'role:admin,kasir'])
             Route::get('/laporan/export', [\App\Http\Controllers\Admin\LaporanController::class, 'export'])
                 ->name('laporan.export');
 
-            // ── CONTENT ROUTES (PERBAIKAN) ──
+            // ── Content Routes ────────────────────────────────────────────────
             Route::get('content',    [ContentController::class, 'index'])->name('content.index');
             Route::put('content',    [ContentController::class, 'update'])->name('content.update');
             Route::delete('content', [ContentController::class, 'reset'])->name('content.reset');
+
+            // ── Template Pesan WhatsApp ───────────────────────────────────────
+            Route::prefix('wa-templates')->name('wa-templates.')->group(function () {
+                Route::get('/',                       [WaMessageTemplateController::class, 'index'])->name('index');
+                Route::get('/{waTemplate}/edit',      [WaMessageTemplateController::class, 'edit'])->name('edit');
+                Route::put('/{waTemplate}',           [WaMessageTemplateController::class, 'update'])->name('update');
+                Route::put('/{waTemplate}/reset',     [WaMessageTemplateController::class, 'reset'])->name('reset');
+                Route::get('/{waTemplate}/preview',   [WaMessageTemplateController::class, 'preview'])->name('preview');
+            });
         });
 
         Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
