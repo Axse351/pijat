@@ -152,14 +152,14 @@
                                         Reset password terapis ke default <strong class="text-gray-800 dark:text-gray-200">123456</strong>.
                                     </p>
                                 </div>
-                                <form method="POST" action="{{ route('admin.therapists.resetPassword', $therapist) }}"
+                                {{-- <form method="POST" action="{{ route('admin.therapists.resetPassword', $therapist) }}"
                                     onsubmit="return confirm('Reset password {{ $therapist->name }} ke 123456?')">
                                     @csrf
                                     <button type="submit"
                                         class="flex-shrink-0 px-4 py-2 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400 text-xs font-semibold rounded-lg transition-colors border border-amber-200 dark:border-amber-700">
                                         Reset Password
                                     </button>
-                                </form>
+                                </form> --}}
                             </div>
                         </div>
                     </div>
