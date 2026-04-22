@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\Promo;
 use App\Models\Program;
 use App\Models\Commission;
+use App\Models\WaMessageTemplate;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -59,21 +60,28 @@ class BookingController extends Controller
 
                 $waUrl = null;
                 if (($isToday || $isTomorrow) && $b->status === 'scheduled' && !empty($b->customer?->phone)) {
-                    $phone = preg_replace('/\D/', '', $b->customer->phone);
-                    if (str_starts_with($phone, '0')) $phone = '62' . substr($phone, 1);
                     $jadwalFormatted = $scheduledDate->translatedFormat('l, d F Y \p\u\k\u\l H:i');
-                    $rescheduleNote  = $b->is_rescheduled && $b->original_scheduled_at
-                        ? "\n⚠️ *Jadwal diubah* dari " . Carbon::parse($b->original_scheduled_at)->translatedFormat('d F Y H:i') . "\n"
-                        : '';
-                    $waMsg = urlencode(
-                        "Halo {$b->customer->name}, kami ingin mengingatkan booking Anda:\n\n"
-                            . "📋 Layanan : {$b->service->name}\n"
-                            . "👤 Terapis : {$b->therapist->name}\n"
-                            . "🗓 Jadwal  : {$jadwalFormatted}\n"
-                            . $rescheduleNote
-                            . "\nMohon hadir tepat waktu. Terima kasih! 🙏"
-                    );
-                    $waUrl = "https://wa.me/{$phone}?text={$waMsg}";
+                    $isRescheduled   = (bool) $b->is_rescheduled;
+
+                    $vars = [
+                        'nama_pelanggan' => $b->customer->name,
+                        'layanan'        => $b->service->name,
+                        'terapis'        => $b->therapist->name,
+                        'jadwal'         => $jadwalFormatted,
+                    ];
+
+                    $templateKey = $isRescheduled ? 'booking_reminder_reschedule' : 'booking_reminder';
+                    if ($isRescheduled && $b->original_scheduled_at) {
+                        $vars['jadwal_lama'] = Carbon::parse($b->original_scheduled_at)->translatedFormat('d F Y H:i');
+                    }
+
+                    $waMsg = WaMessageTemplate::render($templateKey, $vars);
+                    if ($waMsg) {
+                        $phone = WaMessageTemplate::normalizePhone($b->customer->phone);
+                        if ($phone) {
+                            $waUrl = "https://wa.me/{$phone}?text=" . urlencode($waMsg);
+                        }
+                    }
                 }
 
                 return [
@@ -232,14 +240,12 @@ class BookingController extends Controller
             return back()->withErrors(['discount' => 'Total tidak boleh Rp 0 kecuali menggunakan promo.'])->withInput();
         }
 
-        // Deteksi reschedule
         $oldScheduled        = $booking->scheduled_at;
         $newScheduled        = $validated['scheduled_at'];
         $dateChanged         = Carbon::parse($oldScheduled)->ne(Carbon::parse($newScheduled));
         $isRescheduled       = $dateChanged && $request->boolean('is_rescheduled');
         $originalScheduledAt = $booking->original_scheduled_at ?? $booking->scheduled_at;
 
-        // Catat status lama SEBELUM update untuk deteksi perubahan ke completed
         $oldStatus        = $booking->status;
         $newStatus        = $validated['status'] ?? $booking->status;
         $wasCompleted     = $oldStatus === 'completed';
@@ -262,7 +268,6 @@ class BookingController extends Controller
             'notes'                 => $validated['notes'] ?? $booking->notes,
         ]);
 
-        // ✅ Berikan poin ke pelanggan hanya saat pertama kali status berubah ke completed
         if (!$wasCompleted && $becomesCompleted) {
             $rewardPoints = $service->reward_points ?? 0;
             if ($rewardPoints > 0) {
@@ -278,6 +283,66 @@ class BookingController extends Controller
 
         return redirect()->route('admin.bookings.index')
             ->with('success', $message);
+    }
+
+    /**
+     * Quick complete — tandai selesai lalu tampilkan banner WA ucapan terima kasih
+     * Menggunakan WaMessageTemplate dengan key 'booking_complete' agar bisa dikustomisasi
+     */
+    public function complete(Booking $booking)
+    {
+        if ($booking->status === 'completed') {
+            return redirect()->route('admin.bookings.index')
+                ->with('success', 'Booking sudah berstatus selesai.');
+        }
+
+        $booking->update(['status' => 'completed']);
+
+        // Beri poin reward jika ada
+        $service      = $booking->service;
+        $rewardPoints = $service->reward_points ?? 0;
+        if ($rewardPoints > 0) {
+            $booking->customer->addPoints($rewardPoints);
+        }
+
+        // Bangun URL WA menggunakan WaMessageTemplate (bisa dikustomisasi di halaman Kelola Template WA)
+        $waUrl = null;
+        if (!empty($booking->customer?->phone)) {
+            $vars = [
+                'nama_pelanggan' => $booking->customer->name,
+                'layanan'        => $service->name ?? 'layanan',
+                'terapis'        => $booking->therapist->name ?? '',
+                'poin'           => $rewardPoints > 0 ? $rewardPoints : '',
+            ];
+
+            $waMsg = WaMessageTemplate::render('booking_complete', $vars);
+
+            // Fallback jika template belum ada di database
+            if (!$waMsg) {
+                $pointInfo = $rewardPoints > 0
+                    ? "\n\n🎁 Kamu mendapatkan *{$rewardPoints} poin* dari sesi ini!"
+                    : '';
+                $waMsg = "Halo {$vars['nama_pelanggan']}! 😊\n\n"
+                    . "Terima kasih sudah mempercayakan perawatanmu kepada kami hari ini.\n\n"
+                    . "✅ Sesi *{$vars['layanan']}* bersama *{$vars['terapis']}* telah selesai."
+                    . $pointInfo
+                    . "\n\nSemoga kamu merasa lebih segar & relaks. Sampai jumpa lagi! 🌸\n\n"
+                    . "_— Tim Koichi_";
+            }
+
+            $phone = WaMessageTemplate::normalizePhone($booking->customer->phone);
+            if ($phone) {
+                $waUrl = "https://wa.me/{$phone}?text=" . urlencode($waMsg);
+            }
+        }
+
+        // Flash URL WA ke session — akan ditampilkan sebagai banner di index (bukan auto window.open)
+        session()->flash('complete_wa_url', $waUrl);
+        session()->flash('complete_customer_name', $booking->customer->name);
+        session()->flash('success', "Booking {$booking->customer->name} berhasil diselesaikan."
+            . ($rewardPoints > 0 ? " +{$rewardPoints} poin diberikan." : ''));
+
+        return redirect()->route('admin.bookings.index');
     }
 
     public function destroy(Booking $booking)

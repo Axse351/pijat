@@ -164,6 +164,8 @@
                                             'ongoing' => 'Berlangsung',
                                             default => $booking->status,
                                         };
+
+                                        $canComplete = in_array($booking->status, ['scheduled', 'ongoing']);
                                     @endphp
                                     <tr
                                         class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors
@@ -219,6 +221,21 @@
 
                                         <td class="px-5 py-3.5">
                                             <div class="flex items-center gap-2 flex-wrap">
+
+                                                {{-- ✅ Tombol Selesai (hanya untuk scheduled/ongoing) --}}
+                                                @if ($canComplete)
+                                                    <form method="POST"
+                                                        action="{{ route('admin.bookings.complete', $booking) }}"
+                                                        onsubmit="return confirm('Tandai booking {{ $booking->customer->name }} sebagai selesai dan kirim ucapan terima kasih via WA?')">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors border border-emerald-200">
+                                                            ✓ Selesai
+                                                        </button>
+                                                    </form>
+                                                @endif
+
+                                                {{-- Tombol Reminder WA --}}
                                                 @if ($waUrl)
                                                     <a href="{{ $waUrl }}" target="_blank"
                                                         class="inline-flex items-center gap-1 px-3 py-1 bg-green-50 hover:bg-green-100 text-green-600 text-xs font-medium rounded-lg transition-colors border border-green-200">
@@ -237,8 +254,10 @@
                                                         @endif
                                                     </a>
                                                 @endif
+
                                                 <a href="{{ route('admin.bookings.edit', $booking) }}"
                                                     class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-medium rounded-lg transition-colors">Edit</a>
+
                                                 <form method="POST"
                                                     action="{{ route('admin.bookings.destroy', $booking) }}"
                                                     onsubmit="return confirm('Hapus booking ini?')">
@@ -398,6 +417,94 @@
             </div>
         </div>
     </div>
+
+    {{-- ═══════════ BANNER WA SELESAI ═══════════ --}}
+    {{-- Ditampilkan sebagai notifikasi pojok kanan bawah setelah booking diselesaikan --}}
+    {{-- Tidak menggunakan window.open() otomatis karena diblokir browser --}}
+    @if (session('complete_wa_url'))
+        <div id="waBanner"
+            class="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-5 py-4 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-2xl shadow-2xl max-w-sm animate-fade-in"
+            style="animation: slideUp 0.3s ease-out;">
+            {{-- Icon WA --}}
+            <div
+                class="flex-shrink-0 w-11 h-11 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                    <path
+                        d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.847L0 24l6.335-1.507A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.659-.5-5.192-1.375l-.371-.22-3.762.895.952-3.67-.242-.38A9.955 9.955 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
+                </svg>
+            </div>
+            {{-- Teks --}}
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    ✅ Booking selesai!
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Kirim ucapan terima kasih ke
+                    <span class="font-medium text-gray-700 dark:text-gray-300">
+                        {{ session('complete_customer_name', 'pelanggan') }}
+                    </span>?
+                </div>
+                {{-- Progress bar auto-close --}}
+                <div class="mt-2 h-0.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div id="waBannerProgress" class="h-full bg-green-400 rounded-full"
+                        style="width:100%; transition: width 15s linear;">
+                    </div>
+                </div>
+            </div>
+            {{-- Tombol --}}
+            <div class="flex flex-col gap-1.5 flex-shrink-0">
+                <a href="{{ session('complete_wa_url') }}" target="_blank" onclick="closeBanner()"
+                    class="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-lg text-center transition-colors whitespace-nowrap shadow-sm">
+                    📤 Kirim WA
+                </a>
+                <button onclick="closeBanner()"
+                    class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 text-xs rounded-lg transition-colors">
+                    Lewati
+                </button>
+            </div>
+        </div>
+        <style>
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+        <script>
+            // Auto-close banner setelah 15 detik
+            const waBannerTimer = setTimeout(closeBanner, 15000);
+
+            // Mulai progress bar (harus dipanggil setelah DOM siap)
+            document.addEventListener('DOMContentLoaded', function() {
+                const bar = document.getElementById('waBannerProgress');
+                if (bar) {
+                    // Trigger transition dengan sedikit delay
+                    setTimeout(() => {
+                        bar.style.width = '0%';
+                    }, 100);
+                }
+            });
+
+            function closeBanner() {
+                clearTimeout(waBannerTimer);
+                const banner = document.getElementById('waBanner');
+                if (banner) {
+                    banner.style.opacity = '0';
+                    banner.style.transform = 'translateY(10px)';
+                    banner.style.transition = 'opacity 0.2s, transform 0.2s';
+                    setTimeout(() => banner.remove(), 200);
+                }
+            }
+        </script>
+    @endif
 
     <script>
         const THERAPISTS = @json($therapists);
@@ -575,9 +682,9 @@
                             ${isPast
                                 ? `<div class="h-[52px] rounded-lg bg-gray-50 dark:bg-gray-700/20"></div>`
                                 : `<button type="button" onclick="openModal('${dateStr}', ${hour}, ${t.id}, '${t.name.replace(/'/g,"\\'")}' )"
-                                        class="w-full h-[52px] rounded-lg border border-dashed border-gray-200 dark:border-gray-600 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-gray-300 hover:text-indigo-400 transition-all text-xs font-medium group flex items-center justify-center">
-                                        <span class="opacity-0 group-hover:opacity-100 transition-opacity select-none">+ Booking</span>
-                                    </button>`}
+                                                class="w-full h-[52px] rounded-lg border border-dashed border-gray-200 dark:border-gray-600 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-gray-300 hover:text-indigo-400 transition-all text-xs font-medium group flex items-center justify-center">
+                                                <span class="opacity-0 group-hover:opacity-100 transition-opacity select-none">+ Booking</span>
+                                            </button>`}
                         </td>`;
                     }
                 });
@@ -592,7 +699,7 @@
         let hasPromo = false;
 
         function openModal(dateStr, hour, therapistId, therapistName) {
-            document.getElementById('modalDatetime').value = `${dateStr}T${String(hour).padStart(2,'0')}:00`;
+            document.getElementById('modalDatetime').value = `${dateStr}T${String(hour).padStart(2,'00')}:00`;
             document.getElementById('modalTitle').textContent =
                 `Booking — ${therapistName}, ${String(hour).padStart(2,'00')}:00`;
             document.getElementById('modalDiscount').value = 0;

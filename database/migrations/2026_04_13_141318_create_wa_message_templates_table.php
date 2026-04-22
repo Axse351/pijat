@@ -45,6 +45,16 @@ return new class extends Migration
                 'created_at'  => $now,
                 'updated_at'  => $now,
             ],
+            [
+                'key'         => 'booking_complete',
+                'label'       => 'Ucapan Selesai Booking',
+                'category'    => 'booking',
+                'template'    => "Halo {{nama_pelanggan}}! 😊\n\nTerima kasih sudah mempercayakan perawatanmu kepada kami hari ini.\n\n✅ Sesi *{{layanan}}* bersama *{{terapis}}* telah selesai.\n\n🎁 Kamu mendapatkan *{{poin}} poin* dari sesi ini!\n\nSemoga kamu merasa lebih segar & relaks. Sampai jumpa lagi! 🌸\n\n_— Tim Koichi_",
+                'description' => "Variabel: {{nama_pelanggan}}, {{layanan}}, {{terapis}}, {{poin}}",
+                'is_active'   => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
 
             // ── MEMBERSHIP ──────────────────────────────────────────────
             [

@@ -142,6 +142,8 @@ Route::middleware(['auth', 'role:admin,kasir'])
                 Route::put('/{waTemplate}/reset',     [WaMessageTemplateController::class, 'reset'])->name('reset');
                 Route::get('/{waTemplate}/preview',   [WaMessageTemplateController::class, 'preview'])->name('preview');
             });
+            Route::post('bookings/{booking}/complete', [BookingController::class, 'complete'])
+                ->name('bookings.complete');
         });
 
         Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
