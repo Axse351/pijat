@@ -21,8 +21,17 @@ class BookingController extends Controller
         $customers  = Customer::all();
         $therapists = Therapist::where('is_active', 1)->get();
         $services   = Service::all();
+        $promos     = Promo::where('status', 'aktif')->get();
+        $programs   = Program::where('is_active', 1)->get();
 
-        return view('admin.bookings.index', compact('bookings', 'customers', 'therapists', 'services'));
+        return view('admin.bookings.index', compact(
+            'bookings',
+            'customers',
+            'therapists',
+            'services',
+            'promos',
+            'programs'
+        ));
     }
 
     public function calendar()
@@ -68,15 +77,15 @@ class BookingController extends Controller
                 }
 
                 return [
-                    'id'              => $b->id,
-                    'therapist_id'    => $b->therapist_id,
-                    'hour'            => $scheduledDate->hour,
-                    'customer_name'   => $b->customer?->name ?? '—',
-                    'service_name'    => $b->service?->name ?? '—',
-                    'status'          => $b->status,
-                    'is_rescheduled'  => (bool) $b->is_rescheduled,
-                    'wa_url'          => $waUrl,
-                    'edit_url'        => route('admin.bookings.edit', $b->id),
+                    'id'             => $b->id,
+                    'therapist_id'   => $b->therapist_id,
+                    'hour'           => $scheduledDate->hour,
+                    'customer_name'  => $b->customer?->name ?? '—',
+                    'service_name'   => $b->service?->name ?? '—',
+                    'status'         => $b->status,
+                    'is_rescheduled' => (bool) $b->is_rescheduled,
+                    'wa_url'         => $waUrl,
+                    'edit_url'       => route('admin.bookings.edit', $b->id),
                 ];
             });
 
@@ -231,9 +240,9 @@ class BookingController extends Controller
         $originalScheduledAt = $booking->original_scheduled_at ?? $booking->scheduled_at;
 
         // Catat status lama SEBELUM update untuk deteksi perubahan ke completed
-        $oldStatus      = $booking->status;
-        $newStatus      = $validated['status'] ?? $booking->status;
-        $wasCompleted   = $oldStatus === 'completed';
+        $oldStatus        = $booking->status;
+        $newStatus        = $validated['status'] ?? $booking->status;
+        $wasCompleted     = $oldStatus === 'completed';
         $becomesCompleted = $newStatus === 'completed';
 
         $booking->update([

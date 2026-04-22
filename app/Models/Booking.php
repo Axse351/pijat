@@ -15,14 +15,14 @@ class Booking extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'scheduled_at' => 'datetime',
+        'scheduled_at'          => 'datetime',
         'original_scheduled_at' => 'datetime',
-        'is_rescheduled' => 'boolean',
+        'cancelled_at'          => 'datetime',
+        'is_rescheduled'        => 'boolean',
+        'is_specific_therapist' => 'boolean',
     ];
 
-    // ───────────────────────────────────────────────
-    // RELATIONSHIPS
-    // ───────────────────────────────────────────────
+    // ── RELATIONSHIPS ─────────────────────────────────────────────────────
 
     public function customer(): BelongsTo
     {
@@ -59,52 +59,91 @@ class Booking extends Model
         return $this->hasOne(Commission::class);
     }
 
-    // ───────────────────────────────────────────────
-    // SCOPES
-    // ───────────────────────────────────────────────
+    // ── SCOPES ────────────────────────────────────────────────────────────
 
-    /**
-     * Scope: Dapatkan booking yang dijadwalkan
-     */
     public function scopeScheduled($query)
     {
         return $query->where('status', 'scheduled');
     }
 
-    /**
-     * Scope: Dapatkan booking yang sedang berlangsung
-     */
     public function scopeOngoing($query)
     {
         return $query->where('status', 'ongoing');
     }
 
-    /**
-     * Scope: Dapatkan booking yang sudah selesai
-     */
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
     }
 
-    /**
-     * Scope: Dapatkan booking yang dibatalkan
-     */
     public function scopeCancelled($query)
     {
         return $query->where('status', 'cancelled');
     }
 
-
-    /**
-     * Scope: booking dalam rentang waktu berdasarkan scheduled_at
-     */
     public function scopeInRange($query, $start, $end)
     {
         return $query->whereBetween('scheduled_at', [$start, $end]);
     }
 
-    // ── Jika belum ada, tambahkan juga relasi berikut ────────────────────────
+    // ── HELPERS / ACCESSORS ───────────────────────────────────────────────
 
+    /**
+     * Apakah booking ini pakai paket program (komisi 30%)?
+     */
+    public function isProgramBooking(): bool
+    {
+        return $this->program_id !== null || $this->commission_type === 'program';
+    }
 
+    /**
+     * Persentase komisi terapis untuk booking ini
+     */
+    public function getCommissionRateAttribute(): float
+    {
+        return $this->isProgramBooking() ? 30.0 : 25.0;
+    }
+
+    /**
+     * Nominal komisi terapis (kalkulasi langsung dari final_price)
+     */
+    public function getCommissionAmountAttribute(): float
+    {
+        return round($this->final_price * ($this->commission_rate / 100), 2);
+    }
+
+    /**
+     * Income bersih Koichi dari booking ini
+     */
+    public function getKoichiIncomeAttribute(): float
+    {
+        return round($this->final_price - $this->commission_amount, 2);
+    }
+
+    /**
+     * Persentase income Koichi
+     */
+    public function getKoichiPercentAttribute(): float
+    {
+        return 100.0 - $this->commission_rate;
+    }
+
+    /**
+     * Apakah booking ini kena cancel forfeit?
+     * (Sudah bayar + terapis spesifik + status cancelled)
+     */
+    public function isCancelForfeit(): bool
+    {
+        return $this->status === 'cancelled'
+            && $this->is_specific_therapist
+            && $this->payment !== null;
+    }
+
+    /**
+     * Label tipe komisi untuk UI
+     */
+    public function getCommissionTypeLabelAttribute(): string
+    {
+        return $this->isProgramBooking() ? 'Program (30%)' : 'Standard (25%)';
+    }
 }

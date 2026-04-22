@@ -91,7 +91,7 @@
                     </div>
 
                     {{-- Status aktif --}}
-                    <div class="mb-6 flex items-center gap-3">
+                    <div class="mb-6 flex items-center gap-3"> 
                         <input type="hidden" name="is_active" value="0">
                         <input type="checkbox" id="is_active" name="is_active" value="1"
                             {{ old('is_active', $waTemplate->is_active) ? 'checked' : '' }}
