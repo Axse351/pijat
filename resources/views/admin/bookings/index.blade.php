@@ -21,7 +21,7 @@
 
             {{-- Stats --}}
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                @foreach ([['Total', $bookings->count(), 'text-gray-900 dark:text-white'], ['Terjadwal', $bookings->where('status', 'scheduled')->count(), 'text-amber-500'], ['Selesai', $bookings->where('status', 'completed')->count(), 'text-emerald-500'], ['Batal', $bookings->where('status', 'cancelled')->count(), 'text-red-500']] as [$lbl, $cnt, $cls])
+                @foreach ([['Total', $bookings->total(), 'text-gray-900 dark:text-white'], ['Terjadwal', \App\Models\Booking::where('status', 'scheduled')->count(), 'text-amber-500'], ['Selesai', \App\Models\Booking::where('status', 'completed')->count(), 'text-emerald-500'], ['Batal', \App\Models\Booking::where('status', 'cancelled')->count(), 'text-red-500']] as [$lbl, $cnt, $cls])
                     <div
                         class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 text-center">
                         <div class="text-2xl font-bold {{ $cls }}">{{ $cnt }}</div>
@@ -79,7 +79,14 @@
                 class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div
                     class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
-                    <h3 class="font-semibold text-gray-800 dark:text-gray-200">Semua Booking</h3>
+                    <div class="flex items-center gap-3">
+                        <h3 class="font-semibold text-gray-800 dark:text-gray-200">Semua Booking</h3>
+                        @if ($bookings->total() > 0)
+                            <span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+                                {{ $bookings->total() }} total
+                            </span>
+                        @endif
+                    </div>
                     <div class="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                         <span class="flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>WA muncul H-0 & H-1
@@ -94,7 +101,7 @@
                     </div>
                 </div>
 
-                @if ($bookings->count())
+                @if ($bookings->total())
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
@@ -170,6 +177,9 @@
                                         };
 
                                         $canComplete = in_array($booking->status, ['scheduled', 'ongoing']);
+
+                                        // Nomor urut tetap konsisten antar halaman
+                                        $rowNumber = ($bookings->currentPage() - 1) * $bookings->perPage() + $i + 1;
                                     @endphp
 
                                     <tr
@@ -177,7 +187,7 @@
                                         {{ $isRescheduled ? 'border-l-4 border-l-purple-400' : '' }}
                                         {{ $isToday ? 'bg-amber-50/30 dark:bg-amber-900/5' : ($isTomorrow ? 'bg-blue-50/30 dark:bg-blue-900/5' : '') }}">
 
-                                        <td class="px-5 py-3.5 text-gray-400">{{ $i + 1 }}</td>
+                                        <td class="px-5 py-3.5 text-gray-400">{{ $rowNumber }}</td>
 
                                         <td class="px-5 py-3.5">
                                             <div class="font-medium text-gray-800 dark:text-gray-200">
@@ -306,6 +316,96 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {{-- ═══ PAGINATION ═══ --}}
+                    @if ($bookings->hasPages())
+                        <div
+                            class="px-5 py-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-4 flex-wrap">
+
+                            {{-- Info --}}
+                            <div class="text-xs text-gray-400">
+                                Menampilkan
+                                <span
+                                    class="font-semibold text-gray-600 dark:text-gray-300">{{ $bookings->firstItem() }}</span>
+                                –
+                                <span
+                                    class="font-semibold text-gray-600 dark:text-gray-300">{{ $bookings->lastItem() }}</span>
+                                dari
+                                <span
+                                    class="font-semibold text-gray-600 dark:text-gray-300">{{ $bookings->total() }}</span>
+                                booking
+                            </div>
+
+                            {{-- Navigasi --}}
+                            <div class="flex items-center gap-1">
+
+                                {{-- Prev --}}
+                                @if ($bookings->onFirstPage())
+                                    <span
+                                        class="px-3 py-1.5 text-xs text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-gray-700/50 rounded-lg cursor-not-allowed select-none">
+                                        ‹ Prev
+                                    </span>
+                                @else
+                                    <a href="{{ $bookings->previousPageUrl() }}"
+                                        class="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                                        ‹ Prev
+                                    </a>
+                                @endif
+
+                                {{-- Halaman pertama jika jauh --}}
+                                @if ($bookings->currentPage() > 3)
+                                    <a href="{{ $bookings->url(1) }}"
+                                        class="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                                        1
+                                    </a>
+                                    @if ($bookings->currentPage() > 4)
+                                        <span class="px-1 text-xs text-gray-300">…</span>
+                                    @endif
+                                @endif
+
+                                {{-- Range halaman sekitar current --}}
+                                @foreach (range(max(1, $bookings->currentPage() - 2), min($bookings->lastPage(), $bookings->currentPage() + 2)) as $page)
+                                    @if ($page == $bookings->currentPage())
+                                        <span
+                                            class="px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg shadow-sm">
+                                            {{ $page }}
+                                        </span>
+                                    @else
+                                        <a href="{{ $bookings->url($page) }}"
+                                            class="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                                            {{ $page }}
+                                        </a>
+                                    @endif
+                                @endforeach
+
+                                {{-- Halaman terakhir jika jauh --}}
+                                @if ($bookings->currentPage() < $bookings->lastPage() - 2)
+                                    @if ($bookings->currentPage() < $bookings->lastPage() - 3)
+                                        <span class="px-1 text-xs text-gray-300">…</span>
+                                    @endif
+                                    <a href="{{ $bookings->url($bookings->lastPage()) }}"
+                                        class="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                                        {{ $bookings->lastPage() }}
+                                    </a>
+                                @endif
+
+                                {{-- Next --}}
+                                @if ($bookings->hasMorePages())
+                                    <a href="{{ $bookings->nextPageUrl() }}"
+                                        class="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                                        Next ›
+                                    </a>
+                                @else
+                                    <span
+                                        class="px-3 py-1.5 text-xs text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-gray-700/50 rounded-lg cursor-not-allowed select-none">
+                                        Next ›
+                                    </span>
+                                @endif
+
+                            </div>
+                        </div>
+                    @endif
+                    {{-- ═══ END PAGINATION ═══ --}}
                 @else
                     <div class="text-center py-16 text-gray-400 text-sm">
                         Belum ada booking.
@@ -481,7 +581,6 @@
             class="fixed bottom-5 right-5 z-50 flex items-start gap-3 px-5 py-4 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-2xl shadow-2xl max-w-sm"
             style="animation: slideUp 0.3s ease-out;">
 
-            {{-- Icon --}}
             <div
                 class="flex-shrink-0 w-11 h-11 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mt-0.5">
                 <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
@@ -492,7 +591,6 @@
                 </svg>
             </div>
 
-            {{-- Konten --}}
             <div class="flex-1 min-w-0">
                 <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">✅ Booking selesai!</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -501,16 +599,12 @@
                     </span>
                 </div>
 
-                {{-- Progress bar auto-close --}}
                 <div class="mt-2 h-0.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div id="waBannerProgress" class="h-full bg-green-400 rounded-full"
                         style="width:100%; transition: width 15s linear;"></div>
                 </div>
 
-                {{-- Tombol aksi --}}
                 <div class="flex gap-2 mt-3 flex-wrap">
-
-                    {{-- Cetak Struk (auto print) --}}
                     @if (session('complete_receipt_url'))
                         <a href="{{ session('complete_receipt_url') }}?autoprint=1" target="_blank"
                             onclick="closeBanner()"
@@ -523,7 +617,6 @@
                         </a>
                     @endif
 
-                    {{-- Kirim WA --}}
                     @if (session('complete_wa_url'))
                         <a href="{{ session('complete_wa_url') }}" target="_blank" onclick="closeBanner()"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm whitespace-nowrap">
@@ -780,10 +873,10 @@
                             ${isPast
                                 ? `<div class="h-[52px] rounded-lg bg-gray-50 dark:bg-gray-700/20"></div>`
                                 : `<button type="button"
-                                        onclick="openModal('${dateStr}', ${hour}, ${t.id}, '${t.name.replace(/'/g,"\\'")}' )"
-                                        class="w-full h-[52px] rounded-lg border border-dashed border-gray-200 dark:border-gray-600 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-gray-300 hover:text-indigo-400 transition-all text-xs font-medium group flex items-center justify-center">
-                                        <span class="opacity-0 group-hover:opacity-100 transition-opacity select-none">+ Booking</span>
-                                    </button>`
+                                            onclick="openModal('${dateStr}', ${hour}, ${t.id}, '${t.name.replace(/'/g,"\\'")}' )"
+                                            class="w-full h-[52px] rounded-lg border border-dashed border-gray-200 dark:border-gray-600 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-gray-300 hover:text-indigo-400 transition-all text-xs font-medium group flex items-center justify-center">
+                                            <span class="opacity-0 group-hover:opacity-100 transition-opacity select-none">+ Booking</span>
+                                        </button>`
                             }
                         </td>`;
                     }

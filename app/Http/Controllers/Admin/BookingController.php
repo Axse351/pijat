@@ -56,7 +56,7 @@ class BookingController extends Controller
 
     public function index()
     {
-        $bookings   = Booking::with(['customer', 'therapist', 'service', 'program'])->latest()->get();
+        $bookings = Booking::with(['customer', 'therapist', 'service', 'program'])->latest()->paginate(15);
         $customers  = Customer::all();
         $therapists = Therapist::where('is_active', 1)->get();
         $services   = Service::all();
