@@ -349,6 +349,20 @@ class BookingController extends Controller
     // COMPLETE (quick action)
     // ─────────────────────────────────────────────
 
+    // ─────────────────────────────────────────────
+    // RECEIPT
+    // ─────────────────────────────────────────────
+
+    public function receipt(Booking $booking)
+    {
+        $booking->load(['customer', 'therapist', 'service', 'promo', 'program', 'commission']);
+        return view('admin.bookings.receipt', compact('booking'));
+    }
+
+    // ─────────────────────────────────────────────
+    // COMPLETE (quick action) — update versi baru
+    // ─────────────────────────────────────────────
+
     public function complete(Booking $booking)
     {
         if ($booking->status === 'completed') {
@@ -359,14 +373,12 @@ class BookingController extends Controller
         $booking->update(['status' => 'completed']);
         $booking->refresh();
 
-        // Beri poin reward jika ada
         $service      = $booking->service;
         $rewardPoints = $service->reward_points ?? 0;
         if ($rewardPoints > 0) {
             $booking->customer->addPoints($rewardPoints);
         }
 
-        // Buat record komisi
         $this->createCommission($booking);
 
         // Bangun URL WA ucapan terima kasih
@@ -381,7 +393,6 @@ class BookingController extends Controller
 
             $waMsg = WaMessageTemplate::render('booking_complete', $vars);
 
-            // Fallback jika template belum ada di database
             if (!$waMsg) {
                 $pointInfo = $rewardPoints > 0
                     ? "\n\n🎁 Kamu mendapatkan *{$rewardPoints} poin* dari sesi ini!"
@@ -405,6 +416,7 @@ class BookingController extends Controller
 
         session()->flash('complete_wa_url', $waUrl);
         session()->flash('complete_customer_name', $booking->customer->name);
+        session()->flash('complete_receipt_url', route('admin.bookings.receipt', $booking)); // ← baru
         session()->flash(
             'success',
             "Booking {$booking->customer->name} berhasil diselesaikan."

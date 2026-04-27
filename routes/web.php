@@ -163,6 +163,7 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::patch('/commissions/{commission}/mark-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
         Route::post('/commissions/bulk-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markBulkPaid'])->name('commissions.bulk-paid');
         Route::get('/commissions/therapist/{therapist}', [\App\Http\Controllers\Admin\CommissionController::class, 'therapistSummary'])->name('commissions.therapist');
+        Route::get('bookings/{booking}/receipt', [BookingController::class, 'receipt'])->name('bookings.receipt');
     });
 
 // ============================================================================
