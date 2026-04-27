@@ -8,16 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     use HasFactory;
+
     protected $table = 'services';
     protected $guarded = ['id'];
 
     protected $casts = [
-        'price'         => 'integer',
-        'duration'      => 'integer',
-        'is_active'     => 'boolean',
-        'reward_points' => 'integer',
+        'price'           => 'integer',
+        'duration'        => 'integer',
+        'is_active'       => 'boolean',
+        'is_home_service' => 'boolean',   // ← tambahan
+        'reward_points'   => 'integer',
     ];
-
 
     public function bookings()
     {

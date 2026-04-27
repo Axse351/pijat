@@ -85,8 +85,8 @@
                             <p class="text-xs text-gray-400 mt-1">Kosongkan jika bukan layanan terapi.</p>
                         </div>
 
-                        {{-- ✅ Poin Reward --}}
-                        <div>
+                        {{-- Poin Reward --}}
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                 Poin Reward ⭐
                             </label>
@@ -95,7 +95,6 @@
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
                                 placeholder="0" oninput="updatePointPreview()">
 
-                            {{-- Preview badge poin --}}
                             <div id="pointPreview" class="mt-2 hidden">
                                 <span id="pointBadge"
                                     class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
@@ -120,7 +119,15 @@
                                 placeholder="Deskripsi layanan...">{{ old('description') }}</textarea>
                         </div>
 
-                        {{-- Status --}}
+                        {{-- Divider Toggle --}}
+                        <div class="sm:col-span-2">
+                            <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Pengaturan
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Status Aktif --}}
                         <div class="sm:col-span-2">
                             <label class="flex items-center gap-3 cursor-pointer">
                                 <input type="hidden" name="is_active" value="0">
@@ -128,8 +135,35 @@
                                     {{ old('is_active', '1') == '1' ? 'checked' : '' }}
                                     class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Layanan aktif (ditampilkan di daftar booking)
+                                    Layanan aktif
+                                    <span class="text-xs text-gray-400 font-normal ml-1">(ditampilkan di daftar
+                                        booking)</span>
                                 </span>
+                            </label>
+                        </div>
+
+                        {{-- Home Service --}}
+                        <div class="sm:col-span-2">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="hidden" name="is_home_service" value="0">
+                                <input type="checkbox" name="is_home_service" value="1"
+                                    {{ old('is_home_service') == '1' ? 'checked' : '' }} id="homeServiceCheck"
+                                    class="w-4 h-4 mt-0.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400"
+                                    onchange="updateCommissionPreview()">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Home Service
+                                    </span>
+                                    <span id="commissionBadge"
+                                        class="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-400">
+                                        Komisi 25%
+                                    </span>
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        Centang jika layanan dikerjakan di lokasi pelanggan.
+                                        Reguler di tempat = <strong>25%</strong>, Home Service = <strong
+                                            class="text-orange-500">30%</strong>.
+                                    </p>
+                                </div>
                             </label>
                         </div>
 
@@ -168,7 +202,22 @@
             }
         }
 
-        // Jalankan saat halaman load (untuk old() value saat validation error)
-        document.addEventListener('DOMContentLoaded', updatePointPreview);
+        function updateCommissionPreview() {
+            const isHome = document.getElementById('homeServiceCheck').checked;
+            const badge = document.getElementById('commissionBadge');
+
+            if (isHome) {
+                badge.textContent = 'Komisi 30%';
+                badge.className = 'ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-600';
+            } else {
+                badge.textContent = 'Komisi 25%';
+                badge.className = 'ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-400';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePointPreview();
+            updateCommissionPreview();
+        });
     </script>
 </x-app-layout>

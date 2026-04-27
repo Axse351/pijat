@@ -89,15 +89,19 @@ class Booking extends Model
     // ── HELPERS / ACCESSORS ───────────────────────────────────────────────
 
     /**
-     * Apakah booking ini pakai paket program (komisi 30%)?
+     * Apakah booking ini pakai paket program atau layanan home service?
+     * Keduanya mendapat komisi terapis 30%.
      */
     public function isProgramBooking(): bool
     {
-        return $this->program_id !== null || $this->commission_type === 'program';
+        return $this->program_id !== null
+            || $this->commission_type === 'program'
+            || (bool) ($this->service->is_home_service ?? false);
     }
 
     /**
-     * Persentase komisi terapis untuk booking ini
+     * Persentase komisi terapis untuk booking ini.
+     * Home service / program → 30%, reguler → 25%
      */
     public function getCommissionRateAttribute(): float
     {
@@ -144,6 +148,14 @@ class Booking extends Model
      */
     public function getCommissionTypeLabelAttribute(): string
     {
-        return $this->isProgramBooking() ? 'Program (30%)' : 'Standard (25%)';
+        if ($this->program_id !== null || $this->commission_type === 'program') {
+            return 'Program (30%)';
+        }
+
+        if ((bool) ($this->service->is_home_service ?? false)) {
+            return 'Home Service (30%)';
+        }
+
+        return 'Standard (25%)';
     }
 }

@@ -16,6 +16,44 @@ use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+    // ─────────────────────────────────────────────
+    // COMMISSION HELPER
+    // ─────────────────────────────────────────────
+
+    /**
+     * Hitung dan simpan komisi berdasarkan tipe layanan.
+     * Home service → 30%, reguler → 25%
+     */
+    private function createCommission(Booking $booking): void
+    {
+        // Hindari duplikasi jika sudah ada komisi untuk booking ini
+        if ($booking->commission()->exists()) {
+            return;
+        }
+
+        $isHomeService     = (bool) ($booking->service->is_home_service ?? false);
+        $commissionPercent = $isHomeService ? 30.00 : 25.00;
+        $commissionAmount  = round($booking->final_price * $commissionPercent / 100, 2);
+
+        // Hitung rentang minggu (Senin–Minggu) dari tanggal selesai
+        $completedDate = Carbon::now();
+        $weekStart     = $completedDate->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $weekEnd       = $completedDate->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+
+        $booking->commission()->create([
+            'therapist_id'       => $booking->therapist_id,
+            'commission_percent' => $commissionPercent,
+            'commission_amount'  => $commissionAmount,
+            'is_paid'            => false,
+            'week_start'         => $weekStart,
+            'week_end'           => $weekEnd,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────
+    // INDEX & CALENDAR
+    // ─────────────────────────────────────────────
+
     public function index()
     {
         $bookings   = Booking::with(['customer', 'therapist', 'service', 'program'])->latest()->get();
@@ -100,6 +138,10 @@ class BookingController extends Controller
         return response()->json(['bookings' => $bookings]);
     }
 
+    // ─────────────────────────────────────────────
+    // CREATE & STORE
+    // ─────────────────────────────────────────────
+
     public function create()
     {
         $customers  = Customer::all();
@@ -183,6 +225,10 @@ class BookingController extends Controller
         return redirect()->route('admin.bookings.index')
             ->with('success', 'Booking berhasil dibuat.');
     }
+
+    // ─────────────────────────────────────────────
+    // EDIT & UPDATE
+    // ─────────────────────────────────────────────
 
     public function edit(Booking $booking)
     {
@@ -269,26 +315,40 @@ class BookingController extends Controller
         ]);
 
         if (!$wasCompleted && $becomesCompleted) {
+            // Beri poin reward
             $rewardPoints = $service->reward_points ?? 0;
             if ($rewardPoints > 0) {
                 $booking->customer->addPoints($rewardPoints);
             }
+
+            // Buat record komisi — refresh dulu agar relasi service terbaru
+            $booking->refresh();
+            $this->createCommission($booking);
         }
 
         $message = 'Booking berhasil diperbarui.';
-        if ($isRescheduled) $message .= ' Jadwal telah diubah dan ditandai.';
-        if (!$wasCompleted && $becomesCompleted && ($service->reward_points ?? 0) > 0) {
-            $message .= " +{$service->reward_points} poin diberikan ke {$booking->customer->name}.";
+        if ($isRescheduled) {
+            $message .= ' Jadwal telah diubah dan ditandai.';
+        }
+        if (!$wasCompleted && $becomesCompleted) {
+            $rewardPoints = $service->reward_points ?? 0;
+            if ($rewardPoints > 0) {
+                $message .= " +{$rewardPoints} poin diberikan ke {$booking->customer->name}.";
+            }
+
+            $isHomeService     = (bool) ($service->is_home_service ?? false);
+            $commissionPercent = $isHomeService ? 30 : 25;
+            $message .= " Komisi {$commissionPercent}% tercatat untuk {$booking->therapist->name}.";
         }
 
         return redirect()->route('admin.bookings.index')
             ->with('success', $message);
     }
 
-    /**
-     * Quick complete — tandai selesai lalu tampilkan banner WA ucapan terima kasih
-     * Menggunakan WaMessageTemplate dengan key 'booking_complete' agar bisa dikustomisasi
-     */
+    // ─────────────────────────────────────────────
+    // COMPLETE (quick action)
+    // ─────────────────────────────────────────────
+
     public function complete(Booking $booking)
     {
         if ($booking->status === 'completed') {
@@ -297,6 +357,7 @@ class BookingController extends Controller
         }
 
         $booking->update(['status' => 'completed']);
+        $booking->refresh();
 
         // Beri poin reward jika ada
         $service      = $booking->service;
@@ -305,7 +366,10 @@ class BookingController extends Controller
             $booking->customer->addPoints($rewardPoints);
         }
 
-        // Bangun URL WA menggunakan WaMessageTemplate (bisa dikustomisasi di halaman Kelola Template WA)
+        // Buat record komisi
+        $this->createCommission($booking);
+
+        // Bangun URL WA ucapan terima kasih
         $waUrl = null;
         if (!empty($booking->customer?->phone)) {
             $vars = [
@@ -336,14 +400,24 @@ class BookingController extends Controller
             }
         }
 
-        // Flash URL WA ke session — akan ditampilkan sebagai banner di index (bukan auto window.open)
+        $isHomeService     = (bool) ($service->is_home_service ?? false);
+        $commissionPercent = $isHomeService ? 30 : 25;
+
         session()->flash('complete_wa_url', $waUrl);
         session()->flash('complete_customer_name', $booking->customer->name);
-        session()->flash('success', "Booking {$booking->customer->name} berhasil diselesaikan."
-            . ($rewardPoints > 0 ? " +{$rewardPoints} poin diberikan." : ''));
+        session()->flash(
+            'success',
+            "Booking {$booking->customer->name} berhasil diselesaikan."
+                . ($rewardPoints > 0 ? " +{$rewardPoints} poin diberikan." : '')
+                . " Komisi {$commissionPercent}% tercatat untuk {$booking->therapist->name}."
+        );
 
         return redirect()->route('admin.bookings.index');
     }
+
+    // ─────────────────────────────────────────────
+    // DESTROY
+    // ─────────────────────────────────────────────
 
     public function destroy(Booking $booking)
     {

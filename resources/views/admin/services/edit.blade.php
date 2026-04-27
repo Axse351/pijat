@@ -1,12 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Layanan</p>
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    Edit — {{ $service->name }}
-                </h2>
-            </div>
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                Edit Layanan
+                <span class="ml-2 text-indigo-500 font-normal text-base">{{ $service->name }}</span>
+            </h2>
             <a href="{{ route('admin.services.index') }}"
                 class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">
                 ← Kembali
@@ -38,7 +36,8 @@
                                 Nama Layanan *
                             </label>
                             <input type="text" name="name" value="{{ old('name', $service->name) }}" required
-                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="cth. Energizing Therapy - 60'">
                         </div>
 
                         {{-- Kategori --}}
@@ -48,6 +47,7 @@
                             </label>
                             <select name="category" required
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Pilih Kategori --</option>
                                 @foreach (['Refleksi', 'Minuman'] as $cat)
                                     <option value="{{ $cat }}"
                                         {{ old('category', $service->category) === $cat ? 'selected' : '' }}>
@@ -63,7 +63,8 @@
                                 SKU
                             </label>
                             <input type="text" name="sku" value="{{ old('sku', $service->sku) }}"
-                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="cth. R 60">
                         </div>
 
                         {{-- Harga --}}
@@ -73,7 +74,8 @@
                             </label>
                             <input type="number" name="price" value="{{ old('price', $service->price) }}" required
                                 min="0"
-                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="110000">
                         </div>
 
                         {{-- Durasi --}}
@@ -83,23 +85,24 @@
                             </label>
                             <input type="number" name="duration" value="{{ old('duration', $service->duration) }}"
                                 min="1"
-                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="60">
                             <p class="text-xs text-gray-400 mt-1">Kosongkan jika bukan layanan terapi.</p>
                         </div>
 
-                        {{-- ✅ Poin Reward --}}
-                        <div>
+                        {{-- Poin Reward --}}
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                 Poin Reward ⭐
                             </label>
-                            <input type="number" name="reward_points" value="{{ old('reward_points', $service->reward_points ?? 0) }}"
-                                min="0" max="10" id="rewardPointsInput"
+                            <input type="number" name="reward_points"
+                                value="{{ old('reward_points', $service->reward_points) }}" min="0"
+                                max="10" id="rewardPointsInput"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
                                 placeholder="0" oninput="updatePointPreview()">
 
-                            {{-- Preview badge poin --}}
                             <div id="pointPreview" class="mt-2 hidden">
-                                <span id="pointBadge"
+                                <span
                                     class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
                                     ⭐ +<span id="pointBadgeVal">0</span> poin per kunjungan selesai
                                 </span>
@@ -118,10 +121,19 @@
                                 Deskripsi
                             </label>
                             <textarea name="description" rows="3"
-                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">{{ old('description', $service->description) }}</textarea>
+                                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200"
+                                placeholder="Deskripsi layanan...">{{ old('description', $service->description) }}</textarea>
                         </div>
 
-                        {{-- Status --}}
+                        {{-- Divider Toggle --}}
+                        <div class="sm:col-span-2">
+                            <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Pengaturan
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Status Aktif --}}
                         <div class="sm:col-span-2">
                             <label class="flex items-center gap-3 cursor-pointer">
                                 <input type="hidden" name="is_active" value="0">
@@ -129,8 +141,36 @@
                                     {{ old('is_active', $service->is_active) ? 'checked' : '' }}
                                     class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Layanan aktif (ditampilkan di daftar booking)
+                                    Layanan aktif
+                                    <span class="text-xs text-gray-400 font-normal ml-1">(ditampilkan di daftar
+                                        booking)</span>
                                 </span>
+                            </label>
+                        </div>
+
+                        {{-- Home Service --}}
+                        <div class="sm:col-span-2">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="hidden" name="is_home_service" value="0">
+                                <input type="checkbox" name="is_home_service" value="1"
+                                    {{ old('is_home_service', $service->is_home_service) ? 'checked' : '' }}
+                                    id="homeServiceCheck"
+                                    class="w-4 h-4 mt-0.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400"
+                                    onchange="updateCommissionPreview()">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Home Service
+                                    </span>
+                                    <span id="commissionBadge"
+                                        class="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-400">
+                                        Komisi 25%
+                                    </span>
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        Centang jika layanan dikerjakan di lokasi pelanggan.
+                                        Reguler di tempat = <strong>25%</strong>, Home Service = <strong
+                                            class="text-orange-500">30%</strong>.
+                                    </p>
+                                </div>
                             </label>
                         </div>
 
@@ -139,7 +179,7 @@
                     <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-gray-700">
                         <button type="submit"
                             class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
-                            Simpan Perubahan
+                            Perbarui Layanan
                         </button>
                         <a href="{{ route('admin.services.index') }}"
                             class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors">
@@ -169,7 +209,22 @@
             }
         }
 
-        // Jalankan saat halaman load (untuk old() value saat validation error)
-        document.addEventListener('DOMContentLoaded', updatePointPreview);
+        function updateCommissionPreview() {
+            const isHome = document.getElementById('homeServiceCheck').checked;
+            const badge = document.getElementById('commissionBadge');
+
+            if (isHome) {
+                badge.textContent = 'Komisi 30%';
+                badge.className = 'ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-600';
+            } else {
+                badge.textContent = 'Komisi 25%';
+                badge.className = 'ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-400';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePointPreview();
+            updateCommissionPreview();
+        });
     </script>
 </x-app-layout>

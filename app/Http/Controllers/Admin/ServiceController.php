@@ -15,7 +15,6 @@ class ServiceController extends Controller
         return view('admin.services.index', compact('services'));
     }
 
-
     public function create()
     {
         return view('admin.services.create');
@@ -24,25 +23,27 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'category'       => 'required|in:Refleksi,Minuman',
-            'price'          => 'required|numeric|min:0',
-            'duration'       => 'nullable|integer|min:1',
-            'sku'            => 'nullable|string|max:50',
-            'description'    => 'nullable|string',
-            'reward_points'  => 'nullable|integer|min:0|max:10',
-            'is_active'      => 'boolean',
+            'name'            => 'required|string|max:255',
+            'category'        => 'required|in:Refleksi,Minuman',
+            'price'           => 'required|numeric|min:0',
+            'duration'        => 'nullable|integer|min:1',
+            'sku'             => 'nullable|string|max:50',
+            'description'     => 'nullable|string',
+            'reward_points'   => 'nullable|integer|min:0|max:10',
+            'is_active'       => 'boolean',
+            'is_home_service' => 'boolean',
         ]);
 
         Service::create([
-            'name'           => $request->name,
-            'category'       => $request->category,
-            'price'          => $request->price,
-            'duration'       => $request->duration ?: null,
-            'sku'            => $request->sku ?: null,
-            'description'    => $request->description,
-            'reward_points'  => $request->reward_points ?? 0,
-            'is_active'      => $request->boolean('is_active', true),
+            'name'            => $request->name,
+            'category'        => $request->category,
+            'price'           => $request->price,
+            'duration'        => $request->duration ?: null,
+            'sku'             => $request->sku ?: null,
+            'description'     => $request->description,
+            'reward_points'   => $request->reward_points ?? 0,
+            'is_active'       => $request->boolean('is_active', true),
+            'is_home_service' => $request->boolean('is_home_service', false),
         ]);
 
         return redirect()
@@ -58,25 +59,27 @@ class ServiceController extends Controller
     public function update(Request $request, Service $service)
     {
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'category'       => 'required|in:Refleksi,Minuman',
-            'price'          => 'required|numeric|min:0',
-            'duration'       => 'nullable|integer|min:1',
-            'sku'            => 'nullable|string|max:50',
-            'description'    => 'nullable|string',
-            'reward_points'  => 'nullable|integer|min:0|max:10',
-            'is_active'      => 'boolean',
+            'name'            => 'required|string|max:255',
+            'category'        => 'required|in:Refleksi,Minuman',
+            'price'           => 'required|numeric|min:0',
+            'duration'        => 'nullable|integer|min:1',
+            'sku'             => 'nullable|string|max:50',
+            'description'     => 'nullable|string',
+            'reward_points'   => 'nullable|integer|min:0|max:10',
+            'is_active'       => 'boolean',
+            'is_home_service' => 'boolean',
         ]);
 
         $service->update([
-            'name'           => $request->name,
-            'category'       => $request->category,
-            'price'          => $request->price,
-            'duration'       => $request->duration ?: null,
-            'sku'            => $request->sku ?: null,
-            'description'    => $request->description,
-            'reward_points'  => $request->reward_points ?? 0,
-            'is_active'      => $request->boolean('is_active'),
+            'name'            => $request->name,
+            'category'        => $request->category,
+            'price'           => $request->price,
+            'duration'        => $request->duration ?: null,
+            'sku'             => $request->sku ?: null,
+            'description'     => $request->description,
+            'reward_points'   => $request->reward_points ?? 0,
+            'is_active'       => $request->boolean('is_active'),
+            'is_home_service' => $request->boolean('is_home_service'),
         ]);
 
         return redirect()
