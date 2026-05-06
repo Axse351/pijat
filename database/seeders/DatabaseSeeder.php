@@ -21,13 +21,12 @@ class DatabaseSeeder extends Seeder
             TherapistSeeder::class,
             ServiceSeeder::class,
             PromoSeeder::class,
+            BarangSeeder::class,
             ProgramSeeder::class,
             AtkCategorySeeder::class,
             MembershipSeeder::class,
             CustomerSeeder::class,
             CustomerMembershipSeeder::class,
-            BookingSeeder::class,
-            PaymentSeeder::class,
         ]);
 
         // Aktifkan kembali setelah semua seeder selesai
