@@ -2226,7 +2226,7 @@
                 const isPast = new Date(`${date}T${slot}`) <= now;
                 const disabled = blocked || isPast;
                 if (disabled)
-                return `<button type="button" class="slot-btn" disabled><span style="display:block;font-size:.55rem;margin-bottom:1px;">${blocked ? '🔒' : '⏰'}</span>${slot}</button>`;
+                    return `<button type="button" class="slot-btn" disabled><span style="display:block;font-size:.55rem;margin-bottom:1px;">${blocked ? '🔒' : '⏰'}</span>${slot}</button>`;
                 return `<button type="button" class="slot-btn" onclick="pickSlot('${slot}')">${slot}</button>`;
             }).join('') + `</div>`;
             document.getElementById('slotArea').innerHTML = html;
