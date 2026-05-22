@@ -78,12 +78,18 @@ Route::middleware(['auth', 'role:admin,kasir'])
 
         Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class);
 
+        // ── Kehadiran (admin & kasir bisa akses) ─────────────────────────────
         Route::get('/attendances', [TherapistAttendanceController::class, 'index'])->name('attendances.index');
         Route::get('/therapists/{therapist}/attendance/history', [TherapistAttendanceController::class, 'history'])->name('attendance.history');
         Route::get('/attendance/check-in', [TherapistAttendanceController::class, 'showCheckInCamera'])->name('attendance.check-in-camera');
         Route::get('/attendance/check-out', [TherapistAttendanceController::class, 'showCheckOutCamera'])->name('attendance.check-out-camera');
         Route::post('/attendance/check-in-ajax', [TherapistAttendanceController::class, 'checkInAjax'])->name('attendance.check-in-ajax');
         Route::post('/attendance/check-out-ajax', [TherapistAttendanceController::class, 'checkOutAjax'])->name('attendance.check-out-ajax');
+
+        // ── Face Registration (admin & kasir bisa akses untuk proses absensi) ─
+        Route::get('/therapists/{therapist}/face/register', [TherapistFaceController::class, 'create'])->name('therapist-face.register');
+        Route::post('/therapists/{therapist}/face', [TherapistFaceController::class, 'store'])->name('therapist-face.store');
+        Route::post('/therapists/{therapist}/face/verify', [TherapistFaceController::class, 'verify'])->name('therapist-face.verify');
 
         // ── Leave Requests Terapis (admin & kasir bisa lihat, admin bisa approve/reject) ──
         Route::prefix('leaves')->name('leaves.')->group(function () {
@@ -93,6 +99,32 @@ Route::middleware(['auth', 'role:admin,kasir'])
             Route::patch('/{leaveRequest}/reject',    [TherapistLeaveController::class, 'reject'])->name('reject');
             Route::delete('/{leaveRequest}',          [TherapistLeaveController::class, 'destroy'])->name('destroy');
         });
+
+        // ── ATK Purchases (admin & kasir bisa akses) ──────────────────────────
+        Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
+        Route::post('atk-purchases/{purchase}/confirm', [\App\Http\Controllers\AtkPurchaseController::class, 'confirm'])
+            ->name('atk-purchases.confirm');
+        Route::post('atk-purchases/{purchase}/cancel', [\App\Http\Controllers\AtkPurchaseController::class, 'cancel'])
+            ->name('atk-purchases.cancel');
+        Route::get('/api/atk-by-category/{category}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkByCategory']);
+        Route::get('/api/atk-detail/{atk}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']);
+        Route::resource('atk-categories', AtkCategoryController::class);
+
+        // ── Jadwal (admin & kasir bisa akses) ────────────────────────────────
+        Route::get('schedules/all', [TherapistScheduleController::class, 'allSchedules'])->name('schedules.all');
+        Route::post('schedules/generate-month', [TherapistScheduleController::class, 'generateMonthSchedule'])->name('schedules.generate');
+        Route::resource('schedules', TherapistScheduleController::class);
+
+        // ── Komisi (admin & kasir bisa lihat) ────────────────────────────────
+        Route::get('/commissions', [\App\Http\Controllers\Admin\CommissionController::class, 'index'])->name('commissions.index');
+        Route::get('/commissions/therapist/{therapist}', [\App\Http\Controllers\Admin\CommissionController::class, 'therapistSummary'])->name('commissions.therapist');
+
+        // ── Receipt (admin & kasir bisa cetak) ───────────────────────────────
+        Route::get('bookings/{booking}/receipt', [BookingController::class, 'receipt'])->name('bookings.receipt');
+
+        // ====================================================================
+        // ADMIN ONLY ROUTES
+        // ====================================================================
 
         Route::middleware('role:admin')->group(function () {
 
@@ -107,9 +139,7 @@ Route::middleware(['auth', 'role:admin,kasir'])
             Route::patch('/programs/{program}/toggle-active', [ProgramController::class, 'toggleActive'])
                 ->name('programs.toggle-active');
 
-            Route::get('/therapists/{therapist}/face/register', [TherapistFaceController::class, 'create'])->name('therapist-face.register');
-            Route::post('/therapists/{therapist}/face', [TherapistFaceController::class, 'store'])->name('therapist-face.store');
-            Route::post('/therapists/{therapist}/face/verify', [TherapistFaceController::class, 'verify'])->name('therapist-face.verify');
+            // ── Hapus data wajah hanya admin ─────────────────────────────────
             Route::delete('/therapists/{therapist}/face', [TherapistFaceController::class, 'destroy'])->name('therapist-face.destroy');
 
             Route::prefix('customers/{customer}/memberships')
@@ -126,8 +156,13 @@ Route::middleware(['auth', 'role:admin,kasir'])
             Route::resource('atk-items', \App\Http\Controllers\AtkController::class);
             Route::post('atk-items/{atk}/adjust-stock', [\App\Http\Controllers\AtkController::class, 'adjustStock'])
                 ->name('atk-items.adjust-stock');
+
             Route::get('/laporan/export', [\App\Http\Controllers\Admin\LaporanController::class, 'export'])
                 ->name('laporan.export');
+
+            // ── Komisi admin-only actions ─────────────────────────────────────
+            Route::patch('/commissions/{commission}/mark-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
+            Route::post('/commissions/bulk-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markBulkPaid'])->name('commissions.bulk-paid');
 
             // ── Content Routes ────────────────────────────────────────────────
             Route::get('content',    [ContentController::class, 'index'])->name('content.index');
@@ -142,28 +177,10 @@ Route::middleware(['auth', 'role:admin,kasir'])
                 Route::put('/{waTemplate}/reset',     [WaMessageTemplateController::class, 'reset'])->name('reset');
                 Route::get('/{waTemplate}/preview',   [WaMessageTemplateController::class, 'preview'])->name('preview');
             });
+
             Route::post('bookings/{booking}/complete', [BookingController::class, 'complete'])
                 ->name('bookings.complete');
         });
-
-        Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
-        Route::post('atk-purchases/{purchase}/confirm', [\App\Http\Controllers\AtkPurchaseController::class, 'confirm'])
-            ->name('atk-purchases.confirm');
-        Route::post('atk-purchases/{purchase}/cancel', [\App\Http\Controllers\AtkPurchaseController::class, 'cancel'])
-            ->name('atk-purchases.cancel');
-        Route::get('/api/atk-by-category/{category}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkByCategory']);
-        Route::get('/api/atk-detail/{atk}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']);
-        Route::resource('atk-categories', AtkCategoryController::class);
-
-        Route::get('schedules/all', [TherapistScheduleController::class, 'allSchedules'])->name('schedules.all');
-        Route::post('schedules/generate-month', [TherapistScheduleController::class, 'generateMonthSchedule'])->name('schedules.generate');
-        Route::resource('schedules', TherapistScheduleController::class);
-
-        Route::get('/commissions', [\App\Http\Controllers\Admin\CommissionController::class, 'index'])->name('commissions.index');
-        Route::patch('/commissions/{commission}/mark-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
-        Route::post('/commissions/bulk-paid', [\App\Http\Controllers\Admin\CommissionController::class, 'markBulkPaid'])->name('commissions.bulk-paid');
-        Route::get('/commissions/therapist/{therapist}', [\App\Http\Controllers\Admin\CommissionController::class, 'therapistSummary'])->name('commissions.therapist');
-        Route::get('bookings/{booking}/receipt', [BookingController::class, 'receipt'])->name('bookings.receipt');
     });
 
 // ============================================================================
