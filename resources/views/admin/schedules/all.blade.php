@@ -168,6 +168,8 @@
                     <span class="flex items-center gap-1.5"><span
                             class="w-3 h-3 rounded bg-green-500 inline-block"></span> Kerja Pagi</span>
                     <span class="flex items-center gap-1.5"><span
+                            class="w-3 h-3 rounded bg-amber-400 inline-block"></span> Kerja Siang</span>
+                    <span class="flex items-center gap-1.5"><span
                             class="w-3 h-3 rounded bg-green-800 inline-block"></span> Kerja Malam</span>
                     <span class="flex items-center gap-1.5"><span
                             class="w-3 h-3 rounded bg-orange-400 inline-block"></span> Libur</span>
@@ -267,6 +269,10 @@
                                                 'working' => $isNightShift
                                                     ? ['bg-green-800 dark:bg-green-900', 'text-white']
                                                     : [$c[0], $c[1]],
+                                                'working_afternoon' => [
+                                                    'bg-amber-100 dark:bg-amber-900/30',
+                                                    'text-amber-700 dark:text-amber-300',
+                                                ],
                                                 'off' => [
                                                     'bg-orange-100 dark:bg-orange-900/30',
                                                     'text-orange-700 dark:text-orange-300',
@@ -291,12 +297,15 @@
 
                                             $pillLabel = match ($status) {
                                                 'working' => $isNightShift ? 'Mlm' : 'Kerja',
+                                                'working_afternoon' => 'Siang',
                                                 'off' => 'Libur',
                                                 'sick' => 'Sakit',
                                                 'vacation' => 'Ijin',
                                                 'cuti_bersama' => 'Cuti',
                                                 default => '—',
                                             };
+
+                                            $isWorkingStatus = in_array($status, ['working', 'working_afternoon']);
                                         @endphp
                                         <td class="px-3 py-2 text-center">
                                             <div class="flex flex-col items-center gap-0.5">
@@ -312,7 +321,7 @@
                                                         <span class="tooltip-text">Edit jadwal {{ $t->name }} —
                                                             {{ $day['date']->format('d M Y') }}</span>
                                                     </a>
-                                                    @if ($status === 'working' && $sched->start_time)
+                                                    @if ($isWorkingStatus && $sched->start_time)
                                                         <span class="text-xs text-gray-400 dark:text-gray-500">
                                                             {{ \Carbon\Carbon::parse($sched->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($sched->end_time)->format('H:i') }}
                                                         </span>
@@ -384,17 +393,28 @@
                                             // Dot: pakai warna terapis kalau kerja, warna status kalau tidak
                                             $dot = match ($status) {
                                                 'working' => $isNightShift ? 'bg-green-800' : $c[4],
+                                                'working_afternoon' => 'bg-amber-400',
                                                 'off' => 'bg-orange-400',
                                                 'sick' => 'bg-gray-400',
                                                 'vacation' => 'bg-blue-400',
                                                 'cuti_bersama' => 'bg-red-400',
                                                 default => 'bg-gray-200 border border-dashed border-gray-300',
                                             };
+
+                                            $statusLabel = match ($status) {
+                                                'working' => $isNightShift ? 'Kerja Malam' : 'Kerja Pagi',
+                                                'working_afternoon' => 'Kerja Siang',
+                                                'off' => 'Libur',
+                                                'sick' => 'Sakit',
+                                                'vacation' => 'Ijin',
+                                                'cuti_bersama' => 'Cuti Bersama',
+                                                default => 'Belum ada',
+                                            };
                                         @endphp
                                         @if ($sched)
                                             <a href="{{ route('admin.schedules.edit', $sched) }}"
                                                 class="has-tooltip flex items-center gap-1 group hover:opacity-80 transition"
-                                                title="{{ $t->name }}: {{ ucfirst($status) }}">
+                                                title="{{ $t->name }}: {{ $statusLabel }}">
                                                 <span
                                                     class="w-2 h-2 rounded-full flex-shrink-0 {{ $dot }}"></span>
                                                 <span
@@ -428,7 +448,7 @@
                     @php
                         $c = $therapistColors[$t->id];
                         $tScheds = $allSchedules->where('therapist_id', $t->id);
-                        $workCount = $tScheds->where('status', 'working')->count();
+                        $workCount = $tScheds->whereIn('status', ['working', 'working_afternoon'])->count();
                         $offCount = $tScheds->where('status', 'off')->count();
                         $sickCount = $tScheds->where('status', 'sick')->count();
                         $ijinCount = $tScheds->where('status', 'vacation')->count();
