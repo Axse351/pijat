@@ -39,6 +39,11 @@
                                 Pembayaran
                             </x-nav-link>
 
+                            {{-- PELANGGAN (admin & kasir bisa lihat & input) --}}
+                            <x-nav-link :href="route('admin.customers.index')" :active="request()->routeIs('admin.customers.*')">
+                                Pelanggan
+                            </x-nav-link>
+
                             {{-- PENGELUARAN DROPDOWN (admin + kasir) --}}
                             <div class="hidden sm:flex sm:items-center" x-data="{ openCoa: false }"
                                 @click.outside="openCoa = false">
@@ -135,7 +140,6 @@
                                                 ||
                                                 {{ request()->routeIs('admin.services.*') ||
                                                 request()->routeIs('admin.therapists.*') ||
-                                                request()->routeIs('admin.customers.*') ||
                                                 request()->routeIs('admin.memberships.*') ||
                                                 request()->routeIs('admin.customers.membership.*') ||
                                                 request()->routeIs('admin.promos.*') ||
@@ -166,10 +170,6 @@
                                             <a href="{{ route('admin.therapists.index') }}"
                                                 class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.therapists.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
                                                 Terapis
-                                            </a>
-                                            <a href="{{ route('admin.customers.index') }}"
-                                                class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.customers.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
-                                                Pelanggan
                                             </a>
                                             <a href="{{ route('admin.memberships.index') }}"
                                                 class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.memberships.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
@@ -279,6 +279,10 @@
                         Pembayaran
                     </x-responsive-nav-link>
 
+                    <x-responsive-nav-link :href="route('admin.customers.index')" :active="request()->routeIs('admin.customers.*')">
+                        Pelanggan
+                    </x-responsive-nav-link>
+
                     {{-- PENGELUARAN MOBILE --}}
                     <div class="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">Pengeluaran</div>
 
@@ -311,7 +315,6 @@
                         <div class="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">Master Data</div>
                         <x-responsive-nav-link :href="route('admin.services.index')" :active="request()->routeIs('admin.services.*')">Layanan</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.therapists.index')" :active="request()->routeIs('admin.therapists.*')">Terapis</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('admin.customers.index')" :active="request()->routeIs('admin.customers.*')">Pelanggan</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.memberships.index')" :active="request()->routeIs('admin.memberships.*')">Membership</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.promos.index')" :active="request()->routeIs('admin.promos.*')">Promo</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.programs.index')" :active="request()->routeIs('admin.programs.*')">Program</x-responsive-nav-link>

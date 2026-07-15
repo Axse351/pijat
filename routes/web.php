@@ -122,13 +122,18 @@ Route::middleware(['auth', 'role:admin,kasir'])
         // ── Receipt (admin & kasir bisa cetak) ───────────────────────────────
         Route::get('bookings/{booking}/receipt', [BookingController::class, 'receipt'])->name('bookings.receipt');
 
+        // ── Pelanggan (admin & kasir bisa lihat & input; edit/hapus tetap admin-only) ──
+        Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class)
+            ->only(['index', 'create', 'store', 'show']);
+
         // ====================================================================
         // ADMIN ONLY ROUTES
         // ====================================================================
 
         Route::middleware('role:admin')->group(function () {
 
-            Route::resource('customers',   \App\Http\Controllers\Admin\CustomerController::class);
+            Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class)
+                ->only(['edit', 'update', 'destroy']);
             Route::resource('therapists',  \App\Http\Controllers\Admin\TherapistController::class);
             Route::resource('services',    \App\Http\Controllers\Admin\ServiceController::class);
             Route::resource('memberships', \App\Http\Controllers\Admin\MembershipController::class);
