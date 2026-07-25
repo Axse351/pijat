@@ -125,8 +125,8 @@ class TherapistAttendanceController extends Controller
             ->whereDate('schedule_date', $today)
             ->first();
 
-        // ✅ Validasi apakah dijadwalkan masuk
-        if (!$schedule || $schedule->status !== 'working') {
+        // ✅ Validasi apakah dijadwalkan masuk (pagi ATAU siang)
+        if (!$schedule || !in_array($schedule->status, \App\Http\Controllers\Admin\TherapistScheduleController::WORKING_STATUSES)) {
             return response()->json([
                 'success' => false,
                 'message' => $therapist->name . ' tidak dijadwalkan masuk hari ini.',

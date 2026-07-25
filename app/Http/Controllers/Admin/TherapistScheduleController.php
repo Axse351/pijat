@@ -13,7 +13,7 @@ use Illuminate\Http\RedirectResponse;
 class TherapistScheduleController extends Controller
 {
     // Status yang dianggap "kerja" (jam perlu diisi)
-    private const WORKING_STATUSES = ['working', 'working_afternoon'];
+    public const WORKING_STATUSES = ['working', 'working_afternoon'];
 
     public function index(Request $request): View
     {
