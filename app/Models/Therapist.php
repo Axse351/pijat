@@ -18,7 +18,7 @@ class Therapist extends Model
      * Ini agar method update() bisa bekerja dengan baik
      */
     protected $fillable = [
-        'user_id',              // ← TAMBAH INI
+        'user_id',
         'name',
         'specialty',
         'phone',
@@ -81,6 +81,17 @@ class Therapist extends Model
     }
 
     /**
+     * ⭐ BARU: Relasi HasOne ke jadwal HARI INI.
+     * Dipakai untuk eager-load (with('todaySchedule')) di TherapistAttendanceController@index
+     * supaya info shift bisa ditampilkan di tabel Kehadiran tanpa query tambahan per baris (N+1).
+     */
+    public function todaySchedule(): HasOne
+    {
+        return $this->hasOne(TherapistSchedule::class, 'therapist_id')
+            ->whereDate('schedule_date', Carbon::today());
+    }
+
+    /**
      * Relationship ke leaveRequests (pengajuan izin/cuti)
      */
     public function leaveRequests(): HasMany
@@ -112,6 +123,7 @@ class Therapist extends Model
 
     /**
      * Ambil attendance hari ini
+     * Catatan: field tanggal di TherapistAttendance adalah 'attendance_date'
      */
     public function getTodayAttendance()
     {
@@ -222,13 +234,76 @@ class Therapist extends Model
     }
 
     /**
-     * Dapatkan jadwal hari ini
+     * Dapatkan jadwal hari ini.
+     * Method lama tetap dipertahankan untuk kompatibilitas di tempat lain.
+     * Untuk list/tabel dengan banyak baris (mis. index Kehadiran), pakai relasi
+     * todaySchedule() via eager-load supaya tidak N+1 query.
      */
     public function getTodaySchedule()
     {
         return $this->schedules()
             ->whereDate('schedule_date', Carbon::today())
             ->first();
+    }
+
+    /**
+     * ⭐ BARU: Info shift hari ini siap-tampil (label + warna Tailwind).
+     * Otomatis pakai relasi todaySchedule yang sudah di-eager-load kalau ada,
+     * kalau belum di-load, fallback ke query langsung (getTodaySchedule()).
+     *
+     * Return array:
+     * [
+     *   'status'     => string|null (working, working_afternoon, off, sick, vacation, cuti_bersama, null)
+     *   'label'      => string ('Kerja Pagi', 'Libur', dst)
+     *   'bg'         => string (class Tailwind background)
+     *   'text'       => string (class Tailwind text color)
+     *   'start_time' => string|null
+     *   'end_time'   => string|null
+     *   'is_working' => bool
+     * ]
+     */
+    public function getTodayShiftInfo(): array
+    {
+        $sched  = $this->relationLoaded('todaySchedule') ? $this->todaySchedule : $this->getTodaySchedule();
+        $status = $sched?->status;
+
+        $isNightShift = false;
+        if ($status === 'working' && $sched?->start_time) {
+            $startHour    = Carbon::parse($sched->start_time)->hour;
+            $isNightShift = $startHour >= 18 || $startHour < 6;
+        }
+
+        [$bg, $text] = match ($status) {
+            'working' => $isNightShift
+                ? ['bg-green-800 dark:bg-green-900', 'text-white']
+                : ['bg-green-100 dark:bg-green-900/30', 'text-green-700 dark:text-green-300'],
+            'working_afternoon' => ['bg-amber-100 dark:bg-amber-900/30', 'text-amber-700 dark:text-amber-300'],
+            'off' => ['bg-orange-100 dark:bg-orange-900/30', 'text-orange-700 dark:text-orange-300'],
+            'sick' => ['bg-gray-100 dark:bg-gray-700', 'text-gray-600 dark:text-gray-300'],
+            'vacation' => ['bg-blue-100 dark:bg-blue-900/30', 'text-blue-700 dark:text-blue-300'],
+            'cuti_bersama' => ['bg-red-100 dark:bg-red-900/30', 'text-red-700 dark:text-red-300'],
+            default => ['bg-gray-100 dark:bg-gray-700/40 border border-dashed border-gray-300 dark:border-gray-600', 'text-gray-400'],
+        };
+
+        $label = match ($status) {
+            'working' => $isNightShift ? 'Kerja Malam' : 'Kerja Pagi',
+            'working_afternoon' => 'Kerja Siang',
+            'off' => 'Libur',
+            'sick' => 'Sakit',
+            'vacation' => 'Ijin',
+            'cuti_bersama' => 'Cuti Bersama',
+            default => 'Belum Ada Jadwal',
+        };
+
+        return [
+            'status'     => $status,
+            'label'      => $label,
+            'bg'         => $bg,
+            'text'       => $text,
+            'start_time' => $sched?->start_time,
+            'end_time'   => $sched?->end_time,
+            'is_working' => in_array($status, ['working', 'working_afternoon']),
+        ];
     }
 
     /*

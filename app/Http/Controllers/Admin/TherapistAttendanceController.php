@@ -38,7 +38,9 @@ class TherapistAttendanceController extends Controller
 
         $therapists = Therapist::with([
             'attendances' => fn($q) => $q->whereDate('attendance_date', $today),
-            'faceData'
+            'faceData',
+            // ⭐ BARU: eager-load jadwal hari ini supaya bisa ditampilkan shift-nya
+            'todaySchedule',
         ])->paginate(15);
 
         return view('admin.attendances.index', compact('therapists', 'today'));
@@ -156,7 +158,6 @@ class TherapistAttendanceController extends Controller
         $today     = Carbon::today('Asia/Jakarta');
         $now       = Carbon::now('Asia/Jakarta');
 
-        // ✅ Cek jadwal hari ini
         $schedule = \App\Models\TherapistSchedule::where('therapist_id', $therapist->id)
             ->whereDate('schedule_date', $today)
             ->first();
@@ -168,7 +169,6 @@ class TherapistAttendanceController extends Controller
             ]);
         }
 
-        // Cek sudah check-in hari ini
         $existing = TherapistAttendance::where('therapist_id', $therapist->id)
             ->whereDate('attendance_date', $today)
             ->whereNotNull('check_in_at')
@@ -184,7 +184,6 @@ class TherapistAttendanceController extends Controller
             ]);
         }
 
-        // ✅ Validasi geofence — apakah masih dalam area Koichi
         $distance = $this->calculateDistanceMeters(
             $this->officeLatitude,
             $this->officeLongitude,
@@ -277,7 +276,6 @@ class TherapistAttendanceController extends Controller
             ]);
         }
 
-        // ✅ Validasi geofence — apakah masih dalam area Koichi
         $distance = $this->calculateDistanceMeters(
             $this->officeLatitude,
             $this->officeLongitude,

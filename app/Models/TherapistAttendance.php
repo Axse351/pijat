@@ -189,7 +189,7 @@ class TherapistAttendance extends Model
      */
     public function getStatusLabel()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'present' => 'Hadir',
             'late' => 'Terlambat',
             'absent' => 'Alpa',
@@ -202,7 +202,7 @@ class TherapistAttendance extends Model
      */
     public function getStatusBadgeColor()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'present' => 'green',
             'late' => 'yellow',
             'absent' => 'red',

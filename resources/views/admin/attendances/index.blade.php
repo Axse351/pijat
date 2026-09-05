@@ -45,12 +45,70 @@
                                     <th class="px-4 py-3 text-left font-semibold">{{ __('Nama Terapis') }}</th>
                                     <th class="px-4 py-3 text-left font-semibold">{{ __('Email') }}</th>
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Status Wajah') }}</th>
+                                    {{-- ⭐ KOLOM BARU: Shift Hari Ini --}}
+                                    <th class="px-4 py-3 text-center font-semibold">{{ __('Shift Hari Ini') }}</th>
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Status Hari Ini') }}</th>
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Aksi') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 @forelse ($therapists as $index => $therapist)
+                                    @php
+                                        // Ambil jadwal hari ini (hasil eager load 'todaySchedule' di controller)
+                                        $todaySched = $therapist->todaySchedule;
+                                        $status = $todaySched?->status;
+
+                                        $isNightShift = false;
+                                        if ($status === 'working' && $todaySched?->start_time) {
+                                            $startHour = \Carbon\Carbon::parse($todaySched->start_time)->hour;
+                                            $isNightShift = $startHour >= 18 || $startHour < 6;
+                                        }
+
+                                        [$shiftBg, $shiftText] = match ($status) {
+                                            'working' => $isNightShift
+                                                ? ['bg-green-800 dark:bg-green-900', 'text-white']
+                                                : [
+                                                    'bg-green-100 dark:bg-green-900/30',
+                                                    'text-green-700 dark:text-green-300',
+                                                ],
+                                            'working_afternoon' => [
+                                                'bg-amber-100 dark:bg-amber-900/30',
+                                                'text-amber-700 dark:text-amber-300',
+                                            ],
+                                            'off' => [
+                                                'bg-orange-100 dark:bg-orange-900/30',
+                                                'text-orange-700 dark:text-orange-300',
+                                            ],
+                                            'sick' => [
+                                                'bg-gray-100 dark:bg-gray-700',
+                                                'text-gray-600 dark:text-gray-300',
+                                            ],
+                                            'vacation' => [
+                                                'bg-blue-100 dark:bg-blue-900/30',
+                                                'text-blue-700 dark:text-blue-300',
+                                            ],
+                                            'cuti_bersama' => [
+                                                'bg-red-100 dark:bg-red-900/30',
+                                                'text-red-700 dark:text-red-300',
+                                            ],
+                                            default => [
+                                                'bg-gray-100 dark:bg-gray-700/40 border border-dashed border-gray-300 dark:border-gray-600',
+                                                'text-gray-400',
+                                            ],
+                                        };
+
+                                        $shiftLabel = match ($status) {
+                                            'working' => $isNightShift ? 'Kerja Malam' : 'Kerja Pagi',
+                                            'working_afternoon' => 'Kerja Siang',
+                                            'off' => 'Libur',
+                                            'sick' => 'Sakit',
+                                            'vacation' => 'Ijin',
+                                            'cuti_bersama' => 'Cuti Bersama',
+                                            default => 'Belum Ada Jadwal',
+                                        };
+
+                                        $isWorkingStatus = in_array($status, ['working', 'working_afternoon']);
+                                    @endphp
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                                         <td class="px-4 py-3">
                                             {{ ($therapists->currentPage() - 1) * $therapists->perPage() + $index + 1 }}
@@ -98,6 +156,19 @@
                                                     </svg>
                                                     {{ __('Belum Terdaftar') }}
                                                 </span>
+                                            @endif
+                                        </td>
+
+                                        <!-- ⭐ Shift Hari Ini (BARU) -->
+                                        <td class="px-4 py-3 text-center">
+                                            <span
+                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $shiftBg }} {{ $shiftText }}">
+                                                {{ $shiftLabel }}
+                                            </span>
+                                            @if ($isWorkingStatus && $todaySched?->start_time)
+                                                <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                    {{ \Carbon\Carbon::parse($todaySched->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($todaySched->end_time)->format('H:i') }}
+                                                </div>
                                             @endif
                                         </td>
 
@@ -171,7 +242,6 @@
                                                 @endphp
 
                                                 @if ($canCheckIn)
-                                                    {{-- FIXED: gunakan prefix admin. --}}
                                                     <a href="{{ route('admin.attendance.check-in-camera', $therapist->id) }}"
                                                         class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs font-semibold transition"
                                                         title="{{ __('Check-in dengan Kamera') }}">
@@ -196,7 +266,6 @@
                                                 @endphp
 
                                                 @if ($canCheckOut)
-                                                    {{-- FIXED: gunakan prefix admin. --}}
                                                     <a href="{{ route('admin.attendance.check-out-camera', $therapist->id) }}"
                                                         class="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-semibold transition"
                                                         title="{{ __('Check-out dengan Kamera') }}">
@@ -239,7 +308,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6"
+                                        <td colspan="7"
                                             class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                             <div class="flex flex-col items-center justify-center">
                                                 <svg class="w-16 h-16 mb-4 opacity-30" fill="none"
