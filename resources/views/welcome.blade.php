@@ -10,19 +10,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Public+Sans:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
     <style>
         :root {
-            --cream: #faf7f2;
-            --warm: #f5ede0;
-            --sand: #e8d5b7;
-            --terracotta: #c4714b;
-            --terra-dark: #a35a38;
-            --brown: #6b4226;
-            --text: #2c1f13;
-            --muted: #8c7060;
+            --cream: #f4f1e6;
+            --warm: #eaeddc;
+            --sand: #d7ddc4;
+            --terracotta: #b8874f;
+            --terra-dark: #96692f;
+            --brown: #1e3a2c;
+            --text: #1c2118;
+            --muted: #6e7566;
             --white: #ffffff;
         }
 
@@ -35,7 +35,7 @@
         }
 
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Public Sans', sans-serif;
             background: var(--cream);
             color: var(--text);
             overflow-x: hidden;
@@ -62,13 +62,13 @@
         }
 
         .navbar.scrolled {
-            background: rgba(250, 247, 242, .96);
+            background: rgba(244, 241, 230, .96);
             backdrop-filter: blur(14px);
-            box-shadow: 0 2px 20px rgba(107, 66, 38, .08);
+            box-shadow: 0 2px 20px rgba(30, 58, 44, .08);
         }
 
         .navbar-logo {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Fraunces', serif;
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--brown);
@@ -154,7 +154,7 @@
             padding: 24px 24px 32px;
             flex-direction: column;
             z-index: 99;
-            box-shadow: 0 8px 32px rgba(107, 66, 38, .12);
+            box-shadow: 0 8px 32px rgba(30, 58, 44, .12);
         }
 
         .mobile-menu.open {
@@ -199,59 +199,28 @@
             }
         }
 
-        /* ── HERO ── */
+        /* ── HERO (simple, tanpa slider gambar) ── */
         #hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
             position: relative;
+            background: linear-gradient(160deg, var(--brown) 0%, #16281d 100%);
+            padding: 170px 40px 100px;
             overflow: hidden;
-            background: var(--warm);
-            padding: 100px 40px 60px;
         }
 
-        .hero-bg {
+        #hero::before {
+            content: '';
             position: absolute;
             inset: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 70% 50%, rgba(196, 113, 75, .12) 0%, transparent 60%),
-                radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232, 213, 183, .5) 0%, transparent 50%);
+            background: radial-gradient(circle at 80% 20%, rgba(227, 189, 128, .12), transparent 55%);
+            pointer-events: none;
         }
 
         .hero-inner {
             position: relative;
-            width: 100%;
-            max-width: 1160px;
+            max-width: 760px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 64px;
-            align-items: center;
-        }
-
-        @media(max-width:960px) {
-            .hero-inner {
-                grid-template-columns: 1fr;
-                gap: 48px;
-            }
-
-            .hero-slider-col {
-                order: -1;
-            }
-        }
-
-        @media(max-width:640px) {
-            #hero {
-                padding: 100px 20px 60px;
-            }
-
-            .hero-slider-col {
-                display: none;
-            }
-        }
-
-        .hero-content {
-            animation: fadeUp .8s ease both;
+            text-align: center;
+            color: var(--white);
         }
 
         .hero-badge {
@@ -259,22 +228,23 @@
             align-items: center;
             gap: 8px;
             padding: 6px 16px;
-            background: rgba(196, 113, 75, .1);
-            border: 1px solid rgba(196, 113, 75, .25);
+            background: rgba(244, 241, 230, .12);
+            border: 1px solid rgba(244, 241, 230, .35);
+            backdrop-filter: blur(6px);
             border-radius: 100px;
             font-size: .75rem;
             font-weight: 600;
-            color: var(--terracotta);
+            color: var(--white);
             letter-spacing: .08em;
             text-transform: uppercase;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
         }
 
         .hero-badge::before {
             content: '';
             width: 6px;
             height: 6px;
-            background: var(--terracotta);
+            background: #d9b877;
             border-radius: 50%;
             animation: blink 2s infinite;
         }
@@ -294,30 +264,33 @@
         }
 
         .hero-title {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(2.4rem, 4vw, 4rem);
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.2rem, 4.4vw, 3.8rem);
             line-height: 1.1;
-            color: var(--brown);
-            margin-bottom: 24px;
+            color: var(--white);
+            margin-bottom: 20px;
+            text-wrap: balance;
         }
 
         .hero-title em {
             font-style: italic;
-            color: var(--terracotta);
+            color: #e3bd80;
         }
 
         .hero-subtitle {
             font-size: 1.05rem;
             line-height: 1.8;
-            color: var(--muted);
-            max-width: 480px;
-            margin-bottom: 40px;
+            color: rgba(244, 241, 230, .82);
+            max-width: 520px;
+            margin: 0 auto 36px;
         }
 
         .hero-actions {
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 44px;
         }
 
         .btn-primary {
@@ -326,7 +299,7 @@
             color: white;
             border: none;
             border-radius: 100px;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Public Sans', sans-serif;
             font-size: .95rem;
             font-weight: 600;
             cursor: pointer;
@@ -334,20 +307,20 @@
             align-items: center;
             gap: 8px;
             transition: background .2s, transform .2s, box-shadow .2s;
-            box-shadow: 0 8px 24px rgba(196, 113, 75, .3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
         }
 
         .btn-primary:hover {
             background: var(--terra-dark);
             transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(196, 113, 75, .4);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .32);
         }
 
         .btn-outline {
             padding: 16px 32px;
-            background: transparent;
-            color: var(--brown);
-            border: 1.5px solid var(--sand);
+            background: rgba(255, 255, 255, .06);
+            color: var(--white);
+            border: 1.5px solid rgba(244, 241, 230, .45);
             border-radius: 100px;
             font-size: .95rem;
             font-weight: 500;
@@ -359,296 +332,41 @@
         }
 
         .btn-outline:hover {
-            border-color: var(--terracotta);
-            background: rgba(196, 113, 75, .05);
+            border-color: var(--white);
+            background: rgba(255, 255, 255, .14);
         }
 
         .hero-stats {
             display: flex;
             gap: 40px;
-            margin-top: 56px;
-            padding-top: 40px;
-            border-top: 1px solid var(--sand);
+            justify-content: center;
+            padding-top: 28px;
+            border-top: 1px solid rgba(244, 241, 230, .25);
         }
 
         .hero-stat-num {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--brown);
+            font-family: 'Fraunces', serif;
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: var(--white);
             line-height: 1;
         }
 
         .hero-stat-label {
-            font-size: .8rem;
-            color: var(--muted);
+            font-size: .78rem;
+            color: rgba(244, 241, 230, .72);
             margin-top: 4px;
             font-weight: 500;
         }
 
-        /* ── PROMO SLIDER ── */
-        .hero-slider-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            animation: fadeUp .9s .15s ease both;
-        }
+        @media(max-width:640px) {
+            #hero {
+                padding: 130px 20px 70px;
+            }
 
-        .promo-slider-outer {
-            position: relative;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        .promo-slider-outer::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: -20px;
-            right: 20px;
-            bottom: -20px;
-            background: var(--sand);
-            border-radius: 28px;
-            z-index: 0;
-            opacity: .55;
-        }
-
-        .promo-slider-outer::after {
-            content: '';
-            position: absolute;
-            top: 10px;
-            left: -10px;
-            right: 10px;
-            bottom: -10px;
-            background: rgba(196, 113, 75, .12);
-            border-radius: 26px;
-            z-index: 0;
-        }
-
-        .promo-slider-wrap {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            aspect-ratio: 3/4;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 40px 80px rgba(107, 66, 38, .22), 0 8px 24px rgba(107, 66, 38, .12);
-            background: #2c1f13;
-        }
-
-        .promo-slides-track {
-            display: flex;
-            height: 100%;
-            transition: transform .65s cubic-bezier(.77, 0, .175, 1);
-            will-change: transform;
-        }
-
-        .promo-slide {
-            min-width: 100%;
-            height: 100%;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .promo-slide-img {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 8s ease;
-        }
-
-        .promo-slide.active .promo-slide-img {
-            transform: scale(1.06);
-        }
-
-        .promo-slide-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(44, 31, 19, 0) 25%, rgba(44, 31, 19, .25) 55%, rgba(44, 31, 19, .82) 100%);
-        }
-
-        .promo-slide-body {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 28px 24px;
-            transform: translateY(8px);
-            opacity: 0;
-            transition: transform .5s .1s ease, opacity .5s .1s ease;
-        }
-
-        .promo-slide.active .promo-slide-body {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .promo-slide-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: var(--terracotta);
-            border-radius: 100px;
-            font-size: .65rem;
-            font-weight: 700;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: #fff;
-            margin-bottom: 8px;
-        }
-
-        .promo-slide-desc {
-            font-size: .78rem;
-            color: rgba(255, 255, 255, .8);
-            line-height: 1.6;
-            margin-bottom: 12px;
-        }
-
-        .promo-nav {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 10;
-        }
-
-        .promo-nav-btn {
-            width: 32px;
-            height: 32px;
-            background: rgba(255, 255, 255, .18);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, .25);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background .2s, transform .2s;
-        }
-
-        .promo-nav-btn:hover {
-            background: rgba(255, 255, 255, .35);
-            transform: scale(1.1);
-        }
-
-        .promo-counter {
-            font-size: .7rem;
-            color: rgba(255, 255, 255, .8);
-            font-weight: 600;
-            letter-spacing: .05em;
-            background: rgba(0, 0, 0, .25);
-            backdrop-filter: blur(6px);
-            padding: 3px 10px;
-            border-radius: 100px;
-            border: 1px solid rgba(255, 255, 255, .15);
-        }
-
-        .promo-dots {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            z-index: 10;
-        }
-
-        .promo-dot {
-            width: 4px;
-            height: 4px;
-            border-radius: 100px;
-            background: rgba(255, 255, 255, .35);
-            cursor: pointer;
-            transition: all .35s;
-        }
-
-        .promo-dot.active {
-            background: #fff;
-            height: 20px;
-        }
-
-        .promo-thumbs {
-            display: flex;
-            gap: 8px;
-            margin-top: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .promo-thumb {
-            width: 52px;
-            height: 68px;
-            border-radius: 10px;
-            overflow: hidden;
-            cursor: pointer;
-            border: 2.5px solid transparent;
-            transition: border-color .25s, transform .25s, opacity .25s;
-            opacity: .55;
-            flex-shrink: 0;
-            background: var(--sand);
-        }
-
-        .promo-thumb:hover {
-            opacity: .8;
-        }
-
-        .promo-thumb.active {
-            border-color: var(--terracotta);
-            transform: scale(1.1);
-            opacity: 1;
-        }
-
-        .promo-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .promo-label {
-            margin-top: 14px;
-            font-size: .72rem;
-            color: var(--muted);
-            text-align: center;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .promo-label::before,
-        .promo-label::after {
-            content: '';
-            display: inline-block;
-            width: 24px;
-            height: 1px;
-            background: var(--sand);
-        }
-
-        .promo-placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .promo-placeholder-icon {
-            font-size: 44px;
-            opacity: .25;
-        }
-
-        .promo-placeholder-text {
-            font-size: 10px;
-            color: rgba(255, 255, 255, .4);
-            text-align: center;
-            padding: 0 16px;
-            line-height: 1.7;
-            font-family: 'DM Sans', sans-serif;
+            .hero-stats {
+                gap: 24px;
+            }
         }
 
         /* ── SECTIONS ── */
@@ -662,7 +380,7 @@
         }
 
         .section-eyebrow {
-            font-size: 2rem;
+            font-size: .8rem;
             font-weight: 600;
             letter-spacing: .15em;
             text-transform: uppercase;
@@ -682,7 +400,7 @@
         }
 
         .section-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Fraunces', serif;
             font-size: clamp(2rem, 3.5vw, 3rem);
             line-height: 1.2;
             color: var(--brown);
@@ -726,7 +444,7 @@
 
         .service-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 20px 48px rgba(107, 66, 38, .1);
+            box-shadow: 0 20px 48px rgba(30, 58, 44, .1);
         }
 
         .service-card::before {
@@ -748,7 +466,7 @@
         .service-icon {
             width: 52px;
             height: 52px;
-            background: rgba(196, 113, 75, .1);
+            background: rgba(184, 135, 79, .12);
             border-radius: 14px;
             display: flex;
             align-items: center;
@@ -758,7 +476,7 @@
         }
 
         .service-name {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Fraunces', serif;
             font-size: 1.2rem;
             font-weight: 600;
             color: var(--brown);
@@ -784,20 +502,226 @@
             margin-top: 4px;
         }
 
-        /* ── TERAPIS ── */
-        #terapis {
+        /* ── PROMO ── */
+        #promo {
             background: var(--warm);
+        }
+
+        .promo-slider-wrap {
+            position: relative;
+            margin-top: 56px;
+            width: 100%;
+            height: min(480px, 62vw);
+            max-height: 520px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 24px 64px rgba(30, 58, 44, .16);
+            background: #16281d;
+        }
+
+        @media(max-width:640px) {
+            .promo-slider-wrap {
+                height: 70vw;
+                border-radius: 16px;
+            }
+        }
+
+        .promo-slides-track {
+            display: flex;
+            height: 100%;
+            transition: transform .65s cubic-bezier(.77, 0, .175, 1);
+            will-change: transform;
+        }
+
+        .promo-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .promo-slide-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 8s ease;
+        }
+
+        .promo-slide.active .promo-slide-img {
+            transform: scale(1.06);
+        }
+
+        .promo-slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(20, 32, 22, 0) 40%, rgba(20, 32, 22, .35) 70%, rgba(20, 32, 22, .68) 100%);
+        }
+
+        .promo-slide-body {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 3;
+            padding: 28px 28px 64px;
+            color: var(--white);
+        }
+
+        .promo-slide-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            background: var(--terracotta);
+            border-radius: 100px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .promo-slide-desc {
+            font-size: .9rem;
+            line-height: 1.7;
+            max-width: 460px;
+            color: rgba(244, 241, 230, .9);
+        }
+
+        .promo-nav {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .promo-nav-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(244, 241, 230, .14);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(244, 241, 230, .3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .2s, transform .2s;
+        }
+
+        .promo-nav-btn:hover {
+            background: rgba(244, 241, 230, .3);
+            transform: scale(1.1);
+        }
+
+        .promo-counter {
+            font-size: .7rem;
+            color: rgba(244, 241, 230, .85);
+            font-weight: 600;
+            letter-spacing: .05em;
+            background: rgba(20, 32, 22, .3);
+            backdrop-filter: blur(6px);
+            padding: 3px 10px;
+            border-radius: 100px;
+            border: 1px solid rgba(244, 241, 230, .18);
+        }
+
+        .promo-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            z-index: 10;
+        }
+
+        .promo-dot {
+            width: 22px;
+            height: 3px;
+            border-radius: 100px;
+            background: rgba(244, 241, 230, .4);
+            cursor: pointer;
+            transition: all .35s;
+        }
+
+        .promo-dot.active {
+            background: #e3bd80;
+            width: 34px;
+        }
+
+        .promo-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .promo-placeholder-icon {
+            font-size: 44px;
+            opacity: .25;
+        }
+
+        .promo-placeholder-text {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .4);
+            text-align: center;
+            padding: 0 16px;
+            line-height: 1.7;
+            font-family: 'Public Sans', sans-serif;
+        }
+
+        /* ── JADWAL (versi simpel: jam operasional + terapis) ── */
+        #jadwal {
+            background: var(--white);
+        }
+
+        .jd-hours-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+            margin-bottom: 48px;
+        }
+
+        .jd-hours-card {
+            flex: 1;
+            min-width: 180px;
+            background: var(--cream);
+            border: 1.5px solid var(--sand);
+            border-radius: 16px;
+            padding: 22px 20px;
+            text-align: center;
+        }
+
+        .jd-hours-num {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            color: var(--brown);
+        }
+
+        .jd-hours-label {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: 4px;
         }
 
         .therapists-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 24px;
-            margin-top: 56px;
         }
 
         .therapist-card {
-            background: var(--white);
+            background: var(--cream);
             border-radius: 20px;
             padding: 32px 24px;
             text-align: center;
@@ -807,27 +731,27 @@
 
         .therapist-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 20px 48px rgba(107, 66, 38, .12);
+            box-shadow: 0 20px 48px rgba(30, 58, 44, .12);
         }
 
         .therapist-avatar {
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
             background: linear-gradient(135deg, var(--sand), var(--terracotta));
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.6rem;
+            font-family: 'Fraunces', serif;
+            font-size: 1.4rem;
             font-weight: 700;
             color: white;
-            margin: 0 auto 20px;
+            margin: 0 auto 18px;
         }
 
         .therapist-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
+            font-family: 'Fraunces', serif;
+            font-size: 1.05rem;
             font-weight: 600;
             color: var(--brown);
             margin-bottom: 6px;
@@ -843,537 +767,17 @@
             display: inline-block;
             margin-top: 12px;
             padding: 4px 12px;
-            background: rgba(196, 113, 75, .1);
+            background: rgba(184, 135, 79, .12);
             color: var(--terracotta);
             border-radius: 100px;
             font-size: .7rem;
             font-weight: 600;
         }
 
-        /* ── JADWAL TERAPIS ── */
-        #jadwal {
-            background: var(--white);
-        }
-
-        .ts-filter-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 32px;
-            margin-top: 40px;
-        }
-
-        .ts-btn {
-            padding: 9px 20px;
-            border-radius: 100px;
-            border: 1.5px solid var(--sand);
-            background: transparent;
-            color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-size: .82rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all .2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .ts-btn:hover {
-            border-color: var(--terracotta);
-            color: var(--brown);
-        }
-
-        .ts-btn.active {
-            background: var(--terracotta);
-            border-color: var(--terracotta);
-            color: white;
-        }
-
-        .ts-btn-avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--sand), var(--terracotta));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .ts-btn.active .ts-btn-avatar {
-            background: rgba(255, 255, 255, .28);
-        }
-
-        .ts-cal-wrap {
-            background: var(--cream);
-            border: 1.5px solid var(--sand);
-            border-radius: 20px;
-            padding: 32px;
-        }
-
-        .ts-cal-nav {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .ts-nav-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            border: 1.5px solid var(--sand);
-            background: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--brown);
-            font-size: 1rem;
-            transition: all .2s;
-            flex-shrink: 0;
-        }
-
-        .ts-nav-btn:hover {
-            background: var(--terracotta);
-            border-color: var(--terracotta);
-            color: white;
-        }
-
-        .ts-month-label {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            color: var(--brown);
-            flex: 1;
-        }
-
-        .ts-therapist-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .ts-therapist-info-name {
-            font-size: .82rem;
-            font-weight: 600;
-            color: var(--brown);
-        }
-
-        .ts-therapist-info-spec {
-            font-size: .72rem;
-            color: var(--muted);
-        }
-
-        .ts-therapist-mini-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--sand), var(--terracotta));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Playfair Display', serif;
-            font-size: .9rem;
-            font-weight: 700;
-            color: white;
-        }
-
-        .ts-day-header {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            margin-bottom: 4px;
-        }
-
-        .ts-day-name {
-            text-align: center;
-            font-size: .7rem;
-            font-weight: 600;
-            color: var(--muted);
-            padding: 6px 0;
-            letter-spacing: .05em;
-        }
-
-        .ts-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-
-        .ts-cell {
-            min-height: 84px;
-            border-radius: 10px;
-            padding: 8px 7px;
-            border: 1.5px solid transparent;
-            transition: transform .15s, box-shadow .15s;
-            cursor: default;
-        }
-
-        .ts-cell.working {
-            background: #f0faf5;
-            border-color: #9fe1cb;
-        }
-
-        .ts-cell.working.has-booking {
-            background: #fff8ed;
-            border-color: #f5c87a;
-            cursor: pointer;
-        }
-
-        .ts-cell.working.has-booking:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(196, 113, 75, .15);
-        }
-
-        .ts-cell.off {
-            background: #f8f7f4;
-            border-color: #e0ded9;
-        }
-
-        .ts-cell.today {
-            outline: 2px solid var(--terracotta);
-            outline-offset: 2px;
-        }
-
-        .ts-cell-date {
-            font-size: .82rem;
-            font-weight: 600;
-            color: var(--brown);
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        .ts-cell-date.off-num {
-            color: var(--muted);
-            font-weight: 400;
-        }
-
-        .ts-badge {
-            display: inline-block;
-            padding: 2px 7px;
-            border-radius: 100px;
-            font-size: .62rem;
-            font-weight: 600;
-        }
-
-        .ts-badge.work {
-            background: #c0dd97;
-            color: #3b6d11;
-        }
-
-        .ts-badge.off {
-            background: #d9d7d0;
-            color: #6b6860;
-        }
-
-        .ts-badge.booked {
-            background: #fde68a;
-            color: #92400e;
-        }
-
-        .ts-slot-preview {
-            margin-top: 3px;
-        }
-
-        .ts-slot-dot-row {
-            display: flex;
-            gap: 3px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-top: 3px;
-        }
-
-        .ts-slot-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #f59e0b;
-            flex-shrink: 0;
-        }
-
-        .ts-slot-dot.free {
-            background: #22c55e;
-        }
-
-        .ts-slot-more-text {
-            font-size: .58rem;
-            color: var(--muted);
-        }
-
-        .ts-time {
-            font-size: .62rem;
-            color: #1d9e75;
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        /* ── MODAL DETAIL BOOKING HARI ── */
-        .ts-day-modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 500;
-            background: rgba(44, 31, 19, .55);
-            backdrop-filter: blur(4px);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .ts-day-modal-overlay.open {
-            display: flex;
-        }
-
-        .ts-day-modal {
-            background: var(--white);
-            border-radius: 24px;
-            padding: 32px;
-            max-width: 440px;
-            width: 100%;
-            box-shadow: 0 32px 80px rgba(44, 31, 19, .25);
-            animation: modalIn .25s ease;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        @keyframes modalIn {
-            from {
-                opacity: 0;
-                transform: translateY(16px) scale(.97)
-            }
-
-            to {
-                opacity: 1;
-                transform: none
-            }
-        }
-
-        .ts-day-modal-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            gap: 12px;
-        }
-
-        .ts-day-modal-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.3rem;
-            color: var(--brown);
-        }
-
-        .ts-day-modal-sub {
-            font-size: .8rem;
-            color: var(--muted);
-            margin-top: 4px;
-        }
-
-        .ts-day-modal-close {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 1.5px solid var(--sand);
-            background: var(--cream);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            color: var(--muted);
-            flex-shrink: 0;
-            transition: all .2s;
-        }
-
-        .ts-day-modal-close:hover {
-            background: var(--terracotta);
-            color: white;
-            border-color: var(--terracotta);
-        }
-
-        .ts-slot-timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .ts-slot-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1.5px solid var(--sand);
-        }
-
-        .ts-slot-row.booked {
-            background: #fff8ed;
-            border-color: #f5c87a;
-        }
-
-        .ts-slot-row.free {
-            background: #f0faf5;
-            border-color: #9fe1cb;
-        }
-
-        .ts-slot-row-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .75rem;
-            flex-shrink: 0;
-        }
-
-        .ts-slot-row.booked .ts-slot-row-icon {
-            background: #fde68a;
-        }
-
-        .ts-slot-row.free .ts-slot-row-icon {
-            background: #c0dd97;
-        }
-
-        .ts-slot-row-time {
-            font-size: .85rem;
-            font-weight: 600;
-            color: var(--brown);
-            min-width: 42px;
-        }
-
-        .ts-slot-row-label {
-            font-size: .78rem;
-            color: var(--muted);
-            flex: 1;
-        }
-
-        .ts-slot-row-status {
-            font-size: .68rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 100px;
-        }
-
-        .ts-slot-row.booked .ts-slot-row-status {
-            background: #fde68a;
-            color: #92400e;
-        }
-
-        .ts-slot-row.free .ts-slot-row-status {
-            background: #c0dd97;
-            color: #3b6d11;
-        }
-
-        .ts-modal-book-btn {
-            display: block;
-            width: 100%;
-            margin-top: 20px;
-            padding: 14px;
-            background: var(--terracotta);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: .95rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-            transition: background .2s;
-        }
-
-        .ts-modal-book-btn:hover {
-            background: var(--terra-dark);
-        }
-
-        .ts-summary {
-            display: flex;
-            gap: 14px;
-            margin-top: 24px;
-            flex-wrap: wrap;
-        }
-
-        .ts-sum-card {
-            flex: 1;
-            min-width: 100px;
-            background: var(--white);
-            border: 1.5px solid var(--sand);
-            border-radius: 14px;
-            padding: 18px 16px;
-            text-align: center;
-        }
-
-        .ts-sum-num {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            color: var(--brown);
-            line-height: 1;
-        }
-
-        .ts-sum-num.green {
-            color: #1d9e75;
-        }
-
-        .ts-sum-num.muted {
-            color: var(--muted);
-        }
-
-        .ts-sum-label {
-            font-size: .72rem;
-            color: var(--muted);
-            margin-top: 5px;
-        }
-
-        .ts-legend {
-            display: flex;
-            gap: 16px;
-            margin-top: 18px;
-            flex-wrap: wrap;
-        }
-
-        .ts-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: .75rem;
-            color: var(--muted);
-        }
-
-        .ts-legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-            flex-shrink: 0;
-        }
-
-        .ts-empty {
-            padding: 56px 24px;
-            text-align: center;
-            color: var(--muted);
-            background: var(--cream);
-            border: 1.5px dashed var(--sand);
-            border-radius: 20px;
-        }
-
-        .ts-empty-icon {
-            font-size: 3rem;
-            margin-bottom: 12px;
-            opacity: .5;
-        }
-
-        .ts-empty p {
-            font-size: .9rem;
-            line-height: 1.7;
-        }
-
-        .ts-note {
-            margin-top: 20px;
+        .jd-note {
+            margin-top: 32px;
             padding: 14px 18px;
-            background: rgba(196, 113, 75, .07);
+            background: rgba(184, 135, 79, .08);
             border-left: 3px solid var(--terracotta);
             border-radius: 0 10px 10px 0;
             font-size: .82rem;
@@ -1381,73 +785,19 @@
             line-height: 1.8;
         }
 
-        .ts-note a {
+        .jd-note a {
             color: var(--terracotta);
             font-weight: 600;
         }
 
-        @media(max-width:600px) {
-            .ts-cal-wrap {
-                padding: 20px 14px;
-            }
-
-            .ts-cell {
-                min-height: 56px;
-                padding: 5px 4px;
-            }
-
-            .ts-time,
-            .ts-slot-preview {
-                display: none;
-            }
-
-            .ts-therapist-info {
-                display: none;
-            }
-        }
-
-        /* ── TENTANG ── */
-        #tentang {
-            background: var(--white);
-        }
-
-        .why-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 24px;
-            margin-top: 56px;
-        }
-
-        .why-card {
-            padding: 32px 24px;
-            border-radius: 20px;
-            background: var(--cream);
-            border: 1px solid var(--sand);
+        .jd-empty {
+            padding: 40px 24px;
             text-align: center;
-            transition: transform .3s, box-shadow .3s;
-        }
-
-        .why-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(107, 66, 38, .08);
-        }
-
-        .why-icon {
-            font-size: 2rem;
-            margin-bottom: 16px;
-        }
-
-        .why-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1rem;
-            color: var(--brown);
-            margin-bottom: 8px;
-        }
-
-        .why-text {
-            font-size: .82rem;
             color: var(--muted);
-            line-height: 1.7;
+            background: var(--cream);
+            border: 1.5px dashed var(--sand);
+            border-radius: 20px;
+            font-size: .9rem;
         }
 
         /* ── BOOKING ── */
@@ -1485,7 +835,7 @@
         .booking-feature-icon {
             width: 44px;
             height: 44px;
-            background: rgba(196, 113, 75, .1);
+            background: rgba(184, 135, 79, .12);
             border-radius: 12px;
             flex-shrink: 0;
             display: flex;
@@ -1512,11 +862,11 @@
             border-radius: 24px;
             padding: 40px;
             border: 1px solid var(--sand);
-            box-shadow: 0 24px 64px rgba(107, 66, 38, .08);
+            box-shadow: 0 24px 64px rgba(30, 58, 44, .08);
         }
 
         .form-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Fraunces', serif;
             font-size: 1.5rem;
             color: var(--brown);
             margin-bottom: 8px;
@@ -1549,7 +899,7 @@
             background: var(--cream);
             border: 1.5px solid var(--sand);
             border-radius: 12px;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Public Sans', sans-serif;
             font-size: .9rem;
             color: var(--text);
             outline: none;
@@ -1560,12 +910,12 @@
 
         .form-control:focus {
             border-color: var(--terracotta);
-            box-shadow: 0 0 0 3px rgba(196, 113, 75, .1);
+            box-shadow: 0 0 0 3px rgba(184, 135, 79, .12);
             background: var(--white);
         }
 
         .form-control::placeholder {
-            color: #c0a898;
+            color: #a89b7f;
         }
 
         .form-control:disabled {
@@ -1592,7 +942,7 @@
             color: white;
             border: none;
             border-radius: 12px;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Public Sans', sans-serif;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
@@ -1622,7 +972,7 @@
         .slot-btn {
             padding: 9px 4px;
             border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Public Sans', sans-serif;
             font-size: .78rem;
             font-weight: 600;
             text-align: center;
@@ -1636,7 +986,7 @@
 
         .slot-btn:hover:not(:disabled) {
             border-color: var(--terracotta);
-            background: rgba(196, 113, 75, .06);
+            background: rgba(184, 135, 79, .08);
         }
 
         .slot-btn.selected {
@@ -1682,10 +1032,108 @@
             font-size: .85rem;
         }
 
+        /* ── LOKASI ── */
+        #lokasi {
+            background: var(--warm);
+        }
+
+        .lokasi-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 40px;
+            margin-top: 56px;
+            align-items: stretch;
+        }
+
+        @media(max-width:900px) {
+            .lokasi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lokasi-map {
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--sand);
+            box-shadow: 0 24px 64px rgba(30, 58, 44, .1);
+            min-height: 340px;
+        }
+
+        .lokasi-map iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 340px;
+            display: block;
+            border: 0;
+        }
+
+        .lokasi-info {
+            background: var(--white);
+            border-radius: 24px;
+            border: 1px solid var(--sand);
+            padding: 36px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .lokasi-info-item {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .lokasi-info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(184, 135, 79, .12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .lokasi-info-title {
+            font-size: .78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--muted);
+            margin-bottom: 3px;
+        }
+
+        .lokasi-info-value {
+            font-size: .92rem;
+            color: var(--brown);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .lokasi-wa-btn {
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            background: var(--terracotta);
+            color: white !important;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: .9rem;
+            transition: background .2s;
+        }
+
+        .lokasi-wa-btn:hover {
+            background: var(--terra-dark);
+        }
+
         /* ── FOOTER ── */
         footer {
             background: var(--brown);
-            color: rgba(255, 255, 255, .7);
+            color: rgba(244, 241, 230, .7);
             padding: 60px 40px 32px;
         }
 
@@ -1701,11 +1149,11 @@
             flex-wrap: wrap;
             gap: 40px;
             padding-bottom: 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, .1);
+            border-bottom: 1px solid rgba(244, 241, 230, .12);
         }
 
         .footer-brand {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Fraunces', serif;
             font-size: 1.6rem;
             font-weight: 700;
             color: white;
@@ -1713,7 +1161,7 @@
         }
 
         .footer-brand span {
-            color: var(--sand);
+            color: #e3bd80;
             font-style: italic;
         }
 
@@ -1741,7 +1189,7 @@
 
         .footer-links a {
             font-size: .875rem;
-            color: rgba(255, 255, 255, .6);
+            color: rgba(244, 241, 230, .6);
             transition: color .2s;
         }
 
@@ -1756,18 +1204,6 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(28px)
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0)
-            }
         }
 
         .fade-up {
@@ -1790,10 +1226,10 @@
         </a>
         <ul class="navbar-links">
             <li><a href="#layanan">Layanan</a></li>
-            <li><a href="#terapis">Terapis</a></li>
+            <li><a href="#promo">Promo</a></li>
             <li><a href="#jadwal">Jadwal</a></li>
-            <li><a href="#tentang">Tentang</a></li>
             <li><a href="#booking">Booking</a></li>
+            <li><a href="#lokasi">Lokasi</a></li>
             @auth
                 <li><a href="{{ route('dashboard') }}" class="navbar-cta">Dashboard →</a></li>
             @else
@@ -1808,10 +1244,10 @@
     {{-- ── MOBILE MENU ── --}}
     <div class="mobile-menu" id="mobileMenu">
         <a href="#layanan" onclick="closeMenu()">Layanan</a>
-        <a href="#terapis" onclick="closeMenu()">Terapis</a>
+        <a href="#promo" onclick="closeMenu()">Promo</a>
         <a href="#jadwal" onclick="closeMenu()">Jadwal</a>
-        <a href="#tentang" onclick="closeMenu()">Tentang</a>
         <a href="#booking" onclick="closeMenu()">Booking</a>
+        <a href="#lokasi" onclick="closeMenu()">Lokasi</a>
         @auth
             <a href="{{ route('dashboard') }}" class="mobile-cta" onclick="closeMenu()">Dashboard</a>
         @else
@@ -1819,161 +1255,41 @@
         @endauth
     </div>
 
-    {{-- ── HERO ── --}}
+    {{-- ── HERO (simple, tanpa slider gambar — foto promo sekarang ada di section Promo) ── --}}
     <section id="hero">
-        <div class="hero-bg"></div>
         <div class="hero-inner">
-            <div class="hero-content">
-                <div class="hero-badge">{{ $content['hero_badge'] ?? 'Buka Setiap Hari · 09.00 – 20.00' }}</div>
-                <h1 class="hero-title">
-                    {{ $content['hero_title_plain'] ?? 'Temukan' }}
-                    <em>{{ $content['hero_title_italic'] ?? 'Kedamaian' }}</em><br>
-                    {{ $content['hero_title_line2'] ?? 'di Tengah Kesibukan' }}
-                </h1>
-                <p class="hero-subtitle">
-                    {{ $content['hero_subtitle'] ?? 'Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda. Dipercaya lebih dari 500 pelanggan setia.' }}
-                </p>
-                <div class="hero-actions">
-                    <a href="#booking" class="btn-primary">
-                        {{ $content['hero_btn_primary'] ?? 'Booking Sekarang' }}
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5"
-                                stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </a>
-                    <a href="#layanan" class="btn-outline">{{ $content['hero_btn_secondary'] ?? 'Lihat Layanan' }}</a>
-                </div>
-                <div class="hero-stats">
-                    <div>
-                        <div class="hero-stat-num">{{ $content['stat_1_num'] ?? '500+' }}</div>
-                        <div class="hero-stat-label">{{ $content['stat_1_label'] ?? 'Pelanggan Puas' }}</div>
-                    </div>
-                    <div>
-                        <div class="hero-stat-num">{{ $content['stat_2_num'] ?? '15+' }}</div>
-                        <div class="hero-stat-label">{{ $content['stat_2_label'] ?? 'Terapis Bersertifikat' }}</div>
-                    </div>
-                    <div>
-                        <div class="hero-stat-num">{{ $content['stat_3_num'] ?? '8+' }}</div>
-                        <div class="hero-stat-label">{{ $content['stat_3_label'] ?? 'Jenis Layanan' }}</div>
-                    </div>
-                </div>
+            <div class="hero-badge">{{ $content['hero_badge'] ?? 'Buka Setiap Hari · 09.00 – 20.00' }}</div>
+            <h1 class="hero-title">
+                {{ $content['hero_title_plain'] ?? 'Temukan' }}
+                <em>{{ $content['hero_title_italic'] ?? 'Kedamaian' }}</em><br>
+                {{ $content['hero_title_line2'] ?? 'di Tengah Kesibukan' }}
+            </h1>
+            <p class="hero-subtitle">
+                {{ $content['hero_subtitle'] ?? 'Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda. Dipercaya lebih dari 500 pelanggan setia.' }}
+            </p>
+            <div class="hero-actions">
+                <a href="#booking" class="btn-primary">
+                    {{ $content['hero_btn_primary'] ?? 'Booking Sekarang' }}
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </a>
+                <a href="#layanan" class="btn-outline">{{ $content['hero_btn_secondary'] ?? 'Lihat Layanan' }}</a>
             </div>
-
-            <div class="hero-slider-col">
-                <div class="promo-slider-outer">
-                    <div class="promo-slider-wrap" id="promoSlider">
-                        <div class="promo-slides-track" id="slidesTrack">
-                            @php
-                                $slides = [
-                                    [
-                                        'file' => '1.jpeg',
-                                        'badge' => 'Buy 4 Get 1',
-                                        'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
-                                    ],
-                                    [
-                                        'file' => '2.jpeg',
-                                        'badge' => 'Weekend Deal',
-                                        'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
-                                    ],
-                                    [
-                                        'file' => '3.jpeg',
-                                        'badge' => 'Hot Deal',
-                                        'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
-                                    ],
-                                    [
-                                        'file' => '4.jpeg',
-                                        'badge' => 'Facial',
-                                        'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
-                                    ],
-                                    [
-                                        'file' => '5.jpeg',
-                                        'badge' => 'Facial',
-                                        'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
-                                    ],
-                                    [
-                                        'file' => '6.jpeg',
-                                        'badge' => 'Facial',
-                                        'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
-                                    ],
-                                    [
-                                        'file' => '7.jpeg',
-                                        'badge' => 'Facial',
-                                        'desc' =>
-                                            'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
-                                    ],
-                                ];
-                                $placeholderColors = ['#c4714b', '#a35a38', '#8c5c38', '#b07850', '#d4956e'];
-                            @endphp
-                            @foreach ($slides as $i => $slide)
-                                @php
-                                    $exists = file_exists(public_path('images/promos/' . $slide['file']));
-                                    $color = $placeholderColors[$i % count($placeholderColors)];
-                                @endphp
-                                <div class="promo-slide {{ $i === 0 ? 'active' : '' }}">
-                                    @if ($exists)
-                                        <img class="promo-slide-img"
-                                            src="{{ asset('images/promos/' . $slide['file']) }}"
-                                            loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
-                                    @else
-                                        <div class="promo-placeholder"
-                                            style="background:linear-gradient(145deg,{{ $color }},{{ $color }}99);">
-                                            <div class="promo-placeholder-icon">🖼</div>
-                                            <div class="promo-placeholder-text">Taruh foto di:<br><strong
-                                                    style="opacity:.6;">public/images/promos/{{ $slide['file'] }}</strong>
-                                            </div>
-                                        </div>
-                                    @endif
-                                    <div class="promo-slide-overlay"></div>
-                                    <div class="promo-slide-body">
-                                        @if ($slide['badge'])
-                                            <div class="promo-slide-badge">{{ $slide['badge'] }}</div>
-                                        @endif
-                                        @if ($slide['desc'])
-                                            <div class="promo-slide-desc">{{ $slide['desc'] }}</div>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="promo-nav">
-                            <button class="promo-nav-btn" id="promoPrev" aria-label="Sebelumnya">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <path d="M9 2L4 7l5 5" stroke="white" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                            <div class="promo-counter" id="promoCounter">1 / {{ count($slides) }}</div>
-                            <button class="promo-nav-btn" id="promoNext" aria-label="Berikutnya">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <path d="M5 2l5 5-5 5" stroke="white" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="promo-dots" id="promoDots"></div>
-                    </div>
+            <div class="hero-stats">
+                <div>
+                    <div class="hero-stat-num">{{ $content['stat_1_num'] ?? '500+' }}</div>
+                    <div class="hero-stat-label">{{ $content['stat_1_label'] ?? 'Pelanggan Puas' }}</div>
                 </div>
-                <div class="promo-thumbs" id="promoThumbs">
-                    @foreach ($slides as $i => $slide)
-                        @php $exists = file_exists(public_path('images/promos/'.$slide['file'])); @endphp
-                        <div class="promo-thumb {{ $i === 0 ? 'active' : '' }}"
-                            onclick="promoGoTo({{ $i }})"
-                            style="{{ !$exists ? 'background:' . $placeholderColors[$i % count($placeholderColors)] . ';display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:16px;' : '' }}">
-                            @if ($exists)
-                                <img src="{{ asset('images/promos/' . $slide['file']) }}" loading="lazy">
-                            @else
-                                ✦
-                            @endif
-                        </div>
-                    @endforeach
+                <div>
+                    <div class="hero-stat-num">{{ $content['stat_2_num'] ?? '15+' }}</div>
+                    <div class="hero-stat-label">{{ $content['stat_2_label'] ?? 'Terapis Bersertifikat' }}</div>
                 </div>
-                <div class="promo-label">Foto Promo Kami</div>
+                <div>
+                    <div class="hero-stat-num">{{ $content['stat_3_num'] ?? '8+' }}</div>
+                    <div class="hero-stat-label">{{ $content['stat_3_label'] ?? 'Jenis Layanan' }}</div>
+                </div>
             </div>
         </div>
     </section>
@@ -2018,165 +1334,168 @@
         </div>
     </section>
 
-    {{-- ── TERAPIS ── --}}
-    <section id="terapis">
+    {{-- ── PROMO (foto-foto promo dari slider hero, sekarang jadi section sendiri) ── --}}
+    <section id="promo">
         <div class="section-inner">
             <div class="fade-up">
-                <div class="section-eyebrow">{{ $content['terapis_eyebrow'] ?? 'Tim Kami' }}</div>
+                <div class="section-eyebrow">{{ $content['promo_eyebrow'] ?? 'Promo Spesial' }}</div>
                 <h2 class="section-title">
-                    {{ $content['terapis_title_1'] ?? 'Terapis Profesional' }}<br>
-                    {{ $content['terapis_title_2'] ?? '& Bersertifikat' }}
+                    {{ $content['promo_title_1'] ?? 'Penawaran Menarik' }}<br>
+                    {{ $content['promo_title_2'] ?? 'Untuk Anda' }}
                 </h2>
                 <p class="section-sub">
-                    {{ $content['terapis_sub'] ?? 'Setiap terapis kami telah melewati pelatihan intensif dan memiliki sertifikasi resmi.' }}
+                    {{ $content['promo_sub'] ?? 'Cek promo dan paket membership eksklusif kami yang selalu diperbarui.' }}
                 </p>
             </div>
-            <div class="therapists-grid">
+
+            <div class="promo-slider-wrap fade-up" id="promoSlider">
+                <div class="promo-slides-track" id="slidesTrack">
+                    @php
+                        $slides = [
+                            [
+                                'file' => '1.jpeg',
+                                'badge' => 'Buy 4 Get 1',
+                                'desc' =>
+                                    'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
+                            ],
+                            [
+                                'file' => '2.jpeg',
+                                'badge' => 'Weekend Deal',
+                                'desc' =>
+                                    'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
+                            ],
+                            [
+                                'file' => '3.jpeg',
+                                'badge' => 'Hot Deal',
+                                'desc' =>
+                                    'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
+                            ],
+                            [
+                                'file' => '4.jpeg',
+                                'badge' => 'Facial',
+                                'desc' =>
+                                    'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
+                            ],
+                            [
+                                'file' => '5.jpeg',
+                                'badge' => 'Facial',
+                                'desc' =>
+                                    'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
+                            ],
+                            [
+                                'file' => '6.jpeg',
+                                'badge' => 'Facial',
+                                'desc' =>
+                                    'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
+                            ],
+                            [
+                                'file' => '7.jpeg',
+                                'badge' => 'Facial',
+                                'desc' =>
+                                    'Pilihan paket membership eksklusif KOICHI Family Reflexology dengan penawaran harga terbaik.',
+                            ],
+                        ];
+                        $placeholderColors = ['#1e3a2c', '#2d5240', '#3c6b54', '#254732', '#345f47'];
+                    @endphp
+                    @foreach ($slides as $i => $slide)
+                        @php
+                            $exists = file_exists(public_path('images/promos/' . $slide['file']));
+                            $color = $placeholderColors[$i % count($placeholderColors)];
+                        @endphp
+                        <div class="promo-slide {{ $i === 0 ? 'active' : '' }}">
+                            @if ($exists)
+                                <img class="promo-slide-img" src="{{ asset('images/promos/' . $slide['file']) }}"
+                                    loading="{{ $i === 0 ? 'eager' : 'lazy' }}">
+                            @else
+                                <div class="promo-placeholder"
+                                    style="background:linear-gradient(145deg,{{ $color }},{{ $color }}99);">
+                                    <div class="promo-placeholder-icon">🖼</div>
+                                    <div class="promo-placeholder-text">Taruh foto di:<br><strong
+                                            style="opacity:.6;">public/images/promos/{{ $slide['file'] }}</strong>
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="promo-slide-overlay"></div>
+                            <div class="promo-slide-body">
+                                @if ($slide['badge'])
+                                    <div class="promo-slide-badge">{{ $slide['badge'] }}</div>
+                                @endif
+                                @if ($slide['desc'])
+                                    <div class="promo-slide-desc">{{ $slide['desc'] }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="promo-nav">
+                    <button class="promo-nav-btn" id="promoPrev" aria-label="Sebelumnya">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M9 2L4 7l5 5" stroke="white" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <div class="promo-counter" id="promoCounter">1 / {{ count($slides) }}</div>
+                    <button class="promo-nav-btn" id="promoNext" aria-label="Berikutnya">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M5 2l5 5-5 5" stroke="white" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="promo-dots" id="promoDots"></div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ── JADWAL (versi simpel: jam operasional + daftar terapis, tanpa kalender) ── --}}
+    <section id="jadwal">
+        <div class="section-inner">
+            <div class="fade-up">
+                <div class="section-eyebrow">{{ $content['jadwal_eyebrow'] ?? 'Jam Operasional' }}</div>
+                <h2 class="section-title">
+                    {{ $content['jadwal_title_1'] ?? 'Kapan Kami Buka' }}<br>
+                    {{ $content['jadwal_title_2'] ?? '& Siapa yang Melayani' }}
+                </h2>
+                <p class="section-sub">
+                    {{ $content['jadwal_sub'] ?? 'Kami buka setiap hari dengan tim terapis bersertifikat yang siap melayani Anda.' }}
+                </p>
+            </div>
+
+            <div class="jd-hours-row fade-up">
+                <div class="jd-hours-card">
+                    <div class="jd-hours-num">{{ $content['footer_hours'] ?? '09.00 – 20.00' }}</div>
+                    <div class="jd-hours-label">Setiap Hari, Termasuk Akhir Pekan & Libur</div>
+                </div>
+                <div class="jd-hours-card">
+                    <div class="jd-hours-num">{{ count($therapists ?? []) ?: '4+' }}</div>
+                    <div class="jd-hours-label">Terapis Bersertifikat Siap Melayani</div>
+                </div>
+            </div>
+
+            <div class="therapists-grid fade-up">
                 @forelse ($therapists ?? [] as $therapist)
-                    <div class="therapist-card fade-up">
+                    <div class="therapist-card">
                         <div class="therapist-avatar">{{ strtoupper(substr($therapist->name, 0, 1)) }}</div>
                         <div class="therapist-name">{{ $therapist->name }}</div>
                         <div class="therapist-spec">{{ $therapist->specialization ?? 'Terapis Profesional' }}</div>
-                        <div class="therapist-badge">✓ Aktif</div>
+                        <div class="therapist-badge">✓ Tersedia</div>
                     </div>
                 @empty
                     @foreach (['Sari Dewi', 'Anita Putri', 'Bagas Pratama', 'Maya Lestari'] as $name)
-                        <div class="therapist-card fade-up">
+                        <div class="therapist-card">
                             <div class="therapist-avatar">{{ strtoupper(substr($name, 0, 1)) }}</div>
                             <div class="therapist-name">{{ $name }}</div>
                             <div class="therapist-spec">Terapis Profesional · 5+ Tahun</div>
-                            <div class="therapist-badge">✓ Aktif</div>
+                            <div class="therapist-badge">✓ Tersedia</div>
                         </div>
                     @endforeach
                 @endforelse
             </div>
-        </div>
-    </section>
 
-    {{-- ── JADWAL TERAPIS ── --}}
-    <section id="jadwal">
-        <div class="section-inner">
-            <div class="fade-up">
-                <div class="section-eyebrow">Cek Ketersediaan</div>
-                <h2 class="section-title">Jadwal & Ketersediaan<br>Terapis</h2>
-                <p class="section-sub">Klik pada tanggal yang bertanda kuning untuk melihat jam mana saja yang sudah
-                    dipesan dan yang masih tersedia.</p>
-            </div>
-
-            <div class="ts-filter-row fade-up" id="tsFilter">
-                @forelse ($therapists ?? [] as $t)
-                    <button type="button" class="ts-btn" data-id="{{ $t->id }}"
-                        onclick="tsSelect({{ $t->id }}, '{{ addslashes($t->name) }}', '{{ addslashes($t->specialization ?? 'Terapis Profesional') }}')">
-                        <div class="ts-btn-avatar">{{ strtoupper(substr($t->name, 0, 1)) }}</div>
-                        {{ $t->name }}
-                    </button>
-                @empty
-                    <p style="font-size:.85rem;color:var(--muted);font-style:italic;">Belum ada terapis terdaftar.</p>
-                @endforelse
-            </div>
-
-            <div id="tsCalArea" class="fade-up">
-                <div class="ts-empty">
-                    <div class="ts-empty-icon">🗓</div>
-                    <p>Pilih salah satu terapis di atas<br>untuk melihat jadwal dan ketersediaan.</p>
-                </div>
-            </div>
-
-            <p class="ts-note fade-up">
-                💡 Tanggal dengan tanda kuning berarti sudah ada booking di hari itu — klik untuk melihat detail jam.
-                Jadwal dapat berubah sewaktu-waktu.
-                <a href="#booking">Buat reservasi</a> dan tim kami konfirmasi via WhatsApp dalam 30 menit.
+            <p class="jd-note fade-up">
+                💡 Untuk memastikan terapis pilihan Anda tersedia pada jam tertentu, silakan
+                <a href="#booking">buat reservasi</a> — tim kami akan konfirmasi via WhatsApp dalam 30 menit.
             </p>
-        </div>
-    </section>
-
-    {{-- ── MODAL DETAIL SLOT HARIAN ── --}}
-    <div class="ts-day-modal-overlay" id="tsDayModalOverlay" onclick="closeDayModal(event)">
-        <div class="ts-day-modal" id="tsDayModal">
-            <div class="ts-day-modal-header">
-                <div>
-                    <div class="ts-day-modal-title" id="tsDayModalTitle">—</div>
-                    <div class="ts-day-modal-sub" id="tsDayModalSub">—</div>
-                </div>
-                <button class="ts-day-modal-close" onclick="closeDayModalDirect()">✕</button>
-            </div>
-            <div class="ts-slot-timeline" id="tsDayModalSlots">
-                <div class="slot-loading">Memuat data slot...</div>
-            </div>
-            <button class="ts-modal-book-btn" id="tsDayModalBookBtn" onclick="bookFromModal()">
-                Booking di Tanggal Ini →
-            </button>
-        </div>
-    </div>
-
-    {{-- ── TENTANG ── --}}
-    <section id="tentang">
-        <div class="section-inner">
-            <div class="fade-up" style="text-align:center;max-width:600px;margin:0 auto;">
-                <div class="section-eyebrow" style="justify-content:center;">
-                    {{ $content['tentang_eyebrow'] ?? 'Kenapa Kami' }}</div>
-                <h2 class="section-title">
-                    {{ $content['tentang_title_1'] ?? 'Pengalaman Spa yang' }}<br>
-                    {{ $content['tentang_title_2'] ?? 'Berbeda dari yang Lain' }}
-                </h2>
-                <p class="section-sub" style="margin:0 auto;">
-                    {{ $content['tentang_sub'] ?? 'Kami berkomitmen memberikan pengalaman wellness terbaik dengan standar pelayanan tertinggi.' }}
-                </p>
-            </div>
-            <div class="why-grid">
-                @php
-                    $whyCards = [
-                        [
-                            'key' => 'why_1',
-                            'icon' => '🏅',
-                            'title' => 'Terapis Bersertifikat',
-                            'text' =>
-                                'Semua terapis kami bersertifikat nasional & internasional dengan pengalaman minimal 3 tahun.',
-                        ],
-                        [
-                            'key' => 'why_2',
-                            'icon' => '🌿',
-                            'title' => 'Bahan Alami Premium',
-                            'text' =>
-                                'Kami hanya menggunakan produk organik berkualitas tinggi yang aman untuk kulit Anda.',
-                        ],
-                        [
-                            'key' => 'why_3',
-                            'icon' => '📅',
-                            'title' => 'Booking Mudah',
-                            'text' =>
-                                'Pesan layanan kapan saja, di mana saja — tanpa perlu daftar akun terlebih dahulu.',
-                        ],
-                        [
-                            'key' => 'why_4',
-                            'icon' => '💆',
-                            'title' => 'Privasi Terjaga',
-                            'text' => 'Ruangan terapi privat yang tenang dan nyaman untuk pengalaman terbaik Anda.',
-                        ],
-                        [
-                            'key' => 'why_5',
-                            'icon' => '⏰',
-                            'title' => 'Fleksibel',
-                            'text' =>
-                                'Tersedia dari pukul 09.00–20.00 setiap hari, termasuk akhir pekan dan hari libur.',
-                        ],
-                        [
-                            'key' => 'why_6',
-                            'icon' => '💎',
-                            'title' => 'Harga Transparan',
-                            'text' =>
-                                'Tidak ada biaya tersembunyi. Harga yang Anda lihat adalah harga yang Anda bayar.',
-                        ],
-                    ];
-                @endphp
-                @foreach ($whyCards as $card)
-                    <div class="why-card fade-up">
-                        <div class="why-icon">{{ $content[$card['key'] . '_icon'] ?? $card['icon'] }}</div>
-                        <div class="why-title">{{ $content[$card['key'] . '_title'] ?? $card['title'] }}</div>
-                        <div class="why-text">{{ $content[$card['key'] . '_text'] ?? $card['text'] }}</div>
-                    </div>
-                @endforeach
-            </div>
         </div>
     </section>
 
@@ -2236,7 +1555,7 @@
                         <div style="text-align:center;padding:32px 0;">
                             <div style="font-size:3.5rem;margin-bottom:20px;">✅</div>
                             <h3
-                                style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--brown);margin-bottom:12px;">
+                                style="font-family:'Fraunces',serif;font-size:1.5rem;color:var(--brown);margin-bottom:12px;">
                                 Booking Berhasil!</h3>
                             <p style="color:var(--muted);font-size:.9rem;line-height:1.8;">Terima kasih! Tim kami akan
                                 segera menghubungi Anda via WhatsApp untuk konfirmasi jadwal.</p>
@@ -2356,6 +1675,72 @@
         </div>
     </section>
 
+    {{-- ── LOKASI ── --}}
+    <section id="lokasi">
+        <div class="section-inner">
+            <div class="fade-up">
+                <div class="section-eyebrow">{{ $content['lokasi_eyebrow'] ?? 'Temukan Kami' }}</div>
+                <h2 class="section-title">
+                    {{ $content['lokasi_title_1'] ?? 'Lokasi &' }}<br>
+                    {{ $content['lokasi_title_2'] ?? 'Kontak Kami' }}
+                </h2>
+                <p class="section-sub">
+                    {{ $content['lokasi_sub'] ?? 'Kunjungi langsung outlet kami atau hubungi tim kami untuk informasi lebih lanjut.' }}
+                </p>
+            </div>
+
+            @php
+                $waNumberRaw = preg_replace('/\D/', '', $content['footer_phone'] ?? '0821-5567-3894');
+                $waNumber = '62' . ltrim($waNumberRaw, '0');
+            @endphp
+
+            <div class="lokasi-grid fade-up">
+                <div class="lokasi-map">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4700.297788256569!2d108.5652088!3d-6.7098533!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6ee30073f1dad5%3A0x8560f853c9845edd!2sKOICHI%20Family%20Reflexology%20Cirebon!5e1!3m2!1sid!2sid!4v1788575118879!5m2!1sid!2sid"
+                        allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                </div>
+                <div class="lokasi-info">
+                    <div class="lokasi-info-item">
+                        <div class="lokasi-info-icon">📍</div>
+                        <div>
+                            <div class="lokasi-info-title">Alamat</div>
+                            <div class="lokasi-info-value">
+                                {{ $content['footer_address'] ?? 'Jl. Melati Raya No. 47, Cirebon' }}</div>
+                        </div>
+                    </div>
+                    <div class="lokasi-info-item">
+                        <div class="lokasi-info-icon">⏰</div>
+                        <div>
+                            <div class="lokasi-info-title">Jam Buka</div>
+                            <div class="lokasi-info-value">{{ $content['footer_hours'] ?? '09.00 – 20.00' }}, Setiap
+                                Hari</div>
+                        </div>
+                    </div>
+                    <div class="lokasi-info-item">
+                        <div class="lokasi-info-icon">📞</div>
+                        <div>
+                            <div class="lokasi-info-title">Telepon / WhatsApp</div>
+                            <div class="lokasi-info-value">{{ $content['footer_phone'] ?? '0821-5567-3894' }}</div>
+                        </div>
+                    </div>
+                    <div class="lokasi-info-item">
+                        <div class="lokasi-info-icon">✉</div>
+                        <div>
+                            <div class="lokasi-info-title">Email</div>
+                            <div class="lokasi-info-value">{{ $content['footer_email'] ?? 'hello@koichispa.id' }}
+                            </div>
+                        </div>
+                    </div>
+                    <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener"
+                        class="lokasi-wa-btn">
+                        💬 Chat via WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- ── FOOTER ── --}}
     <footer>
         <div class="footer-inner">
@@ -2372,16 +1757,16 @@
                     <h4>Navigasi</h4>
                     <ul>
                         <li><a href="#layanan">Layanan</a></li>
-                        <li><a href="#terapis">Terapis</a></li>
+                        <li><a href="#promo">Promo</a></li>
                         <li><a href="#jadwal">Jadwal</a></li>
-                        <li><a href="#tentang">Tentang</a></li>
                         <li><a href="#booking">Booking</a></li>
+                        <li><a href="#lokasi">Lokasi</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
                     <h4>Info</h4>
                     <ul>
-                        <li><a href="#">Jam Operasional</a></li>
+                        <li><a href="#jadwal">Jam Operasional</a></li>
                         <li><a href="#">Kebijakan Privasi</a></li>
                         <li><a href="#">Syarat & Ketentuan</a></li>
                         <li><a href="{{ route('login') }}">Login Admin</a></li>
@@ -2390,11 +1775,11 @@
                 <div class="footer-links">
                     <h4>Kontak</h4>
                     <ul>
-                        <li><a href="#">📍
+                        <li><a href="#lokasi">📍
                                 {{ $content['footer_address'] ?? 'Jl. Melati Raya No. 47, Cirebon' }}</a></li>
-                        <li><a href="#">📞 {{ $content['footer_phone'] ?? '0821-5567-3894' }}</a></li>
-                        <li><a href="#">✉ {{ $content['footer_email'] ?? 'hello@koichispa.id' }}</a></li>
-                        <li><a href="#">⏰ {{ $content['footer_hours'] ?? '09.00 – 20.00' }}</a></li>
+                        <li><a href="#lokasi">📞 {{ $content['footer_phone'] ?? '0821-5567-3894' }}</a></li>
+                        <li><a href="#lokasi">✉ {{ $content['footer_email'] ?? 'hello@koichispa.id' }}</a></li>
+                        <li><a href="#jadwal">⏰ {{ $content['footer_hours'] ?? '09.00 – 20.00' }}</a></li>
                     </ul>
                 </div>
             </div>
@@ -2461,7 +1846,7 @@
             });
         });
 
-        /* ── PROMO SLIDER ── */
+        /* ── PROMO SLIDER (sekarang di section Promo, bukan hero) ── */
         (function() {
             const track = document.getElementById('slidesTrack');
             const dotsWrap = document.getElementById('promoDots');
@@ -2488,16 +1873,6 @@
                 counterEl.textContent = `${cur + 1} / ${total}`;
                 slides.forEach((s, i) => s.classList.toggle('active', i === cur));
                 dotsWrap.querySelectorAll('.promo-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
-                document.querySelectorAll('.promo-thumb').forEach((t, i) => t.classList.toggle('active', i === cur));
-                const th = document.querySelectorAll('.promo-thumb')[cur];
-                if (th) {
-                    const container = th.parentElement;
-                    const offset = th.offsetLeft - container.offsetLeft;
-                    container.scrollTo({
-                        left: offset - (container.offsetWidth / 2) + (th.offsetWidth / 2),
-                        behavior: 'smooth'
-                    });
-                }
             }
             window.promoGoTo = function(idx) {
                 cur = ((idx % total) + total) % total;
@@ -2528,277 +1903,9 @@
                 paused = false;
                 promoGoTo(cur);
             });
-            document.addEventListener('keydown', e => {
-                if (e.key === 'ArrowLeft') promoGoTo(cur - 1);
-                if (e.key === 'ArrowRight') promoGoTo(cur + 1);
-            });
             updateUI();
             timer = setInterval(() => promoGoTo(cur + 1), 4500);
         })();
-
-        /* ════════════════════════════════════════════════════════════
-           JADWAL TERAPIS
-        ════════════════════════════════════════════════════════════ */
-        const TS_DATA = @json($therapistSchedules ?? []);
-        const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-        const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
-            'Oktober', 'November', 'Desember'
-        ];
-
-        let tsActiveId = null;
-        let tsCurYear = new Date().getFullYear();
-        let tsCurMonth = new Date().getMonth();
-
-        // State modal
-        let modalActiveDate = null;
-        let modalActiveTherapistId = null;
-
-        function tsSelect(id, name, spec) {
-            tsActiveId = id;
-            document.querySelectorAll('.ts-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.id) === id));
-            tsRenderCal();
-        }
-
-        function tsRenderCal() {
-            const area = document.getElementById('tsCalArea');
-            if (!tsActiveId || !TS_DATA[tsActiveId]) {
-                area.innerHTML =
-                    `<div class="ts-empty"><div class="ts-empty-icon">🗓</div><p>Data jadwal belum tersedia untuk terapis ini.</p></div>`;
-                return;
-            }
-
-            const t = TS_DATA[tsActiveId];
-            const scheds = t.schedules || {};
-            const bookingMap = t.booking_map || {};
-            const today = new Date();
-            const lastDate = new Date(tsCurYear, tsCurMonth + 1, 0).getDate();
-            const startDow = new Date(tsCurYear, tsCurMonth, 1).getDay();
-
-            // Bangun semua jam operasional
-            const startH = parseInt((t.start_time || '09:00').split(':')[0]);
-            const endH = parseInt((t.end_time || '20:00').split(':')[0]);
-            const totalSlots = endH - startH;
-
-            let workCount = 0,
-                offCount = 0,
-                cells = '';
-            for (let i = 0; i < startDow; i++) cells += `<div></div>`;
-
-            for (let d = 1; d <= lastDate; d++) {
-                const ds = `${tsCurYear}-${String(tsCurMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const status = scheds[ds] || 'nodata';
-                const dayBooks = bookingMap[ds] || [];
-                const cellDate = new Date(tsCurYear, tsCurMonth, d);
-                const isToday = cellDate.toDateString() === today.toDateString();
-
-                if (status === 'working') workCount++;
-                else if (status !== 'nodata') offCount++;
-
-                let cellCls = 'ts-cell';
-                let dateCls = 'ts-cell-date';
-                let badge = '';
-                let preview = '';
-
-                if (status === 'working') {
-                    const hasBook = dayBooks.length > 0;
-                    cellCls += ' working' + (hasBook ? ' has-booking' : '');
-                    badge = hasBook ?
-                        `<span class="ts-badge booked">📋 ${dayBooks.length} booking</span>` :
-                        `<span class="ts-badge work">Tersedia</span>`;
-
-                    // Titik-titik slot (maks 6 tampil)
-                    if (hasBook) {
-                        const slotsLeft = totalSlots - dayBooks.length;
-                        const dots = dayBooks.slice(0, 6).map(() => `<div class="ts-slot-dot"></div>`).join('');
-                        const freeDots = Math.min(slotsLeft, 3) > 0 ?
-                            Array(Math.min(slotsLeft, 3)).fill(`<div class="ts-slot-dot free"></div>`).join('') :
-                            '';
-                        preview =
-                            `<div class="ts-slot-dot-row">${dots}${freeDots}${dayBooks.length > 6 ? `<span class="ts-slot-more-text">+${dayBooks.length-6}</span>` : ''}</div>`;
-                    } else {
-                        preview = `<div class="ts-time">${t.start_time||'09:00'} – ${t.end_time||'20:00'}</div>`;
-                    }
-                } else if (['off', 'sick', 'vacation', 'cuti_bersama'].includes(status)) {
-                    cellCls += ' off';
-                    dateCls += ' off-num';
-                    const labels = {
-                        off: 'Libur',
-                        sick: 'Sakit',
-                        vacation: 'Liburan',
-                        cuti_bersama: 'Cuti'
-                    };
-                    badge = `<span class="ts-badge off">${labels[status]}</span>`;
-                } else {
-                    cellCls += ' off';
-                    dateCls += ' off-num';
-                    badge = `<span class="ts-badge off" style="opacity:.35">—</span>`;
-                }
-
-                if (isToday) cellCls += ' today';
-
-                const hasBooking = (scheds[ds] === 'working') && (bookingMap[ds] || []).length > 0;
-                const clickAttr = hasBooking ? `onclick="openDayModal('${ds}', ${tsActiveId})"` : '';
-
-                cells += `<div class="${cellCls}" ${clickAttr}>
-            <span class="${dateCls}">${d}</span>
-            ${badge}
-            ${preview}
-        </div>`;
-            }
-
-            area.innerHTML = `
-        <div class="ts-cal-wrap">
-            <div class="ts-cal-nav">
-                <button class="ts-nav-btn" onclick="tsPrev()">&#8249;</button>
-                <button class="ts-nav-btn" onclick="tsNext()">&#8250;</button>
-                <span class="ts-month-label">${MONTH_NAMES[tsCurMonth]} ${tsCurYear}</span>
-                <div class="ts-therapist-info">
-                    <div>
-                        <div class="ts-therapist-info-name">${t.name}</div>
-                        <div class="ts-therapist-info-spec">${t.spec}</div>
-                    </div>
-                    <div class="ts-therapist-mini-avatar">${t.name.charAt(0).toUpperCase()}</div>
-                </div>
-            </div>
-            <div class="ts-day-header">${DAY_NAMES.map(n=>`<div class="ts-day-name">${n}</div>`).join('')}</div>
-            <div class="ts-grid">${cells}</div>
-            <div class="ts-summary">
-                <div class="ts-sum-card"><div class="ts-sum-num green">${workCount}</div><div class="ts-sum-label">Hari Masuk</div></div>
-                <div class="ts-sum-card"><div class="ts-sum-num muted">${offCount}</div><div class="ts-sum-label">Hari Libur</div></div>
-                <div class="ts-sum-card">
-                    <div class="ts-sum-num" style="color:var(--terracotta);font-size:1.1rem;padding-top:4px;">${t.start_time||'09:00'} – ${t.end_time||'20:00'}</div>
-                    <div class="ts-sum-label">Jam Operasional</div>
-                </div>
-            </div>
-            <div class="ts-legend">
-                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#c0dd97;border:1px solid #9fe1cb;"></div> Tersedia</div>
-                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#fff8ed;border:1px solid #f5c87a;"></div> Ada booking (klik untuk detail)</div>
-                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:#d9d7d0;border:1px solid #c4c2bb;"></div> Libur</div>
-                <div class="ts-legend-item"><div class="ts-legend-dot" style="background:transparent;border:2px solid var(--terracotta);border-radius:50%;"></div> Hari ini</div>
-            </div>
-        </div>`;
-        }
-
-        function tsPrev() {
-            tsCurMonth--;
-            if (tsCurMonth < 0) {
-                tsCurMonth = 11;
-                tsCurYear--;
-            }
-            tsRenderCal();
-        }
-
-        function tsNext() {
-            tsCurMonth++;
-            if (tsCurMonth > 11) {
-                tsCurMonth = 0;
-                tsCurYear++;
-            }
-            tsRenderCal();
-        }
-
-        /* ── MODAL DETAIL SLOT ── */
-        async function openDayModal(dateStr, therapistId) {
-            modalActiveDate = dateStr;
-            modalActiveTherapistId = therapistId;
-
-            const t = TS_DATA[therapistId];
-
-            // Format tanggal Indonesia
-            const [y, m, d] = dateStr.split('-');
-            const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
-                'Oktober', 'November', 'Desember'
-            ];
-            const DAYS_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            const dayName = DAYS_ID[new Date(dateStr).getDay()];
-            const formatted = `${dayName}, ${parseInt(d)} ${MONTHS_ID[parseInt(m)-1]} ${y}`;
-
-            document.getElementById('tsDayModalTitle').textContent = formatted;
-            document.getElementById('tsDayModalSub').textContent = `Jadwal ${t.name} · ${t.spec}`;
-            document.getElementById('tsDayModalSlots').innerHTML =
-                '<div class="slot-loading">Memuat data slot...</div>';
-            document.getElementById('tsDayModalOverlay').classList.add('open');
-            document.body.style.overflow = 'hidden';
-
-            // Bangun semua slot jam operasional
-            const startH = parseInt((t.start_time || '09:00').split(':')[0]);
-            const endH = parseInt((t.end_time || '20:00').split(':')[0]);
-            const allSlots = [];
-            for (let h = startH; h < endH; h++) allSlots.push(String(h).padStart(2, '0') + ':00');
-
-            // Ambil data booking via AJAX
-            let bookedRanges = [];
-            try {
-                const res = await fetch(`/api/bookings-by-date?therapist_id=${therapistId}&date=${dateStr}`);
-                const data = await res.json();
-                bookedRanges = data.bookings || [];
-            } catch (e) {
-                bookedRanges = [];
-            }
-
-            // Tentukan slot mana yang terisi berdasarkan range
-            function isSlotBooked(slot) {
-                const [sh, sm] = slot.split(':').map(Number);
-                const slotMin = sh * 60 + sm;
-                return bookedRanges.find(r => {
-                    const [rsh, rsm] = r.time.split(':').map(Number);
-                    const [reh, rem] = r.end_time.split(':').map(Number);
-                    return slotMin >= rsh * 60 + rsm && slotMin < reh * 60 + rem;
-                });
-            }
-
-            const slotsHtml = allSlots.map(slot => {
-                const booking = isSlotBooked(slot);
-                if (booking) {
-                    return `<div class="ts-slot-row booked">
-                <div class="ts-slot-row-icon">🔒</div>
-                <div class="ts-slot-row-time">${slot}</div>
-                <div class="ts-slot-row-label">${booking.service} (${booking.duration} mnt)</div>
-                <div class="ts-slot-row-status">Dipesan</div>
-            </div>`;
-                } else {
-                    return `<div class="ts-slot-row free">
-                <div class="ts-slot-row-icon">✓</div>
-                <div class="ts-slot-row-time">${slot}</div>
-                <div class="ts-slot-row-label">Slot tersedia</div>
-                <div class="ts-slot-row-status">Bebas</div>
-            </div>`;
-                }
-            }).join('');
-
-            document.getElementById('tsDayModalSlots').innerHTML = slotsHtml;
-        }
-
-        function closeDayModal(event) {
-            if (event.target === document.getElementById('tsDayModalOverlay')) closeDayModalDirect();
-        }
-
-        function closeDayModalDirect() {
-            document.getElementById('tsDayModalOverlay').classList.remove('open');
-            document.body.style.overflow = '';
-        }
-
-        function bookFromModal() {
-            closeDayModalDirect();
-            // Isi tanggal di form booking otomatis
-            if (modalActiveDate) {
-                const dateInput = document.getElementById('bookingDate');
-                if (dateInput) dateInput.value = modalActiveDate;
-            }
-            if (modalActiveTherapistId) {
-                const sel = document.getElementById('bookingTherapistSelect');
-                if (sel) sel.value = modalActiveTherapistId;
-            }
-            // Fetch slot & render
-            fetchAndRenderSlots();
-            // Scroll ke booking
-            setTimeout(() => {
-                document.getElementById('booking').scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }, 100);
-        }
 
         /* ════════════════════════════════════════════════════════════
            SLOT PICKER DI FORM BOOKING

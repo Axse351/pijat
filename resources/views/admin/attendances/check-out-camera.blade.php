@@ -28,23 +28,13 @@
                         <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
                         <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
 
-                        <!-- Debug HUD -->
+                        <!-- HUD ringkas -->
                         <div
-                            class="absolute top-2 left-2 bg-black/80 text-white text-xs font-mono px-3 py-2 rounded-lg leading-6 min-w-[160px]">
-                            EAR: <span id="earVal" class="text-yellow-300 font-bold">-</span><br>
-                            Min EAR: <span id="minEarVal" class="text-orange-300">-</span><br>
-                            Threshold: <span id="threshVal" class="text-cyan-300">0.25</span><br>
-                            Mata: <span id="eyeStateVal">-</span><br>
-                            Blink: <span id="debugBlink" class="text-green-300">0</span>
-                        </div>
-
-                        <!-- Blink flash feedback -->
-                        <div id="blinkFlash"
-                            class="hidden absolute inset-0 bg-white/30 pointer-events-none rounded-2xl"></div>
-
-                        <div id="blinkIndicator"
-                            class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm font-semibold px-4 py-2 rounded-full whitespace-nowrap">
-                            👁️ Kedipkan mata untuk konfirmasi...
+                            class="absolute top-2 left-2 bg-black/80 text-white text-xs font-mono px-3 py-2 rounded-lg leading-6 min-w-[170px]">
+                            Wajah: <span id="faceStateVal" class="text-yellow-300 font-bold">-</span><br>
+                            Nama: <span id="nameVal" class="text-orange-300">-</span><br>
+                            Lokasi: <span id="gpsStateVal" class="text-cyan-300">Mencari...</span><br>
+                            Jarak ke Koichi: <span id="distanceVal" class="text-orange-300">-</span>
                         </div>
 
                         <div id="successOverlay"
@@ -67,39 +57,27 @@
                         </div>
                     </div>
 
-                    <!-- Blink progress -->
-                    <div id="blinkProgressBox" class="hidden w-full max-w-lg">
-                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                            <span>Progress kedipan</span>
-                            <span><span id="blinkCount">0</span>/2</span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-                            <div id="blinkBar" class="bg-orange-500 h-4 rounded-full transition-all duration-200"
-                                style="width:0%"></div>
-                        </div>
-                    </div>
+                    <!-- Tombol capture -->
+                    <button type="button" id="captureBtn" disabled
+                        class="w-full max-w-lg px-6 py-4 bg-orange-600 hover:bg-orange-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition">
+                        📸 Ambil Foto & Absen Keluar
+                    </button>
+                    <p id="captureHint" class="text-xs text-gray-500 dark:text-gray-400 text-center -mt-2">
+                        Posisikan wajah ke kamera dan pastikan lokasi sudah terdeteksi.
+                    </p>
 
-                    <!-- Threshold control -->
-                    <div
+                    <!-- Status lokasi -->
+                    <div id="locationBox"
                         class="w-full max-w-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">🔧 Kalibrasi
-                                Sensitivitas Kedipan</p>
-                            <button id="autoCalibBtn"
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">📍 Status Lokasi</p>
+                            <button id="retryLocationBtn"
                                 class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-full transition font-semibold">
-                                ⚡ Auto-kalibrasi
+                                🔄 Coba Lagi
                             </button>
                         </div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="text-xs text-amber-700 dark:text-amber-400 w-24 shrink-0">Threshold:</span>
-                            <input type="range" id="threshSlider" min="0.10" max="0.40" step="0.005"
-                                value="0.25" class="flex-1 accent-amber-500">
-                            <span id="threshDisplay"
-                                class="text-sm font-mono font-bold w-12 text-center text-amber-700 dark:text-amber-300">0.25</span>
-                        </div>
-                        <p class="text-xs text-amber-600 dark:text-amber-400">
-                            💡 Klik <strong>Auto-kalibrasi</strong> lalu kedipkan mata 3x dalam 3 detik untuk set
-                            threshold otomatis.
+                        <p id="locationText" class="text-xs text-amber-700 dark:text-amber-400">
+                            Meminta izin akses lokasi dari browser...
                         </p>
                     </div>
 
@@ -163,6 +141,9 @@
         const THERAPIST_DESCRIPTORS = @json($faceDescriptors);
         const CHECKOUT_URL = "{{ route('admin.attendance.check-out-ajax') }}";
         const CSRF_TOKEN = "{{ csrf_token() }}";
+        const OFFICE_LAT = {{ $officeLatitude }};
+        const OFFICE_LNG = {{ $officeLongitude }};
+        const MAX_DISTANCE_METERS = {{ $maxDistanceMeters }};
     </script>
 
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
@@ -174,34 +155,20 @@
             const overlay = document.getElementById('overlay');
             const statusText = document.getElementById('statusText');
             const statusSub = document.getElementById('statusSub');
-            const blinkIndicator = document.getElementById('blinkIndicator');
-            const blinkProgressBox = document.getElementById('blinkProgressBox');
-            const blinkBar = document.getElementById('blinkBar');
-            const blinkCountEl = document.getElementById('blinkCount');
             const successOverlay = document.getElementById('successOverlay');
             const errorOverlay = document.getElementById('errorOverlay');
-            const earValEl = document.getElementById('earVal');
-            const minEarValEl = document.getElementById('minEarVal');
-            const eyeStateEl = document.getElementById('eyeStateVal');
-            const debugBlinkEl = document.getElementById('debugBlink');
-            const threshSlider = document.getElementById('threshSlider');
-            const threshDisplay = document.getElementById('threshDisplay');
-            const threshValEl = document.getElementById('threshVal');
-            const blinkFlash = document.getElementById('blinkFlash');
-            const autoCalibBtn = document.getElementById('autoCalibBtn');
+            const faceStateVal = document.getElementById('faceStateVal');
+            const nameVal = document.getElementById('nameVal');
+            const gpsStateVal = document.getElementById('gpsStateVal');
+            const distanceVal = document.getElementById('distanceVal');
+            const captureBtn = document.getElementById('captureBtn');
+            const captureHint = document.getElementById('captureHint');
+            const locationText = document.getElementById('locationText');
+            const retryLocationBtn = document.getElementById('retryLocationBtn');
 
             const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-            const BLINKS_NEEDED = 2;
-            let EAR_THRESHOLD = 0.25;
 
-            // Slider
-            threshSlider.addEventListener('input', () => {
-                EAR_THRESHOLD = parseFloat(threshSlider.value);
-                threshDisplay.textContent = EAR_THRESHOLD.toFixed(3);
-                threshValEl.textContent = EAR_THRESHOLD.toFixed(3);
-            });
-
-            // ── Load models — pakai faceLandmark68Net (bukan tiny) ──
+            // ── Load models ──
             setStatus('⏳ Memuat model...', 'Harap tunggu', 'blue');
             try {
                 await Promise.all([
@@ -257,66 +224,109 @@
             }));
             setStatus('👁️ Siap mendeteksi wajah', 'Posisikan wajah ke kamera', 'blue');
 
-            // ── EAR helpers ──
-            function dist(a, b) {
-                return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+            // ════════════════════════════════════════════════
+            // GEOLOCATION — pantau posisi terus-menerus
+            // ════════════════════════════════════════════════
+            let lastPosition = null;
+            let geoWatchId = null;
+
+            function haversineMeters(lat1, lng1, lat2, lng2) {
+                const R = 6371000;
+                const toRad = d => d * Math.PI / 180;
+                const dLat = toRad(lat2 - lat1);
+                const dLng = toRad(lng2 - lng1);
+                const a = Math.sin(dLat / 2) ** 2 +
+                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             }
 
-            function calcEAR(pts, idx) {
-                return (dist(pts[idx[1]], pts[idx[5]]) + dist(pts[idx[2]], pts[idx[4]])) /
-                    (2.0 * dist(pts[idx[0]], pts[idx[3]]));
+            function updateDistanceDisplay() {
+                if (!lastPosition) {
+                    distanceVal.textContent = '-';
+                    return;
+                }
+                const dist = haversineMeters(OFFICE_LAT, OFFICE_LNG, lastPosition.lat, lastPosition.lng);
+                distanceVal.textContent = Math.round(dist) + ' m';
+                distanceVal.style.color = dist <= MAX_DISTANCE_METERS ? '#86efac' : '#fca5a5';
             }
 
-            function getEAR(landmarks) {
-                const p = landmarks.positions;
-                return (calcEAR(p, [36, 37, 38, 39, 40, 41]) + calcEAR(p, [42, 43, 44, 45, 46, 47])) / 2;
+            function startLocationWatch() {
+                if (!('geolocation' in navigator)) {
+                    locationText.textContent = '❌ Browser ini tidak mendukung geolocation.';
+                    gpsStateVal.textContent = 'Tidak didukung';
+                    captureHint.textContent = 'Perangkat tidak mendukung deteksi lokasi.';
+                    return;
+                }
+
+                gpsStateVal.textContent = 'Mencari...';
+                locationText.textContent = 'Meminta izin akses lokasi dari browser...';
+
+                if (geoWatchId !== null) navigator.geolocation.clearWatch(geoWatchId);
+
+                geoWatchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        lastPosition = {
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        };
+                        gpsStateVal.textContent = 'Terdeteksi ✓';
+                        locationText.textContent =
+                            `📍 Lokasi ditemukan (akurasi ±${Math.round(pos.coords.accuracy)} m).`;
+                        updateDistanceDisplay();
+                        refreshCaptureButton();
+                    },
+                    (err) => {
+                        lastPosition = null;
+                        gpsStateVal.textContent = 'Gagal';
+                        let msg = 'Gagal mendapatkan lokasi.';
+                        if (err.code === err.PERMISSION_DENIED) {
+                            msg =
+                            '❌ Izin lokasi ditolak. Aktifkan izin lokasi di browser untuk bisa absen.';
+                        } else if (err.code === err.TIMEOUT) {
+                            msg = '⏳ Waktu pencarian lokasi habis. Klik "Coba Lagi".';
+                        }
+                        locationText.textContent = msg;
+                        refreshCaptureButton();
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 5000
+                    }
+                );
             }
 
-            // ── Auto-calibrate ──
-            let isCalibrating = false;
-            let calibSamples = [];
+            retryLocationBtn.addEventListener('click', startLocationWatch);
+            startLocationWatch();
 
-            autoCalibBtn.addEventListener('click', () => {
-                if (isCalibrating) return;
-                isCalibrating = true;
-                calibSamples = [];
-                autoCalibBtn.textContent = '⏳ Kedipkan mata 3x sekarang...';
-                autoCalibBtn.disabled = true;
-
-                setTimeout(() => {
-                    isCalibrating = false;
-                    autoCalibBtn.textContent = '⚡ Auto-kalibrasi';
-                    autoCalibBtn.disabled = false;
-
-                    if (calibSamples.length === 0) return;
-
-                    const minEAR = Math.min(...calibSamples);
-                    const maxEAR = Math.max(...calibSamples);
-                    const newThresh = parseFloat(((minEAR + maxEAR) / 2).toFixed(3));
-
-                    EAR_THRESHOLD = newThresh;
-                    threshSlider.value = newThresh;
-                    threshDisplay.textContent = newThresh.toFixed(3);
-                    threshValEl.textContent = newThresh.toFixed(3);
-
-                    setStatus('✅ Kalibrasi selesai! Threshold = ' + newThresh,
-                        'Sekarang coba kedipkan mata', 'green');
-                }, 3000);
-            });
-
-            // ── State ──
+            // ════════════════════════════════════════════════
+            // DETEKSI WAJAH (tanpa liveness kedip — tinggal foto)
+            // ════════════════════════════════════════════════
             const ctx = overlay.getContext('2d');
             let isProcessing = false;
-            let blinkState = null;
-            let earBuf = [];
-            let minEarSession = 1.0;
-            let blinkPhase = 'OPEN'; // 'OPEN' | 'CLOSING'
-            let closeFrameCount = 0;
-            const CLOSE_FRAMES_MIN = 1;
+            let currentMatch = null;
 
-            // ── Loop utama via requestAnimationFrame ──
+            function refreshCaptureButton() {
+                const hasFace = !!currentMatch;
+                const hasLocation = !!lastPosition;
+                captureBtn.disabled = isProcessing || !hasFace || !hasLocation;
+
+                if (isProcessing) {
+                    captureHint.textContent = 'Sedang memproses absen...';
+                } else if (!hasFace && !hasLocation) {
+                    captureHint.textContent = 'Posisikan wajah ke kamera dan aktifkan izin lokasi.';
+                } else if (!hasFace) {
+                    captureHint.textContent = 'Posisikan wajah ke kamera untuk dikenali sistem.';
+                } else if (!hasLocation) {
+                    captureHint.textContent = 'Menunggu lokasi terdeteksi...';
+                } else {
+                    captureHint.textContent =
+                        `Siap! Klik tombol untuk absen keluar sebagai ${currentMatch.name}.`;
+                }
+            }
+
             let lastDetectTime = 0;
-            const DETECT_INTERVAL_MS = 80;
+            const DETECT_INTERVAL_MS = 150;
 
             async function detectLoop(timestamp) {
                 requestAnimationFrame(detectLoop);
@@ -334,18 +344,17 @@
                         inputSize: 416,
                         scoreThreshold: 0.4
                     }))
-                    .withFaceLandmarks() // 68-point penuh
+                    .withFaceLandmarks()
                     .withFaceDescriptor();
 
                 if (!det) {
-                    earValEl.textContent = '-';
-                    eyeStateEl.textContent = '-';
-                    if (!blinkState) setStatus('👁️ Siap mendeteksi wajah', 'Posisikan wajah ke kamera',
-                        'blue');
+                    currentMatch = null;
+                    faceStateVal.textContent = 'Tidak ada wajah';
+                    nameVal.textContent = '-';
+                    refreshCaptureButton();
                     return;
                 }
 
-                // Box + label
                 const box = det.detection.box;
                 const match = faceMatcher.findBestMatch(det.descriptor);
                 const isKnown = match.label !== 'unknown';
@@ -353,121 +362,40 @@
                 ctx.strokeStyle = isKnown ? '#f97316' : '#ef4444';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(box.x, box.y, box.width, box.height);
-                ctx.fillStyle = isKnown ? '#f97316' : '#ef4444';
-                ctx.font = 'bold 14px sans-serif';
-                ctx.fillText(
-                    isKnown ?
-                    JSON.parse(match.label).name + ' (' + Math.round((1 - match.distance) * 100) +
-                    '%)' :
-                    'Tidak dikenal',
-                    box.x, box.y > 20 ? box.y - 6 : box.y + box.height + 16
-                );
 
-                // Outline mata
-                const pts = det.landmarks.positions;
-                [
-                    [36, 37, 38, 39, 40, 41],
-                    [42, 43, 44, 45, 46, 47]
-                ].forEach(eye => {
-                    ctx.beginPath();
-                    ctx.strokeStyle = '#fed7aa'; // orange untuk checkout
-                    ctx.lineWidth = 1.5;
-                    eye.forEach((i, k) => k === 0 ? ctx.moveTo(pts[i].x, pts[i].y) : ctx.lineTo(pts[
-                        i].x, pts[i].y));
-                    ctx.closePath();
-                    ctx.stroke();
-                });
-
-                // EAR + smoothing
-                const rawEAR = getEAR(det.landmarks);
-                earBuf.push(rawEAR);
-                if (earBuf.length > 3) earBuf.shift();
-                const ear = earBuf.reduce((a, b) => a + b, 0) / earBuf.length;
-
-                if (ear < minEarSession) minEarSession = ear;
-                if (isCalibrating) calibSamples.push(rawEAR);
-
-                earValEl.textContent = ear.toFixed(3);
-                minEarValEl.textContent = minEarSession.toFixed(3);
-                eyeStateEl.textContent = ear < EAR_THRESHOLD ? '😑 MENUTUP' : '👁️ TERBUKA';
-                eyeStateEl.style.color = ear < EAR_THRESHOLD ? '#fbbf24' : '#86efac';
-
-                if (!isKnown) {
-                    blinkState = null;
-                    blinkPhase = 'OPEN';
-                    closeFrameCount = 0;
-                    blinkProgressBox.classList.add('hidden');
-                    blinkIndicator.classList.add('hidden');
+                if (isKnown) {
+                    const info = JSON.parse(match.label);
+                    currentMatch = info;
+                    faceStateVal.textContent = 'Dikenali ✓';
+                    nameVal.textContent = info.name + ' (' + Math.round((1 - match.distance) * 100) + '%)';
+                    ctx.fillStyle = '#f97316';
+                    ctx.font = 'bold 14px sans-serif';
+                    ctx.fillText(info.name, box.x, box.y > 20 ? box.y - 6 : box.y + box.height + 16);
+                    setStatus('✅ ' + info.name + ' terdeteksi', 'Klik tombol untuk absen keluar', 'green');
+                } else {
+                    currentMatch = null;
+                    faceStateVal.textContent = 'Tidak dikenal';
+                    nameVal.textContent = '-';
+                    ctx.fillStyle = '#ef4444';
+                    ctx.font = 'bold 14px sans-serif';
+                    ctx.fillText('Tidak dikenal', box.x, box.y > 20 ? box.y - 6 : box.y + box.height + 16);
                     setStatus('❓ Wajah tidak dikenal', 'Wajah tidak terdaftar di sistem', 'red');
-                    return;
                 }
 
-                const info = JSON.parse(match.label);
-
-                if (!blinkState || blinkState.id !== info.id) {
-                    blinkState = {
-                        id: info.id,
-                        name: info.name,
-                        blinkCount: 0
-                    };
-                    blinkPhase = 'OPEN';
-                    closeFrameCount = 0;
-                    earBuf = [];
-                    minEarSession = 1.0;
-                    blinkProgressBox.classList.remove('hidden');
-                    blinkIndicator.classList.remove('hidden');
-                    updateBlinkUI(0);
-                    setStatus('✅ ' + info.name + ' terdeteksi!',
-                        '👁️ Kedipkan mata ' + BLINKS_NEEDED + 'x untuk check-out', 'green');
-                }
-
-                debugBlinkEl.textContent = blinkState.blinkCount;
-
-                // State machine kedipan
-                if (blinkPhase === 'OPEN') {
-                    if (ear < EAR_THRESHOLD) {
-                        blinkPhase = 'CLOSING';
-                        closeFrameCount = 1;
-                    }
-                } else if (blinkPhase === 'CLOSING') {
-                    if (ear < EAR_THRESHOLD) {
-                        closeFrameCount++;
-                    } else {
-                        // Mata terbuka lagi = 1 kedipan valid
-                        if (closeFrameCount >= CLOSE_FRAMES_MIN) {
-                            blinkState.blinkCount++;
-                            updateBlinkUI(blinkState.blinkCount);
-                            debugBlinkEl.textContent = blinkState.blinkCount;
-                            console.log('✅ BLINK #' + blinkState.blinkCount,
-                                '| frames:', closeFrameCount,
-                                '| EAR:', ear.toFixed(3));
-
-                            // Flash feedback
-                            blinkFlash.classList.remove('hidden');
-                            setTimeout(() => blinkFlash.classList.add('hidden'), 150);
-
-                            if (blinkState.blinkCount >= BLINKS_NEEDED) {
-                                isProcessing = true;
-                                blinkIndicator.classList.add('hidden');
-                                setStatus('⏳ Menyimpan check-out...', '', 'blue');
-                                await doCheckOut(det, info);
-                            }
-                        }
-                        blinkPhase = 'OPEN';
-                        closeFrameCount = 0;
-                    }
-                }
+                refreshCaptureButton();
             }
 
             requestAnimationFrame(detectLoop);
 
-            // ── UI helpers ──
-            function updateBlinkUI(count) {
-                blinkCountEl.textContent = count;
-                blinkBar.style.width = Math.min((count / BLINKS_NEEDED) * 100, 100) + '%';
-            }
+            // ════════════════════════════════════════════════
+            // CAPTURE & SUBMIT
+            // ════════════════════════════════════════════════
+            captureBtn.addEventListener('click', async () => {
+                if (!currentMatch || !lastPosition || isProcessing) return;
+                isProcessing = true;
+                refreshCaptureButton();
+                setStatus('⏳ Menyimpan check-out...', '', 'blue');
 
-            async function doCheckOut(det, info) {
                 try {
                     const snap = document.createElement('canvas');
                     snap.width = video.videoWidth;
@@ -477,9 +405,11 @@
 
                     const fd = new FormData();
                     fd.append('_token', CSRF_TOKEN);
-                    fd.append('therapist_id', info.id);
-                    fd.append('confidence', (1 - det.detection.score).toFixed(4));
+                    fd.append('therapist_id', currentMatch.id);
+                    fd.append('confidence', '1.0');
                     fd.append('image', blob, 'checkout.jpg');
+                    fd.append('latitude', lastPosition.lat);
+                    fd.append('longitude', lastPosition.lng);
 
                     const res = await fetch(CHECKOUT_URL, {
                         method: 'POST',
@@ -488,12 +418,16 @@
                     const data = await res.json();
 
                     if (data.success) {
-                        document.getElementById('successName').textContent = '✅ ' + info.name;
-                        document.getElementById('successTime').textContent = 'Jam keluar: ' + data.time;
-                        document.getElementById('workDuration').textContent = '⏱ Durasi: ' + data.duration;
+                        document.getElementById('successName').textContent = '✅ ' + currentMatch
+                            .name;
+                        document.getElementById('successTime').textContent = 'Jam keluar: ' + data
+                            .time;
+                        document.getElementById('workDuration').textContent = '⏱ Durasi: ' + data
+                            .duration;
                         successOverlay.classList.remove('hidden');
-                        updateRowCheckout(info.id, data.time, data.duration);
-                        setStatus('✅ Check-out berhasil!', info.name + ' — ' + data.time, 'green');
+                        updateRowCheckout(currentMatch.id, data.time, data.duration);
+                        setStatus('✅ Check-out berhasil!', currentMatch.name + ' — ' + data.time,
+                            'green');
                     } else {
                         document.getElementById('errorMsg').textContent = data.message;
                         errorOverlay.classList.remove('hidden');
@@ -507,19 +441,14 @@
                 setTimeout(() => {
                     successOverlay.classList.add('hidden');
                     errorOverlay.classList.add('hidden');
-                    blinkState = null;
-                    blinkPhase = 'OPEN';
-                    closeFrameCount = 0;
-                    earBuf = [];
-                    minEarSession = 1.0;
                     isProcessing = false;
-                    blinkProgressBox.classList.add('hidden');
-                    blinkIndicator.classList.add('hidden');
-                    updateBlinkUI(0);
-                    setStatus('👁️ Siap mendeteksi wajah', 'Posisikan wajah ke kamera', 'blue');
+                    refreshCaptureButton();
+                    setStatus('👁️ Siap mendeteksi wajah', 'Posisikan wajah ke kamera',
+                        'blue');
                 }, 4000);
-            }
+            });
 
+            // ── UI helpers ──
             function updateRowCheckout(id, time, duration) {
                 const el = document.getElementById('checkout-' + id);
                 if (el) el.innerHTML = '<span class="text-orange-600 font-semibold">' + time + '</span>';
