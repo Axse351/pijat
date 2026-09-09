@@ -26,24 +26,36 @@
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-                        {{-- Pelanggan --}}
-                        <div>
+                        {{-- Pelanggan (searchable) --}}
+                        <div class="relative" id="customerCombobox">
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                 Pelanggan *
                             </label>
-                            <select name="customer_id" required
+
+                            @php
+                                $oldCustomer = old('customer_id') ? $customers->firstWhere('id', old('customer_id')) : null;
+                            @endphp
+
+                            <input type="hidden" name="customer_id" id="customerIdInput" value="{{ old('customer_id') }}">
+                            <input type="text" id="customerSearchInput" autocomplete="off"
+                                placeholder="Ketik nama pelanggan..." value="{{ $oldCustomer?->name }}"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
-                                <option value="">-- Pilih --</option>
+
+                            <div id="customerDropdown"
+                                class="hidden absolute z-20 mt-1 w-full max-h-60 overflow-y-auto bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg text-sm">
                                 @foreach ($customers as $c)
-                                    <option value="{{ $c->id }}"
-                                        {{ old('customer_id') == $c->id ? 'selected' : '' }}>
+                                    <button type="button"
+                                        class="customer-option w-full text-left px-4 py-2 hover:bg-indigo-50 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200"
+                                        data-id="{{ $c->id }}" data-name="{{ $c->name }}">
                                         {{ $c->name }}
                                         @if ($c->points > 0)
-                                            ({{ $c->points }} poin{{ $c->hasBonus() ? ' 🎁' : '' }})
+                                            <span class="text-xs text-gray-400">({{ $c->points }} poin{{ $c->hasBonus() ? ' 🎁' : '' }})</span>
                                         @endif
-                                    </option>
+                                    </button>
                                 @endforeach
-                            </select>
+                                <div id="customerNoMatch" class="hidden px-4 py-2 text-gray-400 text-xs">Tidak ada
+                                    pelanggan yang cocok.</div>
+                            </div>
                         </div>
 
                         {{-- Terapis --}}
@@ -320,6 +332,58 @@
                 pointPreviewWrap.classList.add('hidden');
             }
         }
+
+        // ── Searchable customer combobox ──
+        const customerWrap = document.getElementById('customerCombobox');
+        const customerSearchInput = document.getElementById('customerSearchInput');
+        const customerIdInput = document.getElementById('customerIdInput');
+        const customerDropdown = document.getElementById('customerDropdown');
+        const customerOptions = Array.from(document.querySelectorAll('.customer-option'));
+        const customerNoMatch = document.getElementById('customerNoMatch');
+
+        function filterCustomers() {
+            const q = customerSearchInput.value.trim().toLowerCase();
+            let visible = 0;
+            customerOptions.forEach(opt => {
+                const match = opt.dataset.name.toLowerCase().includes(q);
+                opt.classList.toggle('hidden', !match);
+                if (match) visible++;
+            });
+            customerNoMatch.classList.toggle('hidden', visible !== 0);
+        }
+
+        customerSearchInput.addEventListener('focus', () => {
+            filterCustomers();
+            customerDropdown.classList.remove('hidden');
+        });
+
+        customerSearchInput.addEventListener('input', () => {
+            customerIdInput.value = ''; // reset kalau user ubah teks manual
+            filterCustomers();
+            customerDropdown.classList.remove('hidden');
+        });
+
+        customerOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                customerIdInput.value = opt.dataset.id;
+                customerSearchInput.value = opt.dataset.name;
+                customerDropdown.classList.add('hidden');
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!customerWrap.contains(e.target)) {
+                customerDropdown.classList.add('hidden');
+            }
+        });
+
+        document.querySelector('form').addEventListener('submit', function (e) {
+            if (!customerIdInput.value) {
+                e.preventDefault();
+                customerSearchInput.classList.add('ring-2', 'ring-red-500');
+                customerSearchInput.focus();
+            }
+        });
 
         // Inisialisasi saat halaman load
         document.addEventListener('DOMContentLoaded', calcTotal);

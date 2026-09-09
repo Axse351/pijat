@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
+
     public function index()
     {
         $now   = Carbon::now();
