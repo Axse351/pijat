@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\User;
+use App\Models\WaMessageTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -38,28 +39,29 @@ class CustomerController extends Controller
     {
         $request->validate([
             'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email',
+            'email'       => 'nullable|email|unique:users,email|required_without:phone',
+            'phone'       => 'nullable|string|max:20|unique:users,phone|required_without:email',
             'password'    => 'required|string|min:8|confirmed',
-            'phone'       => 'nullable|string|max:20',
             'ulang_tahun' => 'nullable|date',
             'notes'       => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($request) {
+            $phone = $request->phone ? WaMessageTemplate::normalizePhone($request->phone) : null;
+
             $user = User::create([
-                'name'        => $request->name,
-                'email'       => $request->email,
-                'password'    => Hash::make($request->password),
-                'phone'       => $request->phone,
-                'ulang_tahun' => $request->ulang_tahun,
-                'role'        => 'user',
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'phone'    => $phone,
+                'password' => Hash::make($request->password),
+                'role'     => 'user',
             ]);
 
             Customer::create([
                 'user_id'     => $user->id,
                 'name'        => $request->name,
                 'email'       => $request->email,
-                'phone'       => $request->phone,
+                'phone'       => $phone,
                 'ulang_tahun' => $request->ulang_tahun,
                 'notes'       => $request->notes,
             ]);
@@ -69,25 +71,21 @@ class CustomerController extends Controller
             ->with('success', 'Pelanggan berhasil ditambahkan.');
     }
 
-    public function edit(Customer $customer)
-    {
-        $customer->load('user');
-        return view('admin.customers.edit', compact('customer'));
-    }
-
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
             'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email,' . $customer->user_id,
+            'email'       => 'nullable|email|unique:users,email,' . $customer->user_id . '|required_without:phone',
+            'phone'       => 'nullable|string|max:20|unique:users,phone,' . $customer->user_id . '|required_without:email',
             'password'    => 'nullable|string|min:8|confirmed',
-            'phone'       => 'nullable|string|max:20',
             'ulang_tahun' => 'nullable|date',
             'notes'       => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($request, $customer) {
-            $userData = ['name' => $request->name, 'email' => $request->email];
+            $phone = $request->phone ? WaMessageTemplate::normalizePhone($request->phone) : null;
+
+            $userData = ['name' => $request->name, 'email' => $request->email, 'phone' => $phone];
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
@@ -96,7 +94,7 @@ class CustomerController extends Controller
             $customer->update([
                 'name'        => $request->name,
                 'email'       => $request->email,
-                'phone'       => $request->phone,
+                'phone'       => $phone,
                 'notes'       => $request->notes,
                 'ulang_tahun' => $request->ulang_tahun,
             ]);
@@ -105,6 +103,14 @@ class CustomerController extends Controller
         return redirect()->route('admin.customers.index')
             ->with('success', 'Data pelanggan berhasil diperbarui.');
     }
+
+    public function edit(Customer $customer)
+    {
+        $customer->load('user');
+        return view('admin.customers.edit', compact('customer'));
+    }
+
+
 
     public function destroy(Customer $customer)
     {

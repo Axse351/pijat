@@ -82,7 +82,7 @@
                             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                 Email *
                             </label>
-                            <input type="email" name="email" value="{{ old('email') }}" required
+                            <input type="email" name="email" value="{{ old('email') }}"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500
                                     {{ $errors->has('email') ? 'border-red-400 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-600' }}"
                                 placeholder="email@contoh.com">
