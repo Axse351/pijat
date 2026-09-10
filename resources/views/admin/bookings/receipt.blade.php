@@ -94,13 +94,16 @@
         .sm {
             font-size: 10px;
         }
+        .m {
+            font-size: 15px;
+        }
 
         .lg {
             font-size: 13px;
         }
 
         .xl {
-            font-size: 15px;
+            font-size: 25px;
         }
 
         .separator-solid {
@@ -223,9 +226,9 @@
         {{-- Header --}}
         <div class="center">
             <div class="xl bold">KOICHI</div>
-            <div class="sm">Refleksi & Perawatan</div>
-            <div class="sm">Jl. Contoh No. 1, Kota Anda</div>
-            <div class="sm">WA: 08123456789</div>
+            <div class="m bold">Reflexology & Massage </div>
+            <div class="sm">Jl. Sisingamangaraja No.16, Panjunan, Kec. Lemahwungkuk, Kota Cirebon, Jawa Barat 45112</div>
+            <div class="sm">WA: 081807081000</div>
         </div>
 
         <hr class="separator-solid">
@@ -350,7 +353,7 @@
         {{-- Footer --}}
         <div class="center sm">
             <div>Terima kasih telah berkunjung!</div>
-            <div style="margin-top:2px;">Semoga merasa lebih segar 🌸</div>
+            <div style="margin-top:2px;">Jika ada saran, keluhan dan kritik dapat menghubungi <br> <b style="font-size: 200%">081806031000</b> 🌸</div>
             <div style="margin-top:4px;color:#aaa;">
                 Dicetak: {{ \Carbon\Carbon::now()->translatedFormat('d M Y H:i') }}
             </div>
