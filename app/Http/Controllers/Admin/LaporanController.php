@@ -40,9 +40,14 @@ class LaporanController extends Controller
         //
         //  Prinsip:
         //  ┌─────────────────────────────────────────────────────────────┐
-        //  │ Bruto       = total final_price semua booking COMPLETED      │
-        //  │ Kom.Std     = bruto booking standard × 25%                  │
-        //  │ Kom.Program = bruto booking program  × 30%                  │
+        //  │ Bruto       = total final_price (harga SETELAH diskon,      │
+        //  │               yaitu uang yg BENERAN diterima Koichi)         │
+        //  │ Harga Asli  = total price (harga SEBELUM diskon)             │
+        //  │ Kom.Std     = harga asli booking standard × 25%              │
+        //  │ Kom.Program = harga asli booking program  × 30%              │
+        //  │               ⭐ Komisi TIDAK dipotong diskon customer —      │
+        //  │                 diskon adalah tanggungan Koichi, bukan       │
+        //  │                 mengurangi hak komisi terapis.               │
         //  │ Kom.Cancel  = total pembayaran booking cancel+forfeit        │
         //  │ Koichi Real = Bruto − Kom.Std − Kom.Program                 │
         //  │               (Kom.Cancel tidak mengurangi Koichi karena    │
@@ -53,6 +58,7 @@ class LaporanController extends Controller
         // Booking completed — pisah standard vs program
         $completedBase = Booking::completed()->inRange($start, $end);
 
+        // Bruto = uang yang benar-benar diterima (sudah dipotong diskon)
         $brutoStandard = (clone $completedBase)
             ->where('commission_type', 'standard')
             ->sum('final_price');
@@ -65,6 +71,15 @@ class LaporanController extends Controller
         $totalHargaAsli    = (clone $completedBase)->sum('price');
         $totalDiskon       = (clone $completedBase)->sum('discount');
 
+        // ⭐ Harga ASLI (sebelum diskon) — dasar perhitungan komisi terapis
+        $hargaAsliStandard = (clone $completedBase)
+            ->where('commission_type', 'standard')
+            ->sum('price');
+
+        $hargaAsliProgram = (clone $completedBase)
+            ->where('commission_type', 'program')
+            ->sum('price');
+
         // Komisi dari sesi selesai (dicatat di tabel commissions)
         $komisiFromSessions = Commission::where('commission_source', 'normal')
             ->whereHas('booking', fn($q) => $q->inRange($start, $end))
@@ -75,9 +90,9 @@ class LaporanController extends Controller
             ->whereHas('booking', fn($q) => $q->inRange($start, $end))
             ->sum('commission_amount');
 
-        // Breakdown komisi per rate
-        $komisiStandard = round($brutoStandard * self::RATE_STANDARD, 2);
-        $komisiProgram  = round($brutoProgram  * self::RATE_PROGRAM,  2);
+        // ⭐ Breakdown komisi per rate — dihitung dari HARGA ASLI, bukan bruto
+        $komisiStandard = round($hargaAsliStandard * self::RATE_STANDARD, 2);
+        $komisiProgram  = round($hargaAsliProgram  * self::RATE_PROGRAM,  2);
 
         // Total komisi terapis dari sesi (25%/30%)
         $totalKomisiPijat = $komisiStandard + $komisiProgram;
@@ -89,8 +104,8 @@ class LaporanController extends Controller
 
         $totalKomisiTerapis = $totalKomisiPijat + $totalBonusHadir;
 
-        // Pendapatan REAL Koichi = bruto - komisi sesi (bukan dari cancel forfeit)
-        // Cancel forfeit: uang memang tidak masuk ke Koichi, langsung ke terapis
+        // Pendapatan REAL Koichi = uang yang diterima (bruto, sudah diskon)
+        // dikurangi komisi (yang dihitung dari harga asli, tidak ikut diskon)
         $totalPendapatan = $totalBruto - $totalKomisiPijat - $totalBonusHadir;
 
         // Metode pembayaran
@@ -152,6 +167,8 @@ class LaporanController extends Controller
             'totalBruto',
             'brutoStandard',
             'brutoProgram',
+            'hargaAsliStandard',
+            'hargaAsliProgram',
             'komisiStandard',
             'komisiProgram',
             'komisiFromSessions',
@@ -243,15 +260,16 @@ class LaporanController extends Controller
 
     private function buildRekapHarian($start, $end): \Illuminate\Support\Collection
     {
-        // Booking completed per hari — pisah standard vs program
+        // ⭐ Ambil SUM(final_price) untuk bruto (uang diterima) DAN
+        //    SUM(price) untuk harga_asli (dasar komisi) sekaligus per hari
         $stdPerHari = Booking::completed()->inRange($start, $end)
             ->where('commission_type', 'standard')
-            ->selectRaw('DATE(scheduled_at) as tgl, SUM(final_price) as bruto, COUNT(*) as sesi')
+            ->selectRaw('DATE(scheduled_at) as tgl, SUM(final_price) as bruto, SUM(price) as harga_asli, COUNT(*) as sesi')
             ->groupBy('tgl')->get()->keyBy('tgl');
 
         $progPerHari = Booking::completed()->inRange($start, $end)
             ->where('commission_type', 'program')
-            ->selectRaw('DATE(scheduled_at) as tgl, SUM(final_price) as bruto, COUNT(*) as sesi')
+            ->selectRaw('DATE(scheduled_at) as tgl, SUM(final_price) as bruto, SUM(price) as harga_asli, COUNT(*) as sesi')
             ->groupBy('tgl')->get()->keyBy('tgl');
 
         // Absensi per hari
@@ -278,8 +296,12 @@ class LaporanController extends Controller
             $sesi      = (int)($stdPerHari[$tgl]->sesi  ?? 0) + (int)($progPerHari[$tgl]->sesi ?? 0);
             $hadir     = (int)($absensiPerHari[$tgl]->hadir ?? 0);
 
-            $komisiStd  = $brutoStd  * self::RATE_STANDARD;
-            $komisiProg = $brutoProg * self::RATE_PROGRAM;
+            // ⭐ Harga asli per hari — dasar hitung komisi (tidak kepotong diskon)
+            $hargaAsliStd  = (float)($stdPerHari[$tgl]->harga_asli  ?? 0);
+            $hargaAsliProg = (float)($progPerHari[$tgl]->harga_asli ?? 0);
+
+            $komisiStd   = $hargaAsliStd  * self::RATE_STANDARD;
+            $komisiProg  = $hargaAsliProg * self::RATE_PROGRAM;
             $komisiPijat = $komisiStd + $komisiProg;
             $bonusHadir  = $hadir * self::BONUS_HADIR;
             $totalKomisi = $komisiPijat + $bonusHadir;
@@ -289,18 +311,20 @@ class LaporanController extends Controller
             $cancelForfeit = (float)($cancelPerHari[$tgl]->total ?? 0);
 
             $days->push([
-                'tanggal'       => $date->copy(),
-                'sesi'          => $sesi,
-                'bruto'         => $bruto,
-                'bruto_std'     => $brutoStd,
-                'bruto_prog'    => $brutoProg,
-                'komisi_std'    => $komisiStd,
-                'komisi_prog'   => $komisiProg,
-                'komisi_pijat'  => $komisiPijat,
-                'bonus_hadir'   => $bonusHadir,
-                'total_komisi'  => $totalKomisi,
-                'bersih'        => $bersih,
-                'hadir'         => $hadir,
+                'tanggal'        => $date->copy(),
+                'sesi'           => $sesi,
+                'bruto'          => $bruto,
+                'bruto_std'      => $brutoStd,
+                'bruto_prog'     => $brutoProg,
+                'harga_asli_std'  => $hargaAsliStd,
+                'harga_asli_prog' => $hargaAsliProg,
+                'komisi_std'     => $komisiStd,
+                'komisi_prog'    => $komisiProg,
+                'komisi_pijat'   => $komisiPijat,
+                'bonus_hadir'    => $bonusHadir,
+                'total_komisi'   => $totalKomisi,
+                'bersih'         => $bersih,
+                'hadir'          => $hadir,
                 'cancel_forfeit' => $cancelForfeit,
             ]);
 
@@ -317,6 +341,7 @@ class LaporanController extends Controller
                 'bookings as total_sesi'   => fn($q) => $q->inRange($start, $end),
                 'bookings as sesi_selesai' => fn($q) => $q->completed()->inRange($start, $end),
             ])
+            // Bruto (uang diterima, sudah diskon) — untuk laporan pendapatan spa
             ->withSum([
                 'bookings as bruto_standard' => fn($q) => $q->completed()->inRange($start, $end)
                     ->where('commission_type', 'standard'),
@@ -325,6 +350,15 @@ class LaporanController extends Controller
                 'bookings as bruto_program' => fn($q) => $q->completed()->inRange($start, $end)
                     ->where('commission_type', 'program'),
             ], 'final_price')
+            // ⭐ Harga ASLI (sebelum diskon) — dasar perhitungan komisi terapis
+            ->withSum([
+                'bookings as harga_asli_standard' => fn($q) => $q->completed()->inRange($start, $end)
+                    ->where('commission_type', 'standard'),
+            ], 'price')
+            ->withSum([
+                'bookings as harga_asli_program' => fn($q) => $q->completed()->inRange($start, $end)
+                    ->where('commission_type', 'program'),
+            ], 'price')
             ->orderByDesc('sesi_selesai')->get();
 
         $terapis->each(function ($t) use ($start, $end) {
@@ -332,9 +366,13 @@ class LaporanController extends Controller
             $brutoProg = (float)($t->bruto_program  ?? 0);
             $bruto     = $brutoStd + $brutoProg;
 
+            // ⭐ Komisi dihitung dari harga asli, bukan bruto (final_price)
+            $hargaAsliStd  = (float)($t->harga_asli_standard ?? 0);
+            $hargaAsliProg = (float)($t->harga_asli_program  ?? 0);
+
             $t->total_bruto_fmt = $bruto;
-            $t->komisi_std      = round($brutoStd  * self::RATE_STANDARD, 2);
-            $t->komisi_prog     = round($brutoProg * self::RATE_PROGRAM,  2);
+            $t->komisi_std      = round($hargaAsliStd  * self::RATE_STANDARD, 2);
+            $t->komisi_prog     = round($hargaAsliProg * self::RATE_PROGRAM,  2);
             $t->komisi_pijat    = $t->komisi_std + $t->komisi_prog;
 
             // Bonus hadir
@@ -346,6 +384,7 @@ class LaporanController extends Controller
             $t->hari_hadir  = $hariHadir;
             $t->bonus_hadir = $hariHadir * self::BONUS_HADIR;
             $t->total_komisi = $t->komisi_pijat + $t->bonus_hadir;
+            // Pendapatan spa = uang yang diterima Koichi (bruto) dikurangi komisi
             $t->pendapatan_spa = $bruto - $t->komisi_pijat;
 
             // Komisi dari cancel forfeit

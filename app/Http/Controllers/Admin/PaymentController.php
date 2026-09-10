@@ -35,7 +35,7 @@ class PaymentController extends Controller
     {
         $request->validate([
             'booking_id' => 'required|exists:bookings,id',
-            'method'     => 'required|in:qris,cash',
+            'method'     => 'required|in:qris,cash,transfer,debit',
             'amount'     => 'required|numeric|min:0',
         ]);
 
@@ -50,11 +50,19 @@ class PaymentController extends Controller
         ]);
 
         // ── Auto-generate komisi ──────────────────────────────────────────
+        //
+        // ⭐ PENTING: komisi terapis dihitung dari HARGA ASLI ($booking->price),
+        // BUKAN dari $booking->final_price (harga setelah diskon customer).
+        //
+        // Contoh: harga asli 100rb, customer dapat diskon 10% jadi bayar 90rb.
+        // Komisi 25% tetap dihitung dari 100rb = 25rb, BUKAN dari 90rb (22.5rb).
+        // Diskon yang diberikan ke customer adalah tanggungan Koichi, bukan
+        // mengurangi hak komisi terapis.
         $therapist         = $booking->therapist;
         $commissionPercent = $therapist->commission_percent ?? 0;
 
         if ($commissionPercent > 0) {
-            $commissionAmount = round($booking->final_price * $commissionPercent / 100, 2);
+            $commissionAmount = round($booking->price * $commissionPercent / 100, 2);
 
             $now       = Carbon::now();
             $weekStart = $now->clone()->startOfWeek(Carbon::MONDAY)->toDateString();
@@ -98,7 +106,7 @@ class PaymentController extends Controller
     public function update(Request $request, Payment $payment)
     {
         $request->validate([
-            'method' => 'required|in:qris,cash',
+            'method' => 'required|in:qris,cash,transfer,debit',
             'amount' => 'required|numeric|min:0',
         ]);
 
@@ -108,12 +116,13 @@ class PaymentController extends Controller
         ]);
 
         // Recalculate komisi jika amount berubah
-        $booking  = $payment->booking()->with('therapist')->first();
-        $therapist = $booking->therapist;
+        // ⭐ Sama seperti store(): pakai harga asli, bukan final_price
+        $booking           = $payment->booking()->with('therapist')->first();
+        $therapist         = $booking->therapist;
         $commissionPercent = $therapist->commission_percent ?? 0;
 
         if ($commissionPercent > 0) {
-            $commissionAmount = round($booking->final_price * $commissionPercent / 100, 2);
+            $commissionAmount = round($booking->price * $commissionPercent / 100, 2);
 
             Commission::where('booking_id', $booking->id)
                 ->where('therapist_id', $therapist->id)

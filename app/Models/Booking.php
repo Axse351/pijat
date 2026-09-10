@@ -59,6 +59,40 @@ class Booking extends Model
         return $this->hasOne(Commission::class);
     }
 
+    /**
+     * ⭐ Sinkronkan payments.amount dengan final_price booking ini,
+     * kalau booking sudah punya payment — DAN catat perubahannya
+     * ke payment_amount_logs supaya ada jejak, bukan overwrite diam-diam.
+     *
+     * Komisi TIDAK ikut disentuh — tetap dihitung dari `price` (harga asli).
+     */
+    public function syncPaymentAmount(?string $reason = null): void
+    {
+        $payment = $this->payment;
+
+        if (!$payment) {
+            return;
+        }
+
+        $oldAmount = round((float) $payment->amount, 2);
+        $newAmount = round((float) $this->final_price, 2);
+
+        if ($oldAmount === $newAmount) {
+            return;
+        }
+
+        \App\Models\PaymentAmountLog::create([
+            'payment_id' => $payment->id,
+            'booking_id' => $this->id,
+            'old_amount' => $oldAmount,
+            'new_amount' => $newAmount,
+            'reason'     => $reason ?? 'Auto-sync: final_price booking berubah',
+            'changed_by' => auth()->id(),
+        ]);
+
+        $payment->update(['amount' => $newAmount]);
+    }
+
     // ── SCOPES ────────────────────────────────────────────────────────────
 
     public function scopeScheduled($query)

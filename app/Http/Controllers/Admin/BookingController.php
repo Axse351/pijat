@@ -23,6 +23,11 @@ class BookingController extends Controller
     /**
      * Hitung dan simpan komisi berdasarkan tipe layanan.
      * Home service → 30%, reguler → 25%
+     *
+     * ⭐ FIX: komisi dihitung dari $booking->price (harga ASLI, sebelum
+     * promo/program/diskon manual) — bukan $booking->final_price.
+     * Diskon yang diterima customer adalah tanggungan Koichi, bukan
+     * mengurangi hak komisi terapis.
      */
     private function createCommission(Booking $booking): void
     {
@@ -33,7 +38,7 @@ class BookingController extends Controller
 
         $isHomeService     = (bool) ($booking->service->is_home_service ?? false);
         $commissionPercent = $isHomeService ? 30.00 : 25.00;
-        $commissionAmount  = round($booking->final_price * $commissionPercent / 100, 2);
+        $commissionAmount  = round($booking->price * $commissionPercent / 100, 2);
 
         // Hitung rentang minggu (Senin–Minggu) dari tanggal selesai
         $completedDate = Carbon::now();
@@ -48,6 +53,31 @@ class BookingController extends Controller
             'week_start'         => $weekStart,
             'week_end'           => $weekEnd,
         ]);
+    }
+
+    /**
+     * ⭐ BARU: hitung nominal diskon dari sebuah Promo terhadap harga layanan.
+     * Promo di sistem ini persentase saja (kolom `discount`), tanpa
+     * discount_type/max_discount seperti Program.
+     *
+     * Melempar balik response redirect kalau promo tidak valid/tidak aktif,
+     * supaya validasinya sama persis antara store() dan update().
+     */
+    private function resolvePromoDiscount(?int $promoId, float $servicePrice): array
+    {
+        if (empty($promoId)) {
+            return [0, null];
+        }
+
+        $promo = Promo::find($promoId);
+
+        if (!$promo || $promo->status !== 'aktif') {
+            return ['error' => 'Promo tidak aktif atau tidak ditemukan.'];
+        }
+
+        $promoDisc = round($servicePrice * $promo->discount / 100);
+
+        return [$promoDisc, $promo];
     }
 
     // ─────────────────────────────────────────────
@@ -198,6 +228,16 @@ class BookingController extends Controller
             $discount += $programDisc;
         }
 
+        // ⭐ FIX: diskon promo sekarang benar-benar dihitung & ikut mengurangi harga.
+        // Sebelumnya promo_id cuma dicek "ada/tidak" tanpa nominalnya pernah
+        // dikurangkan dari harga, jadi efeknya seolah promo tidak berlaku.
+        $promoDiscResult = $this->resolvePromoDiscount($validated['promo_id'] ?? null, $service->price);
+        if (isset($promoDiscResult['error'])) {
+            return back()->withErrors(['promo_id' => $promoDiscResult['error']])->withInput();
+        }
+        [$promoDisc] = $promoDiscResult;
+        $discount += $promoDisc;
+
         $finalPrice = max(0, $service->price - $discount);
         $hasPromo   = !empty($validated['promo_id']);
 
@@ -279,6 +319,14 @@ class BookingController extends Controller
             $discount += $programDisc;
         }
 
+        // ⭐ FIX: sama seperti store() — diskon promo sekarang dihitung juga.
+        $promoDiscResult = $this->resolvePromoDiscount($validated['promo_id'] ?? null, $service->price);
+        if (isset($promoDiscResult['error'])) {
+            return back()->withErrors(['promo_id' => $promoDiscResult['error']])->withInput();
+        }
+        [$promoDisc] = $promoDiscResult;
+        $discount += $promoDisc;
+
         $finalPrice = max(0, $service->price - $discount);
         $hasPromo   = !empty($validated['promo_id']);
 
@@ -313,6 +361,11 @@ class BookingController extends Controller
             'price'                 => $service->price,
             'notes'                 => $validated['notes'] ?? $booking->notes,
         ]);
+
+        // ⭐ BARU: sinkronkan payment yang sudah ada (kalau ada) ke final_price
+        // terbaru, dan catat histori perubahan amount-nya
+        $booking->refresh();
+        $booking->syncPaymentAmount();
 
         if (!$wasCompleted && $becomesCompleted) {
             // Beri poin reward

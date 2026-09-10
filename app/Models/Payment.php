@@ -10,12 +10,17 @@ class Payment extends Model
     use HasFactory;
     protected $table = 'payments';
     protected $guarded = ['id'];
-     protected $casts = [
+    protected $casts = [
         'paid_at' => 'datetime',
     ];
 
     public function booking()
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(PaymentAmountLog::class)->latest();
     }
 }

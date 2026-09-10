@@ -149,7 +149,11 @@
                             <th class="px-5 py-3 text-left">Terapis</th>
                             <th class="px-5 py-3 text-left">Pelanggan / Layanan</th>
                             <th class="px-5 py-3 text-center">Tipe</th>
-                            <th class="px-5 py-3 text-right">Harga Booking</th>
+                            <th class="px-5 py-3 text-right">
+                                Harga Booking<br>
+                                <span class="normal-case font-normal text-[10px] text-gray-400">(asli → setelah
+                                    diskon)</span>
+                            </th>
                             <th class="px-5 py-3 text-center">Rate</th>
                             <th class="px-5 py-3 text-right">Komisi</th>
                             <th class="px-5 py-3 text-right">Koichi Dapat</th>
@@ -162,7 +166,10 @@
                         @forelse ($commissions as $c)
                             @php
                                 $isCancelForfeit = $c->commission_source === 'cancel_forfeit';
+                                $bookingOriginalPrice = $c->booking->price ?? 0;
+                                $bookingDiscount = $c->booking->discount ?? 0;
                                 $bookingFinalPrice = $c->booking->final_price ?? 0;
+                                $hasDiscount = $bookingDiscount > 0;
                                 // Koichi dapat: hanya berlaku untuk komisi normal (bukan forfeit)
                                 $koichiGets = $isCancelForfeit ? 0 : $bookingFinalPrice - $c->commission_amount;
                                 $rowBg = $isCancelForfeit ? 'bg-red-50/50 dark:bg-red-900/10' : '';
@@ -217,8 +224,23 @@
                                     @endif
                                 </td>
 
-                                <td class="px-5 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">
-                                    Rp {{ number_format($bookingFinalPrice, 0, ',', '.') }}
+                                {{-- ⭐ Harga Booking: asli → diskon → final --}}
+                                <td class="px-5 py-3 text-right">
+                                    @if ($hasDiscount)
+                                        <div class="text-xs text-gray-400 line-through">
+                                            Rp {{ number_format($bookingOriginalPrice, 0, ',', '.') }}
+                                        </div>
+                                        <div class="text-xs text-red-400">
+                                            − Rp {{ number_format($bookingDiscount, 0, ',', '.') }} diskon
+                                        </div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-300">
+                                            Rp {{ number_format($bookingFinalPrice, 0, ',', '.') }}
+                                        </div>
+                                    @else
+                                        <div class="font-semibold text-gray-700 dark:text-gray-300">
+                                            Rp {{ number_format($bookingFinalPrice, 0, ',', '.') }}
+                                        </div>
+                                    @endif
                                 </td>
 
                                 <td class="px-5 py-3 text-center">
@@ -233,8 +255,14 @@
                                     </span>
                                 </td>
 
-                                <td class="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                                    Rp {{ number_format($c->commission_amount, 0, ',', '.') }}
+                                {{-- ⭐ Komisi + catatan dasar hitungnya --}}
+                                <td class="px-5 py-3 text-right">
+                                    <div class="font-bold text-emerald-600 dark:text-emerald-400">
+                                        Rp {{ number_format($c->commission_amount, 0, ',', '.') }}
+                                    </div>
+                                    @if (!$isCancelForfeit && $hasDiscount)
+                                        <div class="text-[10px] text-gray-400">dari harga asli</div>
+                                    @endif
                                 </td>
 
                                 {{-- Koichi dapat (hanya untuk sesi normal) --}}
@@ -329,6 +357,10 @@
                         <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-bold">🔴 Cancel
                             Forfeit</span>
                         Customer cancel setelah bayar + terapis spesifik → uang hangus, 100% ke terapis
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400 line-through">Rp xxx.xxx</span>
+                        Harga asli layanan sebelum diskon/promo/program — dasar perhitungan komisi
                     </div>
                 </div>
             </div>

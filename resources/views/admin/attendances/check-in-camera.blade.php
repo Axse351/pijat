@@ -37,6 +37,12 @@
                             Jarak ke Koichi: <span id="distanceVal" class="text-orange-300">-</span>
                         </div>
 
+                        <!-- ⭐ Badge peringatan di luar radius -->
+                        <div id="radiusBadge"
+                            class="hidden absolute top-2 right-2 bg-red-600/90 text-white text-xs font-bold px-3 py-2 rounded-lg max-w-[160px] text-center">
+                            🚫 Di luar radius absen
+                        </div>
+
                         <div id="successOverlay"
                             class="hidden absolute inset-0 bg-green-600/85 flex flex-col items-center justify-center text-white rounded-2xl">
                             <div class="text-6xl mb-3">✅</div>
@@ -69,9 +75,10 @@
 
                     <!-- Status lokasi -->
                     <div id="locationBox"
-                        class="w-full max-w-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
+                        class="w-full max-w-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 transition-colors">
                         <div class="flex items-center justify-between mb-1">
-                            <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">📍 Status Lokasi</p>
+                            <p id="locationTitle" class="text-sm font-semibold text-amber-800 dark:text-amber-300">📍
+                                Status Lokasi</p>
                             <button id="retryLocationBtn"
                                 class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-full transition font-semibold">
                                 🔄 Coba Lagi
@@ -160,8 +167,11 @@
             const distanceVal = document.getElementById('distanceVal');
             const captureBtn = document.getElementById('captureBtn');
             const captureHint = document.getElementById('captureHint');
+            const locationBox = document.getElementById('locationBox');
+            const locationTitle = document.getElementById('locationTitle');
             const locationText = document.getElementById('locationText');
             const retryLocationBtn = document.getElementById('retryLocationBtn');
+            const radiusBadge = document.getElementById('radiusBadge');
 
             const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
@@ -226,6 +236,8 @@
             // ════════════════════════════════════════════════
             let lastPosition = null; // { lat, lng, accuracy }
             let geoWatchId = null;
+            let isWithinRadius = false;
+            let lastDistanceMeters = null;
 
             function haversineMeters(lat1, lng1, lat2, lng2) {
                 const R = 6371000;
@@ -237,14 +249,43 @@
                 return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             }
 
+            // ⭐ Update tampilan jarak + peringatan radius
             function updateDistanceDisplay() {
                 if (!lastPosition) {
                     distanceVal.textContent = '-';
+                    isWithinRadius = false;
+                    lastDistanceMeters = null;
+                    radiusBadge.classList.add('hidden');
                     return;
                 }
+
                 const dist = haversineMeters(OFFICE_LAT, OFFICE_LNG, lastPosition.lat, lastPosition.lng);
+                lastDistanceMeters = dist;
+                isWithinRadius = dist <= MAX_DISTANCE_METERS;
+
                 distanceVal.textContent = Math.round(dist) + ' m';
-                distanceVal.style.color = dist <= MAX_DISTANCE_METERS ? '#86efac' : '#fca5a5';
+                distanceVal.style.color = isWithinRadius ? '#86efac' : '#fca5a5';
+
+                if (isWithinRadius) {
+                    // Dalam radius — tampilan normal (amber)
+                    radiusBadge.classList.add('hidden');
+                    locationBox.className =
+                        'w-full max-w-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 transition-colors';
+                    locationTitle.className = 'text-sm font-semibold text-amber-800 dark:text-amber-300';
+                    locationText.className = 'text-xs text-amber-700 dark:text-amber-400';
+                    locationText.textContent =
+                        `📍 Lokasi ditemukan (±${Math.round(lastPosition.accuracy)} m). Jarak ke Koichi: ${Math.round(dist)} m — dalam radius absen.`;
+                } else {
+                    // ⚠️ Di luar radius — tampilan peringatan merah
+                    radiusBadge.classList.remove('hidden');
+                    locationBox.className =
+                        'w-full max-w-lg bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-xl p-4 transition-colors';
+                    locationTitle.className = 'text-sm font-semibold text-red-800 dark:text-red-300';
+                    locationText.className = 'text-xs text-red-700 dark:text-red-400 font-semibold';
+                    locationText.textContent =
+                        `⚠️ Anda berada ${Math.round(dist)} m dari lokasi Koichi (maks. ${MAX_DISTANCE_METERS} m). ` +
+                        `Absen tidak bisa dilakukan di luar radius kerja. Dekatkan diri ke lokasi lalu klik "Coba Lagi".`;
+                }
             }
 
             function startLocationWatch() {
@@ -268,18 +309,18 @@
                             accuracy: pos.coords.accuracy
                         };
                         gpsStateVal.textContent = 'Terdeteksi ✓';
-                        locationText.textContent =
-                            `📍 Lokasi ditemukan (akurasi ±${Math.round(pos.coords.accuracy)} m).`;
                         updateDistanceDisplay();
                         refreshCaptureButton();
                     },
                     (err) => {
                         lastPosition = null;
+                        isWithinRadius = false;
                         gpsStateVal.textContent = 'Gagal';
+                        radiusBadge.classList.add('hidden');
                         let msg = 'Gagal mendapatkan lokasi.';
                         if (err.code === err.PERMISSION_DENIED) {
                             msg =
-                            '❌ Izin lokasi ditolak. Aktifkan izin lokasi di browser untuk bisa absen.';
+                                '❌ Izin lokasi ditolak. Aktifkan izin lokasi di browser untuk bisa absen.';
                         } else if (err.code === err.TIMEOUT) {
                             msg = '⏳ Waktu pencarian lokasi habis. Klik "Coba Lagi".';
                         }
@@ -303,19 +344,21 @@
             let isProcessing = false;
             let currentMatch = null; // { id, name }
 
+            // ⭐ Tombol capture sekarang juga mengecek isWithinRadius
             function refreshCaptureButton() {
                 const hasFace = !!currentMatch;
                 const hasLocation = !!lastPosition;
-                captureBtn.disabled = isProcessing || !hasFace || !hasLocation;
+                captureBtn.disabled = isProcessing || !hasFace || !hasLocation || !isWithinRadius;
 
                 if (isProcessing) {
                     captureHint.textContent = 'Sedang memproses absen...';
-                } else if (!hasFace && !hasLocation) {
-                    captureHint.textContent = 'Posisikan wajah ke kamera dan aktifkan izin lokasi.';
-                } else if (!hasFace) {
-                    captureHint.textContent = 'Posisikan wajah ke kamera untuk dikenali sistem.';
                 } else if (!hasLocation) {
                     captureHint.textContent = 'Menunggu lokasi terdeteksi...';
+                } else if (!isWithinRadius) {
+                    captureHint.textContent =
+                        `⚠️ Di luar radius (${Math.round(lastDistanceMeters ?? 0)} m dari lokasi, maks. ${MAX_DISTANCE_METERS} m).`;
+                } else if (!hasFace) {
+                    captureHint.textContent = 'Posisikan wajah ke kamera untuk dikenali sistem.';
                 } else {
                     captureHint.textContent = `Siap! Klik tombol untuk absen sebagai ${currentMatch.name}.`;
                 }
@@ -367,7 +410,14 @@
                     ctx.fillStyle = '#22c55e';
                     ctx.font = 'bold 14px sans-serif';
                     ctx.fillText(info.name, box.x, box.y > 20 ? box.y - 6 : box.y + box.height + 16);
-                    setStatus('✅ ' + info.name + ' terdeteksi', 'Klik tombol untuk absen masuk', 'green');
+
+                    if (!isWithinRadius) {
+                        setStatus('⚠️ ' + info.name + ' terdeteksi', 'Namun Anda di luar radius absen',
+                            'red');
+                    } else {
+                        setStatus('✅ ' + info.name + ' terdeteksi', 'Klik tombol untuk absen masuk',
+                            'green');
+                    }
                 } else {
                     currentMatch = null;
                     faceStateVal.textContent = 'Tidak dikenal';
@@ -387,7 +437,7 @@
             // CAPTURE & SUBMIT
             // ════════════════════════════════════════════════
             captureBtn.addEventListener('click', async () => {
-                if (!currentMatch || !lastPosition || isProcessing) return;
+                if (!currentMatch || !lastPosition || isProcessing || !isWithinRadius) return;
                 isProcessing = true;
                 refreshCaptureButton();
                 setStatus('⏳ Menyimpan absensi...', '', 'blue');
