@@ -93,29 +93,42 @@
         .navbar-links {
             display: flex;
             align-items: center;
-            gap: 32px;
+            gap: 36px;
             list-style: none;
         }
 
         .navbar-links a {
-            font-size: .875rem;
-            font-weight: 500;
-            color: var(--brown);
-            opacity: .75;
-            transition: opacity .2s;
+            font-family: 'Fraunces', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: -.01em;
+            color: var(--white);
+            opacity: .92;
+            transition: opacity .2s, color .3s;
         }
 
         .navbar-links a:hover {
             opacity: 1;
         }
 
+        /* ⭐ Setelah di-scroll (background navbar jadi terang), teks berubah gelap */
+        .navbar.scrolled .navbar-links a {
+            color: var(--brown);
+            opacity: .8;
+        }
+
+        .navbar.scrolled .navbar-links a:hover {
+            opacity: 1;
+        }
+
         .navbar-cta {
-            padding: 10px 24px;
+            padding: 11px 26px;
             background: var(--terracotta);
             color: var(--white) !important;
             border-radius: 100px;
             opacity: 1 !important;
             font-weight: 600 !important;
+            font-size: 1rem !important;
             transition: background .2s !important;
         }
 
@@ -136,11 +149,16 @@
 
         .hamburger span {
             display: block;
-            width: 24px;
-            height: 2px;
-            background: var(--brown);
+            width: 26px;
+            height: 2.5px;
+            background: var(--white);
             border-radius: 2px;
             transition: .3s;
+        }
+
+        /* ⭐ Setelah di-scroll, hamburger juga ikut gelap */
+        .navbar.scrolled .hamburger span {
+            background: var(--brown);
         }
 
         .mobile-menu {
@@ -1319,10 +1337,6 @@
         {{-- Slider background --}}
         <div class="hero-slider-bg" id="heroSlider">
             @php
-                // Taruh foto pijat/spa di public/images/hero/1.jpg, 2.jpg, dst.
-                // Foto gratis bisa didownload dari unsplash.com/s/photos/massage-spa
-                // atau pexels.com/search/spa%20massage — selama file belum ada,
-                // otomatis tampil placeholder gradient (sama seperti section Promo).
                 $heroSlides = ['1.jpg', '2.jpg', '3.jpg', '4.jpg'];
                 $heroColors = ['#1e3a2c', '#2d5240', '#3c6b54', '#254732'];
             @endphp
@@ -1424,7 +1438,7 @@
         </div>
     </section>
 
-    {{-- ── PROMO (foto-foto promo dari slider hero, sekarang jadi section sendiri) ── --}}
+    {{-- ── PROMO ── --}}
     <section id="promo">
         <div class="section-inner">
             <div class="fade-up">
@@ -1537,7 +1551,7 @@
         </div>
     </section>
 
-    {{-- ── JADWAL (versi simpel: jam operasional + daftar terapis, tanpa kalender) ── --}}
+    {{-- ── JADWAL ── --}}
     <section id="jadwal">
         <div class="section-inner">
             <div class="fade-up">
@@ -1715,7 +1729,6 @@
                                 </select>
                             </div>
 
-                            {{-- Tanggal --}}
                             <div class="form-group">
                                 <label class="form-label">Tanggal *</label>
                                 <input type="date" id="bookingDate" name="booking_date" class="form-control"
@@ -1723,14 +1736,12 @@
                                     value="{{ old('booking_date', now()->addHour()->format('Y-m-d')) }}" required>
                             </div>
 
-                            {{-- Slot Jam --}}
                             <div class="form-group">
                                 <label class="form-label">Pilih Jam *</label>
                                 <div id="slotArea">
                                     <div class="slot-loading">Pilih terapis dan tanggal untuk melihat ketersediaan jam.
                                     </div>
                                 </div>
-                                {{-- hidden input yang dikirim ke server --}}
                                 <input type="hidden" name="scheduled_at" id="scheduledAt"
                                     value="{{ old('scheduled_at') }}">
                                 <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;">
@@ -1928,7 +1939,7 @@
             });
         });
 
-        /* ── HERO SLIDER (autoplay fade, cuma dot — dekorasi background) ── */
+        /* ── HERO SLIDER ── */
         (function() {
             const wrap = document.getElementById('heroSlider');
             if (!wrap) return;
@@ -1954,7 +1965,7 @@
             setInterval(() => heroGoTo(cur + 1), 5500);
         })();
 
-        /* ── PROMO SLIDER (sekarang di section Promo, bukan hero) ── */
+        /* ── PROMO SLIDER ── */
         (function() {
             const track = document.getElementById('slidesTrack');
             const dotsWrap = document.getElementById('promoDots');
@@ -2015,11 +2026,9 @@
             timer = setInterval(() => promoGoTo(cur + 1), 4500);
         })();
 
-        /* ════════════════════════════════════════════════════════════
-           SLOT PICKER DI FORM BOOKING
-        ════════════════════════════════════════════════════════════ */
+        /* ── SLOT PICKER DI FORM BOOKING ── */
         const JAM_START = 9;
-        const JAM_END = 20; // jam operasional
+        const JAM_END = 20;
 
         let bookedRangesForm = [];
         let selectedSlot = null;
@@ -2034,7 +2043,6 @@
             const [sh, sm] = slot.split(':').map(Number);
             const slotMin = sh * 60 + sm;
 
-            // Ambil durasi layanan yang dipilih
             const serviceEl = document.getElementById('serviceSelect');
             const duration = serviceEl ?
                 parseInt(serviceEl.options[serviceEl.selectedIndex]?.dataset?.duration || '60') :
@@ -2046,7 +2054,6 @@
                 const [reh, rem] = r.end.split(':').map(Number);
                 const rStart = rsh * 60 + rsm;
                 const rEnd = reh * 60 + rem;
-                // Overlap check
                 return slotMin < rEnd && slotEndMin > rStart;
             });
         }
@@ -2096,14 +2103,13 @@
                 submitBtn.textContent = `Kirim Reservasi Jam ${slot} →`;
             }
 
-            renderSlotGrid(); // re-render untuk highlight
+            renderSlotGrid();
         }
 
         async function fetchAndRenderSlots() {
             const therapistId = document.getElementById('bookingTherapistSelect')?.value;
             const date = document.getElementById('bookingDate')?.value;
 
-            // Reset
             selectedSlot = null;
             document.getElementById('scheduledAt').value = '';
             const submitBtn = document.getElementById('submitBtn');
@@ -2131,12 +2137,10 @@
             renderSlotGrid();
         }
 
-        // Trigger saat terapis atau tanggal berubah
         document.getElementById('bookingTherapistSelect')?.addEventListener('change', fetchAndRenderSlots);
         document.getElementById('bookingDate')?.addEventListener('change', fetchAndRenderSlots);
-        document.getElementById('serviceSelect')?.addEventListener('change', renderSlotGrid); // durasi bisa berubah
+        document.getElementById('serviceSelect')?.addEventListener('change', renderSlotGrid);
 
-        // Render awal jika ada old value (setelah validasi gagal)
         (function initSlots() {
             const tid = document.getElementById('bookingTherapistSelect')?.value;
             const date = document.getElementById('bookingDate')?.value;
