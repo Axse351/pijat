@@ -1355,7 +1355,7 @@
                 {{ $content['hero_title_line2'] ?? 'di Tengah Kesibukan' }}
             </h1>
             <p class="hero-subtitle">
-                {{ $content['hero_subtitle'] ?? 'Layanan spa & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda. Dipercaya lebih dari 500 pelanggan setia.' }}
+                {{ $content['hero_subtitle'] ?? 'Layanan pijat & terapi profesional untuk memulihkan tubuh, pikiran, dan jiwa Anda. Dipercaya lebih dari 500 pelanggan setia.' }}
             </p>
             <div class="hero-actions">
                 <a href="#booking" class="btn-primary">
@@ -1411,7 +1411,7 @@
                         @endif
                     </div>
                 @empty
-                    @foreach ([['💆', 'Swedish Massage', 'Teknik pijat klasik untuk melepaskan ketegangan otot dan meningkatkan sirkulasi.', '150.000'], ['🌿', 'Aromaterapi', 'Kombinasi pijat lembut dengan minyak esensial pilihan untuk ketenangan pikiran.', '180.000'], ['🔥', 'Hot Stone Therapy', 'Batu vulkanik panas yang ditempatkan di titik-titik energi tubuh untuk relaksasi dalam.', '220.000'], ['🧖', 'Facial Spa', 'Perawatan wajah mendalam dengan teknologi modern dan bahan organik.', '200.000'], ['🦶', 'Refleksiologi', 'Pijat kaki berbasis titik refleks untuk kesehatan organ internal Anda.', '120.000'], ['✨', 'Body Scrub', 'Eksfoliasi kulit menyeluruh dengan campuran garam, madu, dan minyak alami.', '160.000']] as [$icon, $name, $desc, $price])
+                    @foreach ([['💆', 'Swedish Massage', 'Teknik pijat klasik untuk melepaskan ketegangan otot dan meningkatkan sirkulasi.', '150.000'], ['🌿', 'Aromaterapi', 'Kombinasi pijat lembut dengan minyak esensial pilihan untuk ketenangan pikiran.', '180.000'], ['🔥', 'Hot Stone Therapy', 'Batu vulkanik panas yang ditempatkan di titik-titik energi tubuh untuk relaksasi dalam.', '220.000'], ['🧖', 'Perawatan wajah mendalam dengan teknologi modern dan bahan organik.', '200.000'], ['🦶', 'Refleksiologi', 'Pijat kaki berbasis titik refleks untuk kesehatan organ internal Anda.', '120.000'], ['✨', 'Body Scrub', 'Eksfoliasi kulit menyeluruh dengan campuran garam, madu, dan minyak alami.', '160.000']] as [$icon, $name, $desc, $price])
                         <div class="service-card fade-up">
                             <div class="service-icon">{{ $icon }}</div>
                             <div class="service-name">{{ $name }}</div>
@@ -1814,14 +1814,6 @@
                             <div class="lokasi-info-value">{{ $content['footer_phone'] ?? '0821-5567-3894' }}</div>
                         </div>
                     </div>
-                    <div class="lokasi-info-item">
-                        <div class="lokasi-info-icon">✉</div>
-                        <div>
-                            <div class="lokasi-info-title">Email</div>
-                            <div class="lokasi-info-value">{{ $content['footer_email'] ?? 'hello@koichispa.id' }}
-                            </div>
-                        </div>
-                    </div>
                     <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener"
                         class="lokasi-wa-btn">
                         💬 Chat via WhatsApp
@@ -1837,7 +1829,7 @@
             <div class="footer-top">
                 <div>
                     <div class="footer-brand">
-                        {{ $content['footer_brand'] ?? 'Koichi' }}<span>{{ $content['footer_brand_accent'] ?? 'Spa' }}</span>
+                        {{ $content['footer_brand'] ?? 'Koichi' }}<span>{{ $content['footer_brand_accent'] ?? 'Reflexology' }}</span>
                     </div>
                     <div class="footer-tagline">
                         {{ $content['footer_tagline'] ?? 'Wellness & Terapi Profesional. Hadir untuk memulihkan keseimbangan tubuh dan pikiran Anda.' }}
