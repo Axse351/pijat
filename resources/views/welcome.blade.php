@@ -199,28 +199,86 @@
             }
         }
 
-        /* ── HERO (simple, tanpa slider gambar) ── */
+        /* ── HERO (dengan slider foto background) ── */
         #hero {
             position: relative;
             background: linear-gradient(160deg, var(--brown) 0%, #16281d 100%);
-            padding: 170px 40px 100px;
+            overflow: hidden;
+            padding: 0;
+            min-height: 640px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Slider background di belakang konten hero */
+        .hero-slider-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
             overflow: hidden;
         }
 
-        #hero::before {
-            content: '';
+        .hero-slide {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 80% 20%, rgba(227, 189, 128, .12), transparent 55%);
-            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+        }
+
+        .hero-slide-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.08);
+            transition: transform 9s ease;
+        }
+
+        .hero-slide.active .hero-slide-img {
+            transform: scale(1);
+        }
+
+        .hero-slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(160deg, rgba(30, 58, 44, .88) 0%, rgba(22, 40, 29, .82) 100%);
+        }
+
+        .hero-slider-bg .promo-placeholder-text {
+            color: rgba(244, 241, 230, .5);
+        }
+
+        .hero-dots {
+            position: absolute;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .hero-dots .promo-dot {
+            background: rgba(244, 241, 230, .35);
+        }
+
+        .hero-dots .promo-dot.active {
+            background: #e3bd80;
         }
 
         .hero-inner {
             position: relative;
+            z-index: 2;
             max-width: 760px;
             margin: 0 auto;
             text-align: center;
             color: var(--white);
+            padding: 170px 40px 100px;
+            width: 100%;
         }
 
         .hero-badge {
@@ -360,7 +418,7 @@
         }
 
         @media(max-width:640px) {
-            #hero {
+            .hero-inner {
                 padding: 130px 20px 70px;
             }
 
@@ -1255,8 +1313,40 @@
         @endauth
     </div>
 
-    {{-- ── HERO (simple, tanpa slider gambar — foto promo sekarang ada di section Promo) ── --}}
+    {{-- ── HERO (dengan slider foto background) ── --}}
     <section id="hero">
+
+        {{-- Slider background --}}
+        <div class="hero-slider-bg" id="heroSlider">
+            @php
+                // Taruh foto pijat/spa di public/images/hero/1.jpg, 2.jpg, dst.
+                // Foto gratis bisa didownload dari unsplash.com/s/photos/massage-spa
+                // atau pexels.com/search/spa%20massage — selama file belum ada,
+                // otomatis tampil placeholder gradient (sama seperti section Promo).
+                $heroSlides = ['1.jpg', '2.jpg', '3.jpg', '4.jpg'];
+                $heroColors = ['#1e3a2c', '#2d5240', '#3c6b54', '#254732'];
+            @endphp
+            @foreach ($heroSlides as $i => $file)
+                @php $heroExists = file_exists(public_path('images/hero/' . $file)); @endphp
+                <div class="hero-slide {{ $i === 0 ? 'active' : '' }}">
+                    @if ($heroExists)
+                        <img class="hero-slide-img" src="{{ asset('images/hero/' . $file) }}"
+                            loading="{{ $i === 0 ? 'eager' : 'lazy' }}" alt="Suasana Koichi Pijat Refleksi">
+                    @else
+                        <div class="promo-placeholder"
+                            style="background:linear-gradient(145deg,{{ $heroColors[$i % count($heroColors)] }},{{ $heroColors[$i % count($heroColors)] }}99);">
+                            <div class="promo-placeholder-icon">🖼</div>
+                            <div class="promo-placeholder-text">Taruh foto di:<br>
+                                <strong style="opacity:.6;">public/images/hero/{{ $file }}</strong>
+                            </div>
+                        </div>
+                    @endif
+                    <div class="hero-slide-overlay"></div>
+                </div>
+            @endforeach
+            <div class="hero-dots" id="heroDots"></div>
+        </div>
+
         <div class="hero-inner">
             <div class="hero-badge">{{ $content['hero_badge'] ?? 'Buka Setiap Hari · 09.00 – 20.00' }}</div>
             <h1 class="hero-title">
@@ -1845,6 +1935,32 @@
                 });
             });
         });
+
+        /* ── HERO SLIDER (autoplay fade, cuma dot — dekorasi background) ── */
+        (function() {
+            const wrap = document.getElementById('heroSlider');
+            if (!wrap) return;
+            const slides = Array.from(wrap.querySelectorAll('.hero-slide'));
+            const dotsWrap = document.getElementById('heroDots');
+            const total = slides.length;
+            if (total <= 1) return;
+            let cur = 0;
+
+            dotsWrap.innerHTML = '';
+            slides.forEach((_, i) => {
+                const d = document.createElement('div');
+                d.className = 'promo-dot' + (i === 0 ? ' active' : '');
+                d.addEventListener('click', () => heroGoTo(i));
+                dotsWrap.appendChild(d);
+            });
+
+            function heroGoTo(idx) {
+                cur = ((idx % total) + total) % total;
+                slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+                dotsWrap.querySelectorAll('.promo-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+            }
+            setInterval(() => heroGoTo(cur + 1), 5500);
+        })();
 
         /* ── PROMO SLIDER (sekarang di section Promo, bukan hero) ── */
         (function() {

@@ -4,7 +4,8 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Riwayat Kehadiran - ') }} {{ $therapist->name }}
             </h2>
-            <a href="{{ route('admin.attendances.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
+            <a href="{{ route('admin.attendances.index') }}"
+                class="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
                 ← {{ __('Kembali') }}
             </a>
         </div>
@@ -16,27 +17,39 @@
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <!-- Total Hadir -->
-                <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div
+                    class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-green-700 dark:text-green-300 font-semibold">{{ __('Total Hadir') }}</p>
-                            <p class="text-2xl font-bold text-green-800 dark:text-green-200 mt-1">{{ $stats['total_hadir'] ?? 0 }}</p>
+                            <p class="text-sm text-green-700 dark:text-green-300 font-semibold">{{ __('Total Hadir') }}
+                            </p>
+                            <p class="text-2xl font-bold text-green-800 dark:text-green-200 mt-1">
+                                {{ $stats['total_hadir'] ?? 0 }}</p>
                         </div>
-                        <svg class="w-10 h-10 text-green-200 dark:text-green-700" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        <svg class="w-10 h-10 text-green-200 dark:text-green-700" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
 
                 <!-- Total Terlambat -->
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div
+                    class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-yellow-700 dark:text-yellow-300 font-semibold">{{ __('Total Terlambat') }}</p>
-                            <p class="text-2xl font-bold text-yellow-800 dark:text-yellow-200 mt-1">{{ $stats['total_terlambat'] ?? 0 }}</p>
+                            <p class="text-sm text-yellow-700 dark:text-yellow-300 font-semibold">
+                                {{ __('Total Terlambat') }}</p>
+                            <p class="text-2xl font-bold text-yellow-800 dark:text-yellow-200 mt-1">
+                                {{ $stats['total_terlambat'] ?? 0 }}</p>
                         </div>
-                        <svg class="w-10 h-10 text-yellow-200 dark:text-yellow-700" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
+                        <svg class="w-10 h-10 text-yellow-200 dark:text-yellow-700" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
@@ -46,10 +59,13 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-red-700 dark:text-red-300 font-semibold">{{ __('Total Alpa') }}</p>
-                            <p class="text-2xl font-bold text-red-800 dark:text-red-200 mt-1">{{ $stats['total_absent'] ?? 0 }}</p>
+                            <p class="text-2xl font-bold text-red-800 dark:text-red-200 mt-1">
+                                {{ $stats['total_absent'] ?? 0 }}</p>
                         </div>
                         <svg class="w-10 h-10 text-red-200 dark:text-red-700" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
@@ -58,11 +74,14 @@
                 <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-blue-700 dark:text-blue-300 font-semibold">{{ __('Total Hari') }}</p>
-                            <p class="text-2xl font-bold text-blue-800 dark:text-blue-200 mt-1">{{ $attendances->total() ?? 0 }}</p>
+                            <p class="text-sm text-blue-700 dark:text-blue-300 font-semibold">{{ __('Total Hari') }}
+                            </p>
+                            <p class="text-2xl font-bold text-blue-800 dark:text-blue-200 mt-1">
+                                {{ $attendances->total() ?? 0 }}</p>
                         </div>
                         <svg class="w-10 h-10 text-blue-200 dark:text-blue-700" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M6 2a1 1 0 00-1 1v2H4a2 2 0 00-2 2v2h16V7a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v2H7V3a1 1 0 00-1-1zm0 5H4v9a2 2 0 002 2h12a2 2 0 002-2V7h-2v2a1 1 0 11-2 0V7H9v2a1 1 0 11-2 0V7z" />
+                            <path
+                                d="M6 2a1 1 0 00-1 1v2H4a2 2 0 00-2 2v2h16V7a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v2H7V3a1 1 0 00-1-1zm0 5H4v9a2 2 0 002 2h12a2 2 0 002-2V7h-2v2a1 1 0 11-2 0V7H9v2a1 1 0 11-2 0V7z" />
                         </svg>
                     </div>
                 </div>
@@ -83,6 +102,7 @@
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Check-out') }}</th>
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Durasi') }}</th>
                                     <th class="px-4 py-3 text-left font-semibold">{{ __('Confidence') }}</th>
+                                    <th class="px-4 py-3 text-center font-semibold">{{ __('Foto') }}</th>
                                     <th class="px-4 py-3 text-left font-semibold">{{ __('Catatan') }}</th>
                                 </tr>
                             </thead>
@@ -100,7 +120,8 @@
                                                 $statusColor = $attendance->getStatusBadgeColor();
                                                 $statusLabel = $attendance->getStatusLabel();
                                             @endphp
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                                            <span
+                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
                                                 style="background-color: {{ $statusColor === 'green' ? '#d1fae5' : ($statusColor === 'yellow' ? '#fef3c7' : '#fee2e2') }};
                                                        color: {{ $statusColor === 'green' ? '#059669' : ($statusColor === 'yellow' ? '#d97706' : '#dc2626') }};">
                                                 {{ $statusLabel }}
@@ -110,7 +131,8 @@
                                         <!-- Check-in -->
                                         <td class="px-4 py-3 text-center text-sm">
                                             @if ($attendance->check_in_at)
-                                                <span class="font-mono">{{ $attendance->getCheckInTimeFormatted() }}</span>
+                                                <span
+                                                    class="font-mono">{{ $attendance->getCheckInTimeFormatted() }}</span>
                                                 <br>
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">
                                                     ({{ $attendance->getCheckInConfidencePercent() }}%)
@@ -123,7 +145,8 @@
                                         <!-- Check-out -->
                                         <td class="px-4 py-3 text-center text-sm">
                                             @if ($attendance->check_out_at)
-                                                <span class="font-mono">{{ $attendance->getCheckOutTimeFormatted() }}</span>
+                                                <span
+                                                    class="font-mono">{{ $attendance->getCheckOutTimeFormatted() }}</span>
                                                 <br>
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">
                                                     ({{ $attendance->getCheckOutConfidencePercent() }}%)
@@ -145,18 +168,55 @@
                                         <!-- Confidence Score -->
                                         <td class="px-4 py-3 text-sm">
                                             @php
-                                                $avgConfidence = (($attendance->check_in_confidence ?? 0) + ($attendance->check_out_confidence ?? 0)) / 2;
+                                                $avgConfidence =
+                                                    (($attendance->check_in_confidence ?? 0) +
+                                                        ($attendance->check_out_confidence ?? 0)) /
+                                                    2;
                                             @endphp
                                             @if ($avgConfidence > 0)
                                                 <div class="flex items-center gap-2">
                                                     <div class="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                                                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $avgConfidence * 100 }}%"></div>
+                                                        <div class="bg-blue-600 h-2 rounded-full"
+                                                            style="width: {{ $avgConfidence * 100 }}%"></div>
                                                     </div>
-                                                    <span class="text-xs font-mono">{{ round($avgConfidence * 100) }}%</span>
+                                                    <span
+                                                        class="text-xs font-mono">{{ round($avgConfidence * 100) }}%</span>
                                                 </div>
                                             @else
                                                 <span class="text-gray-400">-</span>
                                             @endif
+                                        </td>
+
+                                        <!-- ⭐ Foto Check-in/out (BARU) -->
+                                        <td class="px-4 py-3">
+                                            <div class="flex items-center justify-center gap-2">
+                                                @if ($attendance->check_in_image)
+                                                    <button type="button"
+                                                        onclick="openPhotoModal('{{ asset('storage/' . $attendance->check_in_image) }}', '{{ __('Check-in') }} — {{ $attendance->attendance_date->format('d M Y') }}')"
+                                                        class="group relative" title="{{ __('Lihat foto check-in') }}">
+                                                        <img src="{{ asset('storage/' . $attendance->check_in_image) }}"
+                                                            class="w-10 h-10 object-cover rounded-md border-2 border-green-400 group-hover:opacity-80 transition">
+                                                        <span
+                                                            class="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px]">➜</span>
+                                                    </button>
+                                                @endif
+
+                                                @if ($attendance->check_out_image)
+                                                    <button type="button"
+                                                        onclick="openPhotoModal('{{ asset('storage/' . $attendance->check_out_image) }}', '{{ __('Check-out') }} — {{ $attendance->attendance_date->format('d M Y') }}')"
+                                                        class="group relative"
+                                                        title="{{ __('Lihat foto check-out') }}">
+                                                        <img src="{{ asset('storage/' . $attendance->check_out_image) }}"
+                                                            class="w-10 h-10 object-cover rounded-md border-2 border-orange-400 group-hover:opacity-80 transition">
+                                                        <span
+                                                            class="absolute -bottom-1 -right-1 bg-orange-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px]">⟵</span>
+                                                    </button>
+                                                @endif
+
+                                                @if (!$attendance->check_in_image && !$attendance->check_out_image)
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         <!-- Catatan -->
@@ -166,10 +226,14 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="8"
+                                            class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                             <div class="flex flex-col items-center justify-center">
-                                                <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                <svg class="w-16 h-16 mb-4 opacity-30" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
                                                 <p class="text-sm">{{ __('Tidak ada data kehadiran') }}</p>
                                             </div>
@@ -189,16 +253,52 @@
             </div>
 
             <!-- Info Box -->
-            <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div
+                class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <h4 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">{{ __('Keterangan:') }}</h4>
                 <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1">
                     <li>{{ __('• Durasi: Waktu kerja dari check-in hingga check-out') }}</li>
                     <li>{{ __('• Confidence: Tingkat akurasi face recognition (minimal 75% untuk diterima)') }}</li>
                     <li>{{ __('• Status Hadir: Check-in sebelum jam 09:00') }}</li>
                     <li>{{ __('• Status Terlambat: Check-in setelah jam 09:00') }}</li>
+                    <li>{{ __('• Foto: klik thumbnail untuk melihat foto check-in/check-out ukuran penuh') }}</li>
                 </ul>
             </div>
 
         </div>
     </div>
+
+    <!-- ⭐ Modal Lightbox untuk Foto Check-in/Check-out -->
+    <div id="photoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+        onclick="closePhotoModal(event)">
+        <div class="relative max-w-2xl w-full" onclick="event.stopPropagation()">
+            <button type="button" onclick="closePhotoModal()"
+                class="absolute -top-10 right-0 text-white text-3xl leading-none hover:text-gray-300">
+                &times;
+            </button>
+            <p id="photoModalTitle" class="text-white text-center mb-2 font-semibold"></p>
+            <img id="photoModalImg" src="" alt="Foto absensi"
+                class="w-full max-h-[80vh] object-contain rounded-lg border-4 border-white/20">
+        </div>
+    </div>
+
+    <script>
+        function openPhotoModal(url, title) {
+            document.getElementById('photoModalImg').src = url;
+            document.getElementById('photoModalTitle').textContent = title;
+            document.getElementById('photoModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoModal(event) {
+            document.getElementById('photoModal').classList.add('hidden');
+            document.getElementById('photoModalImg').src = '';
+            document.body.style.overflow = '';
+        }
+
+        // Tutup modal dengan tombol Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePhotoModal();
+        });
+    </script>
 </x-app-layout>
