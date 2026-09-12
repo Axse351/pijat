@@ -58,6 +58,11 @@
                                     <th
                                         class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                         Tanggal</th>
+                                    @if (auth()->user()->role === 'admin')
+                                        <th
+                                            class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            Aksi</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -84,6 +89,29 @@
                                             {{ number_format($payment->amount, 0, ',', '.') }}</td>
                                         <td class="px-5 py-3.5 text-gray-600 dark:text-gray-400">
                                             {{ \Carbon\Carbon::parse($payment->paid_at)->format('d M Y, H:i') }}</td>
+
+                                        @if (auth()->user()->role === 'admin')
+                                            <td class="px-5 py-3.5">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    {{-- ✏️ Edit --}}
+                                                    <a href="{{ route('admin.payments.edit', $payment) }}"
+                                                        class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-medium rounded-lg transition-colors">
+                                                        Edit
+                                                    </a>
+
+                                                    {{-- 🗑️ Hapus --}}
+                                                    <form method="POST"
+                                                        action="{{ route('admin.payments.destroy', $payment) }}"
+                                                        onsubmit="return confirm('Hapus pembayaran ini? Komisi terkait juga akan dihapus.')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit"
+                                                            class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg transition-colors">
+                                                            Hapus
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>

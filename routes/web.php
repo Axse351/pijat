@@ -80,7 +80,9 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::post('bookings/{booking}/complete', [BookingController::class, 'complete'])
             ->name('bookings.complete');
 
-        Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class);
+        // ── Pembayaran (admin & kasir bisa lihat & input; edit/hapus khusus admin) ──
+        Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class)
+            ->only(['index', 'create', 'store', 'show']);
 
         // ── Kehadiran (admin & kasir bisa akses) ─────────────────────────────
         Route::get('/attendances', [TherapistAttendanceController::class, 'index'])->name('attendances.index');
@@ -144,6 +146,10 @@ Route::middleware(['auth', 'role:admin,kasir'])
             Route::resource('promos',      \App\Http\Controllers\Admin\PromoController::class);
             Route::resource('programs',    \App\Http\Controllers\Admin\ProgramController::class);
             Route::resource('barang',      \App\Http\Controllers\BarangController::class);
+
+            // ── Pembayaran: edit/update/hapus khusus admin ────────────────────
+            Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class)
+                ->only(['edit', 'update', 'destroy']);
 
             Route::patch('/programs/{program}/toggle-active', [ProgramController::class, 'toggleActive'])
                 ->name('programs.toggle-active');

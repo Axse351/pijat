@@ -98,8 +98,11 @@ class PaymentController extends Controller
         return view('admin.payments.show', compact('payment'));
     }
 
+    // ── ✅ Admin only: tampilkan form edit dengan relasi booking sudah di-load ──
     public function edit(Payment $payment)
     {
+        $payment->load(['booking.customer', 'booking.therapist', 'booking.service']);
+
         return view('admin.payments.edit', compact('payment'));
     }
 
