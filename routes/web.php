@@ -76,6 +76,10 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::get('bookings/calendar-data', [BookingController::class, 'calendarData'])->name('bookings.calendar-data');
         Route::resource('bookings', \App\Http\Controllers\Admin\BookingController::class);
 
+        // ── ✅ FIX: dipindahkan ke sini supaya admin & kasir sama-sama bisa akses ──
+        Route::post('bookings/{booking}/complete', [BookingController::class, 'complete'])
+            ->name('bookings.complete');
+
         Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class);
 
         // ── Kehadiran (admin & kasir bisa akses) ─────────────────────────────
@@ -183,8 +187,8 @@ Route::middleware(['auth', 'role:admin,kasir'])
                 Route::get('/{waTemplate}/preview',   [WaMessageTemplateController::class, 'preview'])->name('preview');
             });
 
-            Route::post('bookings/{booking}/complete', [BookingController::class, 'complete'])
-                ->name('bookings.complete');
+            // ── ❌ Baris duplikat "bookings/{booking}/complete" DIHAPUS dari sini ──
+            // (sudah dipindahkan ke atas, ke grup shared admin+kasir)
         });
     });
 
