@@ -145,7 +145,8 @@
                                                 request()->routeIs('admin.promos.*') ||
                                                 request()->routeIs('admin.programs.*') ||
                                                 request()->routeIs('admin.barang.*') ||
-                                                request()->routeIs('admin.content.*')
+                                                request()->routeIs('admin.content.*') ||
+                                                request()->routeIs('admin.users.*')
                                                     ? 'true'
                                                     : 'false' }} ?
                                                 'border-indigo-500 text-gray-900 dark:text-gray-100' :
@@ -186,6 +187,13 @@
                                             <a href="{{ route('admin.barang.index') }}"
                                                 class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.barang.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
                                                 Barang
+                                            </a>
+
+                                            <div class="border-t border-gray-100 dark:border-gray-600 my-1"></div>
+
+                                            <a href="{{ route('admin.users.index') }}"
+                                                class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.users.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+                                                Kelola User
                                             </a>
 
                                             <div class="border-t border-gray-100 dark:border-gray-600 my-1"></div>
@@ -319,6 +327,7 @@
                         <x-responsive-nav-link :href="route('admin.promos.index')" :active="request()->routeIs('admin.promos.*')">Promo</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.programs.index')" :active="request()->routeIs('admin.programs.*')">Program</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.barang.index')" :active="request()->routeIs('admin.barang.*')">Barang</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">Kelola User</x-responsive-nav-link>
 
                         <div class="border-t border-gray-100 dark:border-gray-600 mt-2"></div>
 

@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12" x-data="{ rejectModal: false, rejectId: null, rejectName: '' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Alert Messages -->
             @if ($errors->any())
@@ -32,6 +32,116 @@
                 </div>
             @endif
 
+            {{-- ============================================================ --}}
+            {{-- ⭐ PENGAJUAN IZIN TERAPIS (PENDING) --}}
+            {{-- ============================================================ --}}
+            <div class="mb-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        {{ __('Pengajuan Izin Terapis') }}
+                        @if ($pendingLeaves->count() > 0)
+                            <span
+                                class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-amber-500 rounded-full">
+                                {{ $pendingLeaves->count() }}
+                            </span>
+                        @endif
+                    </h3>
+                    <a href="{{ route('admin.leaves.index') }}"
+                        class="text-xs text-indigo-500 hover:text-indigo-600 font-medium">
+                        Lihat semua riwayat izin →
+                    </a>
+                </div>
+
+                @if ($pendingLeaves->count())
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                        Terapis</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                        Jenis</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                        Tanggal</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                        Alasan</th>
+                                    <th
+                                        class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                        Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                @foreach ($pendingLeaves as $leave)
+                                    @php
+                                        $typeLabel = match ($leave->type) {
+                                            'sakit' => 'Sakit',
+                                            'pribadi' => 'Pribadi',
+                                            'cuti' => 'Cuti',
+                                            'izin_khusus' => 'Izin Khusus',
+                                            default => ucfirst($leave->type),
+                                        };
+                                    @endphp
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                                            {{ $leave->therapist->name ?? '-' }}
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span
+                                                class="inline-flex px-2.5 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-semibold rounded-lg">
+                                                {{ $typeLabel }}
+                                            </span>
+                                        </td>
+                                        <td
+                                            class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
+                                            {{ \Carbon\Carbon::parse($leave->start_date)->translatedFormat('d M Y') }}
+                                            @if ($leave->start_date != $leave->end_date)
+                                                &ndash;
+                                                {{ \Carbon\Carbon::parse($leave->end_date)->translatedFormat('d M Y') }}
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs max-w-xs truncate"
+                                            title="{{ $leave->reason }}">
+                                            {{ $leave->reason }}
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="flex justify-center gap-2">
+                                                {{-- Setujui --}}
+                                                <form method="POST"
+                                                    action="{{ route('admin.leaves.approve', $leave) }}"
+                                                    onsubmit="return confirm('Setujui pengajuan izin {{ $leave->therapist->name ?? '' }}?')">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                        class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition">
+                                                        ✓ Setujui
+                                                    </button>
+                                                </form>
+
+                                                {{-- Tolak (buka modal untuk isi alasan) --}}
+                                                <button type="button"
+                                                    @click="rejectModal = true; rejectId = {{ $leave->id }}; rejectName = '{{ addslashes($leave->therapist->name ?? '') }}'"
+                                                    class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-semibold transition">
+                                                    ✕ Tolak
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center py-8 text-gray-400 text-sm">
+                        Tidak ada pengajuan izin yang menunggu persetujuan.
+                    </div>
+                @endif
+            </div>
+
             <!-- Main Table Card -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -45,7 +155,6 @@
                                     <th class="px-4 py-3 text-left font-semibold">{{ __('Nama Terapis') }}</th>
                                     <th class="px-4 py-3 text-left font-semibold">{{ __('Email') }}</th>
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Status Wajah') }}</th>
-                                    {{-- ⭐ KOLOM BARU: Shift Hari Ini --}}
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Shift Hari Ini') }}</th>
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Status Hari Ini') }}</th>
                                     <th class="px-4 py-3 text-center font-semibold">{{ __('Aksi') }}</th>
@@ -54,7 +163,6 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 @forelse ($therapists as $index => $therapist)
                                     @php
-                                        // Ambil jadwal hari ini (hasil eager load 'todaySchedule' di controller)
                                         $todaySched = $therapist->todaySchedule;
                                         $status = $todaySched?->status;
 
@@ -159,7 +267,7 @@
                                             @endif
                                         </td>
 
-                                        <!-- ⭐ Shift Hari Ini (BARU) -->
+                                        <!-- Shift Hari Ini -->
                                         <td class="px-4 py-3 text-center">
                                             <span
                                                 class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $shiftBg }} {{ $shiftText }}">
@@ -365,9 +473,47 @@
                 </div>
             </div>
         </div>
+
+        {{-- ── Modal Tolak Izin (di luar container max-w-7xl supaya overlay full screen) ── --}}
+        <div x-show="rejectModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            style="display: none;">
+            <div @click.outside="rejectModal = false"
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md p-6">
+                <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-1">
+                    Tolak Pengajuan Izin
+                </h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" x-text="'Terapis: ' + rejectName"></p>
+
+                <form :action="'/admin/leaves/' + rejectId + '/reject'" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Alasan penolakan <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="approval_notes" rows="3" required minlength="10"
+                        placeholder="Minimal 10 karakter, jelaskan alasan penolakan..."
+                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 text-sm focus:ring-red-500 focus:border-red-500"></textarea>
+
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button type="button" @click="rejectModal = false"
+                            class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition">
+                            Tolak Pengajuan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
         .badge-present {
             background-color: #10b981;
         }

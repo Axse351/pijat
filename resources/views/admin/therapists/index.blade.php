@@ -17,6 +17,14 @@
                 </div>
             @endif
 
+            @if (session('error'))
+                <div
+                    class="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm flex items-center gap-2">
+                    <span>✕</span>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
             <div
                 class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
@@ -38,6 +46,9 @@
                                     <th
                                         class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Nama</th>
+                                    <th
+                                        class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Login (Email / Password)</th>
                                     <th
                                         class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Spesialisasi</th>
@@ -74,6 +85,36 @@
                                             <span
                                                 class="font-medium text-gray-800 dark:text-gray-200">{{ $therapist->name }}</span>
                                         </td>
+
+                                        {{-- ── KOLOM LOGIN: EMAIL & PASSWORD ── --}}
+                                        <td class="px-6 py-4">
+                                            @if ($therapist->user)
+                                                <div class="flex flex-col gap-1">
+                                                    <span class="text-gray-700 dark:text-gray-300 text-xs font-mono">
+                                                        {{ $therapist->user->email }}
+                                                    </span>
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-mono rounded">
+                                                            123456
+                                                        </span>
+                                                        <span class="text-[10px] text-gray-400">(default)</span>
+                                                    </div>
+                                                    <form method="POST"
+                                                        action="{{ route('admin.therapists.reset-password', $therapist) }}"
+                                                        onsubmit="return confirm('Reset password terapis ini ke 123456?')">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="text-[11px] text-indigo-500 hover:text-indigo-600 font-medium underline underline-offset-2">
+                                                            Reset ke default
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @else
+                                                <span class="text-red-500 text-xs">Belum ada akun user</span>
+                                            @endif
+                                        </td>
+
                                         <td class="px-6 py-4 text-gray-600 dark:text-gray-400">
                                             {{ $therapist->specialty ?? '—' }}</td>
                                         <td class="px-6 py-4 text-gray-600 dark:text-gray-400">

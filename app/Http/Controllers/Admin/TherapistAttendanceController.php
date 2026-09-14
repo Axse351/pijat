@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Therapist;
 use App\Models\TherapistAttendance;
 use App\Models\TherapistFaceData;
+use App\Models\TherapistLeaveRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -39,11 +40,16 @@ class TherapistAttendanceController extends Controller
         $therapists = Therapist::with([
             'attendances' => fn($q) => $q->whereDate('attendance_date', $today),
             'faceData',
-            // ⭐ BARU: eager-load jadwal hari ini supaya bisa ditampilkan shift-nya
             'todaySchedule',
         ])->paginate(15);
 
-        return view('admin.attendances.index', compact('therapists', 'today'));
+        // ⭐ Pengajuan izin yang masih pending, untuk section approve/reject di halaman Kehadiran
+        $pendingLeaves = TherapistLeaveRequest::with('therapist')
+            ->where('status', 'pending')
+            ->orderBy('start_date')
+            ->get();
+
+        return view('admin.attendances.index', compact('therapists', 'today', 'pendingLeaves'));
     }
 
     /*

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\TherapistAttendanceController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\TherapistScheduleController;
 use App\Http\Controllers\Admin\TherapistLeaveController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WaMessageTemplateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
@@ -192,6 +193,13 @@ Route::middleware(['auth', 'role:admin,kasir'])
                 Route::put('/{waTemplate}/reset',     [WaMessageTemplateController::class, 'reset'])->name('reset');
                 Route::get('/{waTemplate}/preview',   [WaMessageTemplateController::class, 'preview'])->name('preview');
             });
+
+            // ── ✅ Kelola User (Admin & Kasir) — admin-only ───────────────────
+            Route::resource('users', UserController::class)
+                ->only(['index', 'create', 'store', 'destroy']);
+
+            Route::post('therapists/{therapist}/reset-password', [\App\Http\Controllers\Admin\TherapistController::class, 'resetPassword'])
+                ->name('therapists.reset-password');
 
             // ── ❌ Baris duplikat "bookings/{booking}/complete" DIHAPUS dari sini ──
             // (sudah dipindahkan ke atas, ke grup shared admin+kasir)
