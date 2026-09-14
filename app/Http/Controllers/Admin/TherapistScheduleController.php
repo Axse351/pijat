@@ -133,6 +133,7 @@ class TherapistScheduleController extends Controller
             'status'        => 'required|in:working,working_afternoon,off,sick,vacation,cuti_bersama',
             'start_time'    => 'nullable|date_format:H:i|required_if:status,working|required_if:status,working_afternoon',
             'end_time'      => 'nullable|date_format:H:i|required_if:status,working|required_if:status,working_afternoon|after:start_time',
+            'is_piket'      => 'nullable|boolean',
             'notes'         => 'nullable|string|max:500',
         ]);
 
@@ -146,12 +147,17 @@ class TherapistScheduleController extends Controller
             return back()->withErrors(['schedule_date' => 'Jadwal untuk tanggal ini sudah ada.']);
         }
 
-        if (in_array($validated['status'], self::WORKING_STATUSES)) {
+        $isWorking = in_array($validated['status'], self::WORKING_STATUSES);
+
+        if ($isWorking) {
             $startTime = Carbon::createFromFormat('H:i', $validated['start_time'])->toTimeString();
             $endTime   = Carbon::createFromFormat('H:i', $validated['end_time'])->toTimeString();
+            // ⭐ Piket hanya relevan untuk hari kerja
+            $isPiket   = $request->boolean('is_piket');
         } else {
             $startTime = null;
             $endTime   = null;
+            $isPiket   = false;
         }
 
         TherapistSchedule::create([
@@ -159,6 +165,7 @@ class TherapistScheduleController extends Controller
             'schedule_date' => $scheduleDate->toDateString(),
             'day_of_week'   => $scheduleDate->dayOfWeek,
             'status'        => $validated['status'],
+            'is_piket'      => $isPiket,
             'start_time'    => $startTime,
             'end_time'      => $endTime,
             'notes'         => $validated['notes'] ?? null,
@@ -209,6 +216,7 @@ class TherapistScheduleController extends Controller
             'status'        => 'required|in:working,working_afternoon,off,sick,vacation,cuti_bersama',
             'start_time'    => 'nullable|date_format:H:i|required_if:status,working|required_if:status,working_afternoon',
             'end_time'      => 'nullable|date_format:H:i|required_if:status,working|required_if:status,working_afternoon|after:start_time',
+            'is_piket'      => 'nullable|boolean',
             'notes'         => 'nullable|string|max:500',
         ]);
 
@@ -219,9 +227,12 @@ class TherapistScheduleController extends Controller
         if (in_array($validated['status'], self::WORKING_STATUSES)) {
             $validated['start_time'] = Carbon::createFromFormat('H:i', $validated['start_time'])->toTimeString();
             $validated['end_time']   = Carbon::createFromFormat('H:i', $validated['end_time'])->toTimeString();
+            // ⭐ Piket hanya relevan untuk hari kerja
+            $validated['is_piket']   = $request->boolean('is_piket');
         } else {
             $validated['start_time'] = null;
             $validated['end_time']   = null;
+            $validated['is_piket']   = false;
         }
 
         $schedule->update($validated);
@@ -255,24 +266,28 @@ class TherapistScheduleController extends Controller
     public function generateMonthSchedule(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'therapist_id' => 'required|exists:therapists,id',
-            'month'        => 'required|integer|min:1|max:12',
-            'year'         => 'required|integer|min:2000',
-            'working_days' => 'required|array|min:1|max:7',
-            'shift_type'   => 'nullable|in:morning,afternoon,custom',
-            'start_time'   => 'required|date_format:H:i',
-            'end_time'     => 'required|date_format:H:i|after:start_time',
-            'off_dates'    => 'nullable|array',
+            'therapist_id'     => 'required|exists:therapists,id',
+            'month'            => 'required|integer|min:1|max:12',
+            'year'             => 'required|integer|min:2000',
+            'working_days'     => 'required|array|min:1|max:7',
+            'shift_type'       => 'nullable|in:morning,afternoon,custom',
+            'start_time'       => 'required|date_format:H:i',
+            'end_time'         => 'required|date_format:H:i|after:start_time',
+            'off_dates'        => 'nullable|array',
+            'piket_dates'      => 'nullable|array',
+            'piket_start_time' => 'nullable|date_format:H:i',
         ]);
 
-        $therapistId = $validated['therapist_id'];
-        $month       = $validated['month'];
-        $year        = $validated['year'];
-        $workingDays = array_map('intval', $validated['working_days']);
-        $startTime   = $validated['start_time'];
-        $endTime     = $validated['end_time'];
-        $offDates    = $validated['off_dates'] ?? [];
-        $shiftType   = $validated['shift_type'] ?? 'morning';
+        $therapistId    = $validated['therapist_id'];
+        $month          = $validated['month'];
+        $year           = $validated['year'];
+        $workingDays    = array_map('intval', $validated['working_days']);
+        $startTime      = $validated['start_time'];
+        $endTime        = $validated['end_time'];
+        $offDates       = $validated['off_dates'] ?? [];
+        $piketDates     = $validated['piket_dates'] ?? [];
+        $piketStartTime = $validated['piket_start_time'] ?? '09:45'; // ⭐ default jam piket
+        $shiftType      = $validated['shift_type'] ?? 'morning';
 
         // Tentukan status kerja berdasarkan shift
         $workingStatus = $shiftType === 'afternoon' ? 'working_afternoon' : 'working';
@@ -291,17 +306,22 @@ class TherapistScheduleController extends Controller
             $dateStr   = $date->format('Y-m-d');
 
             if (in_array($dateStr, $offDates)) {
-                $status = 'off';
-                $st     = null;
-                $et     = null;
+                $status  = 'off';
+                $st      = null;
+                $et      = null;
+                $isPiket = false;
             } elseif (in_array($dayOfWeek, $workingDays)) {
-                $status = $workingStatus;
-                $st     = $startTime;
-                $et     = $endTime;
+                $status  = $workingStatus;
+                // ⭐ Tanggal yang ditandai piket di mini-kalender
+                $isPiket = in_array($dateStr, $piketDates);
+                // Kalau piket, pakai jam masuk piket khusus; jam pulang tetap ikut shift
+                $st = $isPiket ? $piketStartTime : $startTime;
+                $et = $endTime;
             } else {
-                $status = 'off';
-                $st     = null;
-                $et     = null;
+                $status  = 'off';
+                $st      = null;
+                $et      = null;
+                $isPiket = false;
             }
 
             TherapistSchedule::create([
@@ -309,6 +329,7 @@ class TherapistScheduleController extends Controller
                 'schedule_date' => $date->toDateString(),
                 'day_of_week'   => $dayOfWeek,
                 'status'        => $status,
+                'is_piket'      => $isPiket,
                 'start_time'    => $st,
                 'end_time'      => $et,
                 'created_by'    => auth()->id(),

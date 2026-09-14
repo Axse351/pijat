@@ -59,8 +59,7 @@
                                     @endfor
                                 </select>
                                 <select name="year"
-                                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100"
-                                    onchange="this.form.submit()">
+                                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100">
                                     @for ($y = now()->year - 1; $y <= now()->year + 2; $y++)
                                         <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
                                             {{ $y }}</option>
@@ -180,6 +179,7 @@
                                 @php
                                     $schedule = $day['schedule'];
                                     $status = $schedule?->status;
+                                    $isPiketDay = (bool) $schedule?->is_piket;
                                     $isEmpty = is_null($day['date']);
                                     $dateKey = $day['date'] ? $day['date']->format('Y-m-d') : null;
                                     $leave = $dateKey ? $leaveLookup[$dateKey] ?? null : null;
@@ -190,6 +190,9 @@
                                             => 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700',
                                         $leave && $leave->status === 'approved'
                                             => 'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700',
+                                        // ⭐ Jadwal piket (pagi/siang) dapat warna khas biru
+                                        $isPiketDay && in_array($status, ['working', 'working_afternoon'])
+                                            => 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700',
                                         $status === 'working'
                                             => 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
                                         $status === 'working_afternoon'
@@ -216,11 +219,13 @@
                                                     ? 'text-yellow-700 dark:text-yellow-400'
                                                     : ($leave && $leave->status === 'approved'
                                                         ? 'text-orange-700 dark:text-orange-400'
-                                                        : ($status === 'working'
-                                                            ? 'text-green-700 dark:text-green-300'
-                                                            : ($status === 'working_afternoon'
-                                                                ? 'text-amber-700 dark:text-amber-300'
-                                                                : 'text-gray-600 dark:text-gray-400'))) }}">
+                                                        : ($isPiketDay && in_array($status, ['working', 'working_afternoon'])
+                                                            ? 'text-blue-700 dark:text-blue-300'
+                                                            : ($status === 'working'
+                                                                ? 'text-green-700 dark:text-green-300'
+                                                                : ($status === 'working_afternoon'
+                                                                    ? 'text-amber-700 dark:text-amber-300'
+                                                                    : 'text-gray-600 dark:text-gray-400')))) }}">
                                                 {{ $day['date']->format('d') }}
                                             </span>
                                             @if ($schedule && !$leave)
@@ -295,6 +300,11 @@
                                                 <span
                                                     class="inline-block px-1.5 py-0.5 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold rounded mb-1">🌅
                                                     Pagi</span>
+                                                @if ($isPiketDay)
+                                                    <span
+                                                        class="inline-block px-1.5 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded mb-1 ml-1">📌
+                                                        Piket</span>
+                                                @endif
                                                 <div class="text-xs text-green-700 dark:text-green-400 font-medium">
                                                     {{ $schedule->getStartTimeFormatted() }} –
                                                     {{ $schedule->getEndTimeFormatted() }}
@@ -307,6 +317,11 @@
                                                 <span
                                                     class="inline-block px-1.5 py-0.5 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-xs font-semibold rounded mb-1">🌤
                                                     Siang</span>
+                                                @if ($isPiketDay)
+                                                    <span
+                                                        class="inline-block px-1.5 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded mb-1 ml-1">📌
+                                                        Piket</span>
+                                                @endif
                                                 <div class="text-xs text-amber-700 dark:text-amber-400 font-medium">
                                                     {{ $schedule->getStartTimeFormatted() }} –
                                                     {{ $schedule->getEndTimeFormatted() }}
@@ -368,21 +383,11 @@
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Libur / Izin</p>
                             </div>
                             <div class="text-center">
-                                @php
-                                    $piketCount = $schedules
-                                        ->filter(function ($s) {
-                                            if (!in_array($s->status, ['working', 'working_afternoon'])) {
-                                                return false;
-                                            }
-                                            $dow = \Carbon\Carbon::parse($s->schedule_date)->dayOfWeek;
-                                            return in_array($dow, [0, 6]);
-                                        })
-                                        ->count();
-                                @endphp
+                                {{-- ⭐ Sekarang berdasarkan flag is_piket asli, bukan tebakan hari Sabtu/Minggu --}}
                                 <p class="text-2xl font-bold text-blue-500">
-                                    {{ $piketCount }}
+                                    {{ $schedules->where('is_piket', true)->count() }}
                                 </p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Piket Wknd</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Piket</p>
                             </div>
                             <div class="text-center">
                                 <p class="text-2xl font-bold text-yellow-500">
@@ -413,14 +418,14 @@
                     Kerja Pagi</div>
                 <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-amber-200 inline-block"></span>
                     Kerja Siang</div>
+                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-blue-200 inline-block"></span>
+                    Piket</div>
                 <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-orange-200 inline-block"></span>
                     Libur/Izin Disetujui</div>
                 <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-yellow-200 inline-block"></span>
                     Izin Menunggu ⏳</div>
                 <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-gray-300 inline-block"></span>
                     Sakit</div>
-                <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-blue-200 inline-block"></span>
-                    Ijin</div>
                 <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-red-200 inline-block"></span>
                     Cuti Bersama</div>
             </div>
@@ -504,10 +509,23 @@
 
                     {{-- Mini Calendar --}}
                     <div class="mb-5 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">3️⃣ Tandai Hari Libur
-                            Khusus</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Klik tanggal untuk toggle <span
-                                class="font-semibold text-red-500">Libur</span></p>
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">3️⃣ Tandai Hari Libur /
+                            Piket Khusus</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Pilih mode di bawah, lalu klik
+                            tanggal untuk menandai.</p>
+
+                        {{-- ⭐ Mode toggle: Libur vs Piket --}}
+                        <div class="flex gap-2 mb-3">
+                            <button type="button" onclick="setMarkMode('off')" id="modeOffBtn"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition">
+                                🚫 Tandai Libur
+                            </button>
+                            <button type="button" onclick="setMarkMode('piket')" id="modePiketBtn"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition">
+                                📌 Tandai Piket
+                            </button>
+                        </div>
+
                         <div class="grid grid-cols-7 gap-1 mb-1">
                             @foreach (['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'] as $lbl)
                                 <div class="text-center text-xs font-bold text-gray-400 py-1">{{ $lbl }}
@@ -516,8 +534,19 @@
                         </div>
                         <div id="miniCalendar" class="grid grid-cols-7 gap-1"></div>
                         <div id="offDatesInputs"></div>
+                        <div id="piketDatesInputs"></div>
+
+                        {{-- ⭐ Jam masuk khusus piket --}}
+                        <div class="mt-3">
+                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jam Masuk
+                                Piket</label>
+                            <input type="time" name="piket_start_time" id="piketStartTime" value="09:45"
+                                class="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
+                        </div>
+
                         <p class="text-xs text-gray-400 mt-2 flex flex-wrap gap-x-3 gap-y-1">
                             <span><span class="inline-block w-3 h-3 rounded bg-red-400 mr-1"></span>Libur manual</span>
+                            <span><span class="inline-block w-3 h-3 rounded bg-blue-500 mr-1"></span>Piket</span>
                             <span><span class="inline-block w-3 h-3 rounded bg-green-400 mr-1"></span>Kerja Pagi</span>
                             <span><span class="inline-block w-3 h-3 rounded bg-amber-400 mr-1"></span>Kerja
                                 Siang</span>
@@ -553,6 +582,8 @@
         const CAL_YEAR = {{ $year }};
         const CAL_MONTH = {{ $month }};
         let offDates = new Set();
+        let piketDates = new Set(); // ⭐ tanggal yang ditandai piket
+        let markMode = 'off'; // ⭐ 'off' | 'piket'
         let currentShift = 'morning';
 
         const SHIFT_PRESETS = {
@@ -566,6 +597,26 @@
             },
             custom: null
         };
+
+        // ── Mode tandai (libur / piket) ─────────────────────────────────
+        function setMarkMode(mode) {
+            markMode = mode;
+
+            const offBtn = document.getElementById('modeOffBtn');
+            const piketBtn = document.getElementById('modePiketBtn');
+
+            if (mode === 'off') {
+                offBtn.className =
+                    'px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition bg-red-400 border-red-400 text-white';
+                piketBtn.className =
+                    'px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition border-blue-400 text-blue-600 dark:text-blue-300';
+            } else {
+                piketBtn.className =
+                    'px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition bg-blue-500 border-blue-500 text-white';
+                offBtn.className =
+                    'px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition border-red-400 text-red-500';
+            }
+        }
 
         // ── Shift preset ──────────────────────────────────────────────
         function applyShiftPreset(shift) {
@@ -581,6 +632,7 @@
         // ── Modal open/close ──────────────────────────────────────────
         function openGenerateModal() {
             document.getElementById('generateModal').classList.remove('hidden');
+            setMarkMode('off');
             refreshMiniCalendar();
         }
 
@@ -614,6 +666,7 @@
                 const dow = date.getDay();
                 const isWorkDay = workingDays.includes(dow);
                 const isManOff = offDates.has(dateStr);
+                const isPiketDay = piketDates.has(dateStr); // ⭐
                 const isWorking = isWorkDay && !isManOff;
 
                 const btn = document.createElement('button');
@@ -625,6 +678,9 @@
                     'w-full aspect-square rounded-lg text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400 ';
                 if (isManOff) {
                     cls += 'bg-red-400 text-white hover:bg-red-500';
+                } else if (isWorking && isPiketDay) {
+                    // ⭐ Piket ditampilkan biru, menang atas warna shift biasa
+                    cls += 'bg-blue-500 text-white hover:bg-blue-600';
                 } else if (isWorking) {
                     cls += isAfternoon ?
                         'bg-amber-400 text-white hover:bg-amber-500' :
@@ -635,7 +691,20 @@
                 btn.className = cls;
 
                 btn.addEventListener('click', () => {
-                    offDates.has(dateStr) ? offDates.delete(dateStr) : offDates.add(dateStr);
+                    if (!isWorkDay) return; // hanya tanggal hari kerja yang bisa ditandai
+
+                    if (markMode === 'off') {
+                        if (offDates.has(dateStr)) {
+                            offDates.delete(dateStr);
+                        } else {
+                            offDates.add(dateStr);
+                            piketDates.delete(dateStr); // libur & piket saling eksklusif
+                        }
+                    } else {
+                        if (offDates.has(dateStr)) return; // tidak bisa piket kalau sudah libur
+                        piketDates.has(dateStr) ? piketDates.delete(dateStr) : piketDates.add(dateStr);
+                    }
+
                     refreshMiniCalendar();
                     syncOffDateInputs();
                 });
@@ -645,14 +714,25 @@
         }
 
         function syncOffDateInputs() {
-            const container = document.getElementById('offDatesInputs');
-            container.innerHTML = '';
+            const offContainer = document.getElementById('offDatesInputs');
+            offContainer.innerHTML = '';
             offDates.forEach(date => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'off_dates[]';
                 input.value = date;
-                container.appendChild(input);
+                offContainer.appendChild(input);
+            });
+
+            // ⭐ Sinkron input tersembunyi untuk tanggal piket
+            const piketContainer = document.getElementById('piketDatesInputs');
+            piketContainer.innerHTML = '';
+            piketDates.forEach(date => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'piket_dates[]';
+                input.value = date;
+                piketContainer.appendChild(input);
             });
         }
 

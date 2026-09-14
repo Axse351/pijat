@@ -33,7 +33,7 @@
             @endif
 
             {{-- ============================================================ --}}
-            {{-- ⭐ PENGAJUAN IZIN TERAPIS (PENDING) --}}
+            {{-- PENGAJUAN IZIN TERAPIS (PENDING) --}}
             {{-- ============================================================ --}}
             <div class="mb-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 
@@ -216,15 +216,39 @@
                                         };
 
                                         $isWorkingStatus = in_array($status, ['working', 'working_afternoon']);
+
+                                        // ⭐ Badge SP1: telat >2x (artinya 3x atau lebih) minggu ini
+                                        $totalTelatMingguIni = $lateCountsThisWeek[$therapist->id] ?? 0;
+
+                                        // ⭐ Badge piket: dijadwalkan piket tapi belum/telat parah hari ini
+                                        $isPiketWarning = $piketWarnings->contains($therapist->id);
                                     @endphp
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                                         <td class="px-4 py-3">
                                             {{ ($therapists->currentPage() - 1) * $therapists->perPage() + $index + 1 }}
                                         </td>
 
-                                        <!-- Nama Terapis -->
+                                        <!-- Nama Terapis + Badge SP1 / Piket -->
                                         <td class="px-4 py-3 font-medium">
-                                            {{ $therapist->name }}
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span>{{ $therapist->name }}</span>
+
+                                                @if ($totalTelatMingguIni >= 3)
+                                                    <span
+                                                        class="inline-flex items-center px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full"
+                                                        title="Telat {{ $totalTelatMingguIni }}x minggu ini">
+                                                        ⚠ SP1
+                                                    </span>
+                                                @endif
+
+                                                @if ($isPiketWarning)
+                                                    <span
+                                                        class="inline-flex items-center px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full"
+                                                        title="Dijadwalkan piket tapi belum/terlambat parah">
+                                                        🔔 Piket
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         <!-- Email -->
@@ -297,6 +321,19 @@
                                                         {{ __('Keluar:') }}
                                                         {{ $todayAttendance->getCheckOutTimeFormatted() }}
                                                     </span>
+                                                    @if ($todayAttendance->late_minutes > 0)
+                                                        <br>
+                                                        <span
+                                                            class="text-xs text-red-500 dark:text-red-400 font-medium">
+                                                            Telat {{ $todayAttendance->late_minutes }} menit
+                                                            @if ($todayAttendance->denda_amount > 0)
+                                                                • Denda
+                                                                Rp{{ number_format($todayAttendance->denda_amount, 0, ',', '.') }}
+                                                            @elseif (!$todayAttendance->bonus_hadir_eligible)
+                                                                • Uang harian hangus
+                                                            @endif
+                                                        </span>
+                                                    @endif
                                                 @elseif ($todayAttendance->isCheckedIn())
                                                     <span
                                                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
@@ -306,6 +343,19 @@
                                                     <span class="text-xs text-gray-500 dark:text-gray-400">
                                                         {{ $todayAttendance->getCheckInTimeFormatted() }}
                                                     </span>
+                                                    @if ($todayAttendance->late_minutes > 0)
+                                                        <br>
+                                                        <span
+                                                            class="text-xs text-red-500 dark:text-red-400 font-medium">
+                                                            Telat {{ $todayAttendance->late_minutes }} menit
+                                                            @if ($todayAttendance->denda_amount > 0)
+                                                                • Denda
+                                                                Rp{{ number_format($todayAttendance->denda_amount, 0, ',', '.') }}
+                                                            @elseif (!$todayAttendance->bonus_hadir_eligible)
+                                                                • Uang harian hangus
+                                                            @endif
+                                                        </span>
+                                                    @endif
                                                 @else
                                                     <span
                                                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
@@ -444,7 +494,8 @@
 
             <!-- Legend -->
             <div class="mt-6 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Keterangan Tombol:') }}</h4>
+                <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Keterangan Tombol & Badge:') }}
+                </h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
                         <p class="font-semibold text-blue-600 dark:text-blue-400">📸 {{ __('Wajah') }}</p>
@@ -469,6 +520,15 @@
                     <div>
                         <p class="font-semibold text-red-600 dark:text-red-400">🗑️ {{ __('Hapus') }}</p>
                         <p class="text-gray-600 dark:text-gray-400">{{ __('Hapus data wajah') }}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-red-600 dark:text-red-400">⚠ SP1</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ __('Telat 3x atau lebih dalam seminggu') }}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-orange-600 dark:text-orange-400">🔔 Piket</p>
+                        <p class="text-gray-600 dark:text-gray-400">
+                            {{ __('Dijadwalkan piket, belum/terlambat parah hari ini') }}</p>
                     </div>
                 </div>
             </div>

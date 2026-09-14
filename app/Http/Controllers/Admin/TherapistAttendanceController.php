@@ -8,6 +8,7 @@ use App\Models\Therapist;
 use App\Models\TherapistAttendance;
 use App\Models\TherapistFaceData;
 use App\Models\TherapistLeaveRequest;
+use App\Models\TherapistSchedule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -20,13 +21,47 @@ class TherapistAttendanceController extends Controller
     |--------------------------------------------------------------------------
     | LOKASI KOICHI (untuk validasi geofence absen)
     |--------------------------------------------------------------------------
-    | Diambil dari titik Google Maps KOICHI Family Reflexology Cirebon.
-    | Ubah $maxDistanceMeters kalau radius area kerja perlu diperlonggar/diperketat
-    | (misal GPS HP kurang akurat di dalam ruangan, radius bisa dinaikkan).
     */
     private float $officeLatitude = -6.7098533;
     private float $officeLongitude = 108.5652088;
     private float $maxDistanceMeters = 150;
+
+    /*
+    |--------------------------------------------------------------------------
+    | ATURAN DENDA KETERLAMBATAN (uang masuk kaleng + mengurangi komisi)
+    |--------------------------------------------------------------------------
+    | Tidak ada toleransi — telat dihitung dari detik pertama lewat jam
+    | masuk resmi (start_time jadwal hari itu: 10:00 pagi / 09:45 piket /
+    | 13:30 siang, tergantung apa yang diisi admin saat generate jadwal).
+    |
+    | 0–15 menit   : Rp2.000
+    | 16–30 menit  : Rp5.000
+    | 31–45 menit  : Rp10.000
+    | 46–60 menit  : Rp15.000
+    | 61 menit+    : uang harian (bonus hadir Rp20.000) hangus, tanpa denda tambahan
+    |--------------------------------------------------------------------------
+    */
+    private function calculateLatePenalty(int $lateMinutes): array
+    {
+        if ($lateMinutes <= 0) {
+            return ['denda' => 0, 'bonus_eligible' => true];
+        }
+        if ($lateMinutes <= 15) {
+            return ['denda' => 2000, 'bonus_eligible' => true];
+        }
+        if ($lateMinutes <= 30) {
+            return ['denda' => 5000, 'bonus_eligible' => true];
+        }
+        if ($lateMinutes <= 45) {
+            return ['denda' => 10000, 'bonus_eligible' => true];
+        }
+        if ($lateMinutes <= 60) {
+            return ['denda' => 15000, 'bonus_eligible' => true];
+        }
+
+        // 61 menit ke atas: tidak dapat uang harian
+        return ['denda' => 0, 'bonus_eligible' => false];
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -43,19 +78,51 @@ class TherapistAttendanceController extends Controller
             'todaySchedule',
         ])->paginate(15);
 
-        // ⭐ Pengajuan izin yang masih pending, untuk section approve/reject di halaman Kehadiran
+        // ⭐ Pengajuan izin pending — untuk section approve/reject di halaman Kehadiran
         $pendingLeaves = TherapistLeaveRequest::with('therapist')
             ->where('status', 'pending')
             ->orderBy('start_date')
             ->get();
 
-        return view('admin.attendances.index', compact('therapists', 'today', 'pendingLeaves'));
+        // ⭐ Hitung jumlah telat per terapis MINGGU INI → dasar badge SP1
+        //    (SP1 kalau telat >2x dalam seminggu, artinya 3x atau lebih)
+        $weekStart = Carbon::now('Asia/Jakarta')->startOfWeek();
+        $weekEnd   = Carbon::now('Asia/Jakarta')->endOfWeek();
+
+        $lateCountsThisWeek = TherapistAttendance::where('late_minutes', '>', 0)
+            ->whereBetween('attendance_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->selectRaw('therapist_id, COUNT(*) as total_telat')
+            ->groupBy('therapist_id')
+            ->pluck('total_telat', 'therapist_id');
+
+        // ⭐ Cek piket yang tidak dijalankan hari ini (dijadwalkan piket tapi
+        //    belum check-in ATAU telat lebih dari 60 menit)
+        $piketWarnings = TherapistSchedule::where('is_piket', true)
+            ->whereDate('schedule_date', $today)
+            ->pluck('therapist_id')
+            ->flip()
+            ->map(function ($_, $therapistId) use ($today) {
+                $attendance = TherapistAttendance::where('therapist_id', $therapistId)
+                    ->whereDate('attendance_date', $today)
+                    ->first();
+
+                return !$attendance || !$attendance->check_in_at || $attendance->late_minutes > 60;
+            })
+            ->filter()
+            ->keys();
+
+        return view('admin.attendances.index', compact(
+            'therapists',
+            'today',
+            'pendingLeaves',
+            'lateCountsThisWeek',
+            'piketWarnings'
+        ));
     }
 
     /*
     |--------------------------------------------------------------------------
     | SHOW CHECK-IN CAMERA PAGE
-    | Memuat semua embeddings terapis yang sudah verified untuk face matching
     |--------------------------------------------------------------------------
     */
     public function showCheckInCamera()
@@ -103,9 +170,6 @@ class TherapistAttendanceController extends Controller
         ]);
     }
 
-    /**
-     * Helper: bangun array embeddings wajah untuk dikirim ke JS.
-     */
     private function buildFaceDescriptors($therapists)
     {
         return $therapists
@@ -126,12 +190,9 @@ class TherapistAttendanceController extends Controller
             ->values();
     }
 
-    /**
-     * Hitung jarak antara dua koordinat (meter) pakai rumus Haversine.
-     */
     private function calculateDistanceMeters(float $lat1, float $lng1, float $lat2, float $lng2): float
     {
-        $earthRadius = 6371000; // meter
+        $earthRadius = 6371000;
 
         $latRad1 = deg2rad($lat1);
         $latRad2 = deg2rad($lat2);
@@ -147,7 +208,7 @@ class TherapistAttendanceController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | CHECK-IN via AJAX (foto biasa, tanpa kedip — divalidasi lokasi GPS)
+    | CHECK-IN via AJAX — sekarang menghitung late_minutes, denda, & eligibility
     |--------------------------------------------------------------------------
     */
     public function checkInAjax(Request $request)
@@ -164,7 +225,7 @@ class TherapistAttendanceController extends Controller
         $today     = Carbon::today('Asia/Jakarta');
         $now       = Carbon::now('Asia/Jakarta');
 
-        $schedule = \App\Models\TherapistSchedule::where('therapist_id', $therapist->id)
+        $schedule = TherapistSchedule::where('therapist_id', $therapist->id)
             ->whereDate('schedule_date', $today)
             ->first();
 
@@ -210,31 +271,49 @@ class TherapistAttendanceController extends Controller
 
             $imagePath = $request->file('image')->store('faces/checkin', 'public');
 
+            // ⭐ Tidak ada toleransi — telat dihitung dari detik pertama lewat start_time
             $scheduledStart = Carbon::parse($schedule->start_time, 'Asia/Jakarta');
-            $status         = $now->gt($scheduledStart) ? 'late' : 'present';
+            $lateMinutes    = $now->gt($scheduledStart) ? $scheduledStart->diffInMinutes($now) : 0;
+            $status         = $lateMinutes > 0 ? 'late' : 'present';
+
+            $penalty = $this->calculateLatePenalty($lateMinutes);
 
             TherapistAttendance::updateOrCreate(
                 ['therapist_id' => $therapist->id, 'attendance_date' => $today],
                 [
-                    'check_in_at'               => $now,
-                    'check_in_image'            => $imagePath,
-                    'check_in_confidence'       => $request->confidence ?? 1.0,
-                    'check_in_latitude'         => $request->latitude,
-                    'check_in_longitude'        => $request->longitude,
-                    'check_in_distance_meters'  => round($distance, 1),
-                    'status'                    => $status,
-                    'check_out_at'              => null,
+                    'check_in_at'              => $now,
+                    'check_in_image'           => $imagePath,
+                    'check_in_confidence'      => $request->confidence ?? 1.0,
+                    'check_in_latitude'        => $request->latitude,
+                    'check_in_longitude'       => $request->longitude,
+                    'check_in_distance_meters' => round($distance, 1),
+                    'status'                   => $status,
+                    'check_out_at'             => null,
+                    'late_minutes'             => $lateMinutes,
+                    'denda_amount'             => $penalty['denda'],
+                    'bonus_hadir_eligible'     => $penalty['bonus_eligible'],
                 ]
             );
 
             DB::commit();
 
+            $message = 'Check-in berhasil';
+            if ($lateMinutes > 0) {
+                $message .= " — telat {$lateMinutes} menit";
+                $message .= $penalty['bonus_eligible']
+                    ? ", denda Rp" . number_format($penalty['denda'], 0, ',', '.')
+                    : ", uang harian hangus (telat lebih dari 60 menit)";
+            }
+
             return response()->json([
-                'success'  => true,
-                'time'     => $now->format('H:i'),
-                'status'   => $status,
-                'distance' => round($distance),
-                'message'  => 'Check-in berhasil',
+                'success'       => true,
+                'time'          => $now->format('H:i'),
+                'status'        => $status,
+                'distance'      => round($distance),
+                'late_minutes'  => $lateMinutes,
+                'denda'         => $penalty['denda'],
+                'bonus_hangus'  => !$penalty['bonus_eligible'],
+                'message'       => $message,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -244,7 +323,7 @@ class TherapistAttendanceController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | CHECK-OUT via AJAX (foto biasa, tanpa kedip — divalidasi lokasi GPS)
+    | CHECK-OUT via AJAX
     |--------------------------------------------------------------------------
     */
     public function checkOutAjax(Request $request)
@@ -346,6 +425,7 @@ class TherapistAttendanceController extends Controller
             'total_hadir'     => TherapistAttendance::where('therapist_id', $therapist->id)->where('status', 'present')->count(),
             'total_terlambat' => TherapistAttendance::where('therapist_id', $therapist->id)->where('status', 'late')->count(),
             'total_absent'    => TherapistAttendance::where('therapist_id', $therapist->id)->where('status', 'absent')->count(),
+            'total_denda'     => TherapistAttendance::where('therapist_id', $therapist->id)->sum('denda_amount'),
         ];
 
         return view('admin.attendances.history', compact('therapist', 'attendances', 'stats'));

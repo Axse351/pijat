@@ -71,12 +71,19 @@
                             <select name="status" required x-model="status"
                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror">
                                 <option value="">-- Pilih Status --</option>
-                                <option value="working"           {{ old('status') === 'working'           ? 'selected' : '' }}>🌅 Kerja Pagi</option>
-                                <option value="working_afternoon" {{ old('status') === 'working_afternoon' ? 'selected' : '' }}>🌤 Kerja Siang</option>
-                                <option value="off"               {{ old('status') === 'off'               ? 'selected' : '' }}>Libur</option>
-                                <option value="sick"              {{ old('status') === 'sick'              ? 'selected' : '' }}>Sakit</option>
-                                <option value="vacation"          {{ old('status') === 'vacation'          ? 'selected' : '' }}>Ijin</option>
-                                <option value="cuti_bersama"      {{ old('status') === 'cuti_bersama'      ? 'selected' : '' }}>Cuti Bersama</option>
+                                <option value="working" {{ old('status') === 'working' ? 'selected' : '' }}>
+                                    🌅 Kerja Pagi</option>
+                                <option value="working_afternoon"
+                                    {{ old('status') === 'working_afternoon' ? 'selected' : '' }}>🌤 Kerja Siang
+                                </option>
+                                <option value="off" {{ old('status') === 'off' ? 'selected' : '' }}>
+                                    Libur</option>
+                                <option value="sick" {{ old('status') === 'sick' ? 'selected' : '' }}>
+                                    Sakit</option>
+                                <option value="vacation" {{ old('status') === 'vacation' ? 'selected' : '' }}>
+                                    Ijin</option>
+                                <option value="cuti_bersama"
+                                    {{ old('status') === 'cuti_bersama' ? 'selected' : '' }}>Cuti Bersama</option>
                             </select>
                             @error('status')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -84,12 +91,15 @@
                         </div>
 
                         <!-- Jam Kerja (hanya muncul kalau status = working / working_afternoon) -->
-                        <div x-show="status === 'working' || status === 'working_afternoon'" x-transition class="mb-5">
+                        <div x-show="status === 'working' || status === 'working_afternoon'" x-transition
+                            class="mb-5">
 
                             {{-- Preset shift otomatis saat pilih siang --}}
-                            <div x-show="status === 'working_afternoon'" class="mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                            <div x-show="status === 'working_afternoon'"
+                                class="mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                                 <p class="text-xs text-amber-700 dark:text-amber-300">
-                                    🌤 Shift Siang — jam default otomatis diisi 13:00–21:00. Bisa diubah sesuai kebutuhan.
+                                    🌤 Shift Siang — jam default otomatis diisi 13:00–21:00. Bisa diubah sesuai
+                                    kebutuhan.
                                 </p>
                             </div>
 
@@ -98,9 +108,8 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         {{ __('Jam Masuk') }} <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="time" name="start_time" id="startTime"
+                                    <input type="time" name="start_time" id="startTime" x-ref="startTime"
                                         :value="status === 'working_afternoon' ? '13:00' : '09:00'"
-                                        x-ref="startTime"
                                         :required="status === 'working' || status === 'working_afternoon'"
                                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 @error('start_time') border-red-500 @enderror">
                                     @error('start_time')
@@ -111,9 +120,8 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         {{ __('Jam Keluar') }} <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="time" name="end_time" id="endTime"
+                                    <input type="time" name="end_time" id="endTime" x-ref="endTime"
                                         :value="status === 'working_afternoon' ? '21:00' : '17:00'"
-                                        x-ref="endTime"
                                         :required="status === 'working' || status === 'working_afternoon'"
                                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 @error('end_time') border-red-500 @enderror">
                                     @error('end_time')
@@ -121,6 +129,23 @@
                                     @enderror
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- ⭐ Piket (hanya muncul kalau status = working / working_afternoon) -->
+                        <div x-show="status === 'working' || status === 'working_afternoon'" x-transition
+                            class="mb-6">
+                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="is_piket" value="1" x-model="isPiket"
+                                    {{ old('is_piket') ? 'checked' : '' }}
+                                    @change="if (isPiket) { $refs.startTime.value = '09:45'; }"
+                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">📌 Tandai sebagai
+                                    jadwal Piket</span>
+                            </label>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Jam masuk piket biasanya 09:45 — otomatis terisi saat dicentang, tapi tetap bisa diubah
+                                manual di atas.
+                            </p>
                         </div>
 
                         <!-- Catatan -->
@@ -156,6 +181,7 @@
         function scheduleForm() {
             return {
                 status: '{{ old('status', '') }}',
+                isPiket: {{ old('is_piket') ? 'true' : 'false' }},
             }
         }
     </script>

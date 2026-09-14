@@ -21,6 +21,11 @@ class LaporanController extends Controller
     const RATE_STANDARD = 0.25;   // 25%
     const RATE_PROGRAM  = 0.30;   // 30%
 
+    // ⭐ Status jadwal yang DIKECUALIKAN dari bonus hadir/komisi kehadiran —
+    //    pengaman ekstra supaya hari libur tidak pernah ikut kehitung
+    //    meski ada data absen yang salah input.
+    const EXCLUDED_SCHEDULE_STATUSES = ['off', 'sick', 'vacation', 'cuti_bersama'];
+
     public function index(Request $request)
     {
         $now = Carbon::now('Asia/Jakarta');
@@ -49,9 +54,11 @@ class LaporanController extends Controller
         //  │                 diskon adalah tanggungan Koichi, bukan       │
         //  │                 mengurangi hak komisi terapis.               │
         //  │ Kom.Cancel  = total pembayaran booking cancel+forfeit        │
+        //  │ Denda Telat = akumulasi denda keterlambatan (masuk kaleng,   │
+        //  │               ikut mengurangi total komisi terapis)          │
         //  │ Koichi Real = Bruto − Kom.Std − Kom.Program                 │
-        //  │               (Kom.Cancel tidak mengurangi Koichi karena    │
-        //  │                uang memang tidak masuk ke Koichi)            │
+        //  │               (Kom.Cancel & Denda tidak mengurangi Koichi   │
+        //  │                karena itu bukan bagian pendapatan spa)       │
         //  └─────────────────────────────────────────────────────────────┘
         // ══════════════════════════════════════════════════════════════════
 
@@ -97,15 +104,30 @@ class LaporanController extends Controller
         // Total komisi terapis dari sesi (25%/30%)
         $totalKomisiPijat = $komisiStandard + $komisiProgram;
 
-        // Bonus hadir
+        // ⭐ Bonus hadir — hanya hari yang eligible (tidak telat >60 menit)
+        //    DAN bukan hari libur (pengaman via whereNotExists ke jadwal)
         $totalBonusHadir = TherapistAttendance::whereIn('status', ['present', 'late'])
+            ->where('bonus_hadir_eligible', true)
             ->whereBetween('attendance_date', [$start->toDateString(), $end->toDateString()])
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('therapist_schedules')
+                    ->whereColumn('therapist_schedules.therapist_id', 'therapist_attendances.therapist_id')
+                    ->whereColumn('therapist_schedules.schedule_date', 'therapist_attendances.attendance_date')
+                    ->whereIn('therapist_schedules.status', self::EXCLUDED_SCHEDULE_STATUSES);
+            })
             ->count() * self::BONUS_HADIR;
 
-        $totalKomisiTerapis = $totalKomisiPijat + $totalBonusHadir;
+        // ⭐ Total denda keterlambatan periode ini (masuk kaleng, mengurangi komisi terapis)
+        $totalDendaTelat = TherapistAttendance::whereBetween('attendance_date', [$start->toDateString(), $end->toDateString()])
+            ->sum('denda_amount');
+
+        // ⭐ Total komisi terapis = komisi pijat + bonus hadir − denda telat
+        $totalKomisiTerapis = $totalKomisiPijat + $totalBonusHadir - $totalDendaTelat;
 
         // Pendapatan REAL Koichi = uang yang diterima (bruto, sudah diskon)
-        // dikurangi komisi (yang dihitung dari harga asli, tidak ikut diskon)
+        // dikurangi komisi pijat saja (bonus hadir & denda bukan bagian
+        // pendapatan spa, itu urusan terapis vs kas terapis)
         $totalPendapatan = $totalBruto - $totalKomisiPijat - $totalBonusHadir;
 
         // Metode pembayaran
@@ -175,6 +197,7 @@ class LaporanController extends Controller
             'komisiFromCancels',
             'totalKomisiPijat',
             'totalBonusHadir',
+            'totalDendaTelat',
             'totalKomisiTerapis',
             'totalPendapatan',
             'pendapatanQris',
@@ -272,10 +295,23 @@ class LaporanController extends Controller
             ->selectRaw('DATE(scheduled_at) as tgl, SUM(final_price) as bruto, SUM(price) as harga_asli, COUNT(*) as sesi')
             ->groupBy('tgl')->get()->keyBy('tgl');
 
-        // Absensi per hari
+        // Absensi per hari — ⭐ hanya yang eligible & bukan hari libur
         $absensiPerHari = TherapistAttendance::whereIn('status', ['present', 'late'])
+            ->where('bonus_hadir_eligible', true)
             ->whereBetween('attendance_date', [$start->toDateString(), $end->toDateString()])
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('therapist_schedules')
+                    ->whereColumn('therapist_schedules.therapist_id', 'therapist_attendances.therapist_id')
+                    ->whereColumn('therapist_schedules.schedule_date', 'therapist_attendances.attendance_date')
+                    ->whereIn('therapist_schedules.status', self::EXCLUDED_SCHEDULE_STATUSES);
+            })
             ->selectRaw('attendance_date as tgl, COUNT(*) as hadir')
+            ->groupBy('tgl')->get()->keyBy('tgl');
+
+        // ⭐ Denda telat per hari
+        $dendaPerHari = TherapistAttendance::whereBetween('attendance_date', [$start->toDateString(), $end->toDateString()])
+            ->selectRaw('attendance_date as tgl, SUM(denda_amount) as total_denda')
             ->groupBy('tgl')->get()->keyBy('tgl');
 
         // Cancel forfeit per hari
@@ -304,28 +340,33 @@ class LaporanController extends Controller
             $komisiProg  = $hargaAsliProg * self::RATE_PROGRAM;
             $komisiPijat = $komisiStd + $komisiProg;
             $bonusHadir  = $hadir * self::BONUS_HADIR;
-            $totalKomisi = $komisiPijat + $bonusHadir;
-            $bersih      = $bruto - $totalKomisi;
+
+            // ⭐ Denda telat hari ini
+            $dendaTelat = (float)($dendaPerHari[$tgl]->total_denda ?? 0);
+
+            $totalKomisi = $komisiPijat + $bonusHadir - $dendaTelat;
+            $bersih      = $bruto - $komisiPijat - $bonusHadir;
 
             // Cancel forfeit hari ini (info saja, tidak mengurangi bersih Koichi)
             $cancelForfeit = (float)($cancelPerHari[$tgl]->total ?? 0);
 
             $days->push([
-                'tanggal'        => $date->copy(),
-                'sesi'           => $sesi,
-                'bruto'          => $bruto,
-                'bruto_std'      => $brutoStd,
-                'bruto_prog'     => $brutoProg,
+                'tanggal'         => $date->copy(),
+                'sesi'            => $sesi,
+                'bruto'           => $bruto,
+                'bruto_std'       => $brutoStd,
+                'bruto_prog'      => $brutoProg,
                 'harga_asli_std'  => $hargaAsliStd,
                 'harga_asli_prog' => $hargaAsliProg,
-                'komisi_std'     => $komisiStd,
-                'komisi_prog'    => $komisiProg,
-                'komisi_pijat'   => $komisiPijat,
-                'bonus_hadir'    => $bonusHadir,
-                'total_komisi'   => $totalKomisi,
-                'bersih'         => $bersih,
-                'hadir'          => $hadir,
-                'cancel_forfeit' => $cancelForfeit,
+                'komisi_std'      => $komisiStd,
+                'komisi_prog'     => $komisiProg,
+                'komisi_pijat'    => $komisiPijat,
+                'bonus_hadir'     => $bonusHadir,
+                'denda_telat'     => $dendaTelat,
+                'total_komisi'    => $totalKomisi,
+                'bersih'          => $bersih,
+                'hadir'           => $hadir,
+                'cancel_forfeit'  => $cancelForfeit,
             ]);
 
             $date->addDay();
@@ -375,16 +416,36 @@ class LaporanController extends Controller
             $t->komisi_prog     = round($hargaAsliProg * self::RATE_PROGRAM,  2);
             $t->komisi_pijat    = $t->komisi_std + $t->komisi_prog;
 
-            // Bonus hadir
-            $hariHadir = TherapistAttendance::where('therapist_id', $t->id)
+            // ⭐ Bonus hadir — hanya hari yang eligible (tidak telat >60 menit)
+            //    dan bukan hari libur (pengaman via whereNotExists ke jadwal)
+            $hariHadirEligible = TherapistAttendance::where('therapist_id', $t->id)
                 ->whereIn('status', ['present', 'late'])
+                ->where('bonus_hadir_eligible', true)
+                ->whereBetween('attendance_date', [$start->toDateString(), $end->toDateString()])
+                ->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('therapist_schedules')
+                        ->whereColumn('therapist_schedules.therapist_id', 'therapist_attendances.therapist_id')
+                        ->whereColumn('therapist_schedules.schedule_date', 'therapist_attendances.attendance_date')
+                        ->whereIn('therapist_schedules.status', self::EXCLUDED_SCHEDULE_STATUSES);
+                })
+                ->count();
+
+            $t->hari_hadir  = $hariHadirEligible;
+            $t->bonus_hadir = $hariHadirEligible * self::BONUS_HADIR;
+
+            // ⭐ Denda telat & jumlah hari telat periode ini
+            $t->denda_telat = TherapistAttendance::where('therapist_id', $t->id)
+                ->whereBetween('attendance_date', [$start->toDateString(), $end->toDateString()])
+                ->sum('denda_amount');
+
+            $t->hari_telat = TherapistAttendance::where('therapist_id', $t->id)
+                ->where('late_minutes', '>', 0)
                 ->whereBetween('attendance_date', [$start->toDateString(), $end->toDateString()])
                 ->count();
 
-            $t->hari_hadir  = $hariHadir;
-            $t->bonus_hadir = $hariHadir * self::BONUS_HADIR;
-            $t->total_komisi = $t->komisi_pijat + $t->bonus_hadir;
-            // Pendapatan spa = uang yang diterima Koichi (bruto) dikurangi komisi
+            // ⭐ Total komisi = komisi pijat + bonus hadir − denda telat
+            $t->total_komisi   = $t->komisi_pijat + $t->bonus_hadir - $t->denda_telat;
             $t->pendapatan_spa = $bruto - $t->komisi_pijat;
 
             // Komisi dari cancel forfeit
@@ -393,7 +454,7 @@ class LaporanController extends Controller
                 ->whereHas('booking', fn($q) => $q->inRange($start, $end))
                 ->sum('commission_amount');
 
-            // Total yang diterima terapis (sesi + cancel + bonus hadir)
+            // Total yang diterima terapis (sesi + cancel + bonus hadir − denda)
             $t->total_terima = $t->total_komisi + $t->cancel_forfeit;
         });
 
