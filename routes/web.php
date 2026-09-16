@@ -133,6 +133,10 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class)
             ->only(['index', 'create', 'store', 'show']);
 
+        // ── ✅ Klaim bonus (admin & kasir bisa akses) ──────────────────────────
+        Route::post('customers/{customer}/redeem-bonus', [\App\Http\Controllers\Admin\CustomerController::class, 'redeemBonus'])
+            ->name('customers.redeem-bonus');
+
         // ====================================================================
         // ADMIN ONLY ROUTES
         // ====================================================================

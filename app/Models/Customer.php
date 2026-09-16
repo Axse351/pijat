@@ -61,4 +61,20 @@ class Customer extends Model
     {
         return min($this->points, 10);
     }
+    // ✅ Masking nomor telepon — tampilkan hanya 3 digit terakhir
+    public function maskedPhone(): ?string
+    {
+        if (!$this->phone) {
+            return null;
+        }
+
+        $phone = $this->phone;
+        $len   = strlen($phone);
+
+        if ($len <= 3) {
+            return $phone;
+        }
+
+        return str_repeat('x', $len - 3) . substr($phone, -3);
+    }
 }

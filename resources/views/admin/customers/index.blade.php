@@ -254,7 +254,8 @@
                                         </td>
 
                                         <td class="px-5 py-3.5 text-gray-600 dark:text-gray-400">
-                                            {{ $customer->phone ?? '—' }}</td>
+                                            {{ auth()->user()->role === 'admin' ? $customer->phone ?? '—' : $customer->maskedPhone() ?? '—' }}
+                                        </td>
 
                                         <td class="px-5 py-3.5">
                                             <span
