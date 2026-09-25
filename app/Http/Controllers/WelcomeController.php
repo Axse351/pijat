@@ -13,7 +13,7 @@ class WelcomeController extends Controller
 {
     public function index()
     {
-        $services   = Service::all();
+        $services = Service::orderBy('urutan')->get();
         $therapists = Therapist::where('is_active', 1)->get();
         $therapistSchedules = $this->buildTherapistSchedules($therapists);
 
