@@ -33,10 +33,13 @@
                             </label>
 
                             @php
-                                $oldCustomer = old('customer_id') ? $customers->firstWhere('id', old('customer_id')) : null;
+                                $oldCustomer = old('customer_id')
+                                    ? $customers->firstWhere('id', old('customer_id'))
+                                    : null;
                             @endphp
 
-                            <input type="hidden" name="customer_id" id="customerIdInput" value="{{ old('customer_id') }}">
+                            <input type="hidden" name="customer_id" id="customerIdInput"
+                                value="{{ old('customer_id') }}">
                             <input type="text" id="customerSearchInput" autocomplete="off"
                                 placeholder="Ketik nama pelanggan..." value="{{ $oldCustomer?->name }}"
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
@@ -49,7 +52,8 @@
                                         data-id="{{ $c->id }}" data-name="{{ $c->name }}">
                                         {{ $c->name }}
                                         @if ($c->points > 0)
-                                            <span class="text-xs text-gray-400">({{ $c->points }} poin{{ $c->hasBonus() ? ' 🎁' : '' }})</span>
+                                            <span class="text-xs text-gray-400">({{ $c->points }}
+                                                poin{{ $c->hasBonus() ? ' 🎁' : '' }})</span>
                                         @endif
                                     </button>
                                 @endforeach
@@ -157,10 +161,17 @@
                                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Tanpa Promo --</option>
                                 @foreach ($promos as $promo)
-                                    <option value="{{ $promo->id }}" data-discount="{{ $promo->discount }}"
+                                    <option value="{{ $promo->id }}"
+                                        data-discount-type="{{ $promo->discount_type }}"
+                                        data-discount="{{ $promo->discount }}"
+                                        data-max-discount="{{ $promo->max_discount ?? 0 }}"
                                         {{ old('promo_id') == $promo->id ? 'selected' : '' }}>
                                         [{{ strtoupper($promo->code) }}] {{ $promo->nama_promo }} —
-                                        {{ $promo->discount }}% off
+                                        @if ($promo->discount_type === 'percent')
+                                            {{ $promo->discount }}% off
+                                        @else
+                                            Rp {{ number_format($promo->discount, 0, ',', '.') }} off
+                                        @endif
                                     </option>
                                 @endforeach
                             </select>
@@ -307,11 +318,20 @@
                 }
             }
 
-            // Hitung diskon promo
+            // Hitung diskon promo (persen ATAU nominal fix)
             if (selectedPromo.value !== '') {
-                const pct = parseFloat(selectedPromo.getAttribute('data-discount')) || 0;
-                promoDisc = Math.round(basePrice * pct / 100);
-                promoLabel = pct + '% dari harga layanan';
+                const promoType = selectedPromo.getAttribute('data-discount-type');
+                const promoValue = parseFloat(selectedPromo.getAttribute('data-discount')) || 0;
+                const promoMax = parseInt(selectedPromo.getAttribute('data-max-discount')) || 0;
+
+                if (promoType === 'fixed') {
+                    promoDisc = Math.min(promoValue, basePrice);
+                    promoLabel = 'Potongan tetap';
+                } else {
+                    promoDisc = Math.round(basePrice * promoValue / 100);
+                    if (promoMax > 0 && promoDisc > promoMax) promoDisc = promoMax;
+                    promoLabel = promoValue + '% dari harga layanan';
+                }
             }
 
             const total = Math.max(0, basePrice - programDisc - promoDisc - manualDisc);
@@ -377,7 +397,7 @@
             }
         });
 
-        document.querySelector('form').addEventListener('submit', function (e) {
+        document.querySelector('form').addEventListener('submit', function(e) {
             if (!customerIdInput.value) {
                 e.preventDefault();
                 customerSearchInput.classList.add('ring-2', 'ring-red-500');

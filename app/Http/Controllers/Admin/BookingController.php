@@ -75,7 +75,15 @@ class BookingController extends Controller
             return ['error' => 'Promo tidak aktif atau tidak ditemukan.'];
         }
 
-        $promoDisc = round($servicePrice * $promo->discount / 100);
+        if ($promo->discount_type === 'fixed') {
+            // Nominal tetap, tapi jangan sampai melebihi harga layanan
+            $promoDisc = min($promo->discount, $servicePrice);
+        } else {
+            $promoDisc = round($servicePrice * $promo->discount / 100);
+            if ($promo->max_discount && $promoDisc > $promo->max_discount) {
+                $promoDisc = $promo->max_discount;
+            }
+        }
 
         return [$promoDisc, $promo];
     }
