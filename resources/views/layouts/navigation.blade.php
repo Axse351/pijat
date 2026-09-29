@@ -72,12 +72,22 @@
                                         class="absolute left-0 top-full mt-1 w-52 bg-white dark:bg-gray-700 border rounded-lg shadow-lg z-50"
                                         style="display:none;">
 
-                                        {{-- Divider label --}}
                                         <div
                                             class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                             Transaksi
                                         </div>
 
+                                        {{-- Admin & kasir: lihat & input --}}
+                                        <a href="{{ route('admin.atk-purchases.index') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-purchases.index') || request()->routeIs('admin.atk-purchases.show') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+                                            Daftar Pengeluaran
+                                        </a>
+                                        <a href="{{ route('admin.atk-purchases.create') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-purchases.create') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+                                            + Input Pengeluaran
+                                        </a>
+
+                                        {{-- Admin only: master data --}}
                                         @if (Auth::user()->role === 'admin')
                                             <div
                                                 class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider border-t border-gray-100 dark:border-gray-600 mt-1">
@@ -293,6 +303,14 @@
 
                     {{-- PENGELUARAN MOBILE --}}
                     <div class="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">Pengeluaran</div>
+
+                    <x-responsive-nav-link :href="route('admin.atk-purchases.index')" :active="request()->routeIs('admin.atk-purchases.index') ||
+                        request()->routeIs('admin.atk-purchases.show')">
+                        Daftar Pengeluaran
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.atk-purchases.create')" :active="request()->routeIs('admin.atk-purchases.create')">
+                        + Input Pengeluaran
+                    </x-responsive-nav-link>
 
                     @if (Auth::user()->role === 'admin')
                         @if (Route::has('admin.atk-categories.index'))

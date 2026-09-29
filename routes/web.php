@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\AtkCategoryController;
+use App\Http\Controllers\AtkPurchaseController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================
@@ -40,6 +41,7 @@ Route::middleware('auth')->get('/dashboard', function () {
     };
 })->name('dashboard');
 
+// NOTE: hapus route debug ini sebelum production
 Route::middleware('auth')->get('/debug-role', function () {
     $user = auth()->user();
     dd([
@@ -77,7 +79,7 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::get('bookings/calendar-data', [BookingController::class, 'calendarData'])->name('bookings.calendar-data');
         Route::resource('bookings', \App\Http\Controllers\Admin\BookingController::class);
 
-        // ── ✅ FIX: dipindahkan ke sini supaya admin & kasir sama-sama bisa akses ──
+        // ── Selesaikan booking (admin & kasir) ───────────────────────────────
         Route::post('bookings/{booking}/complete', [BookingController::class, 'complete'])
             ->name('bookings.complete');
 
@@ -107,15 +109,13 @@ Route::middleware(['auth', 'role:admin,kasir'])
             Route::delete('/{leaveRequest}',          [TherapistLeaveController::class, 'destroy'])->name('destroy');
         });
 
-        // ── ATK Purchases (admin & kasir bisa akses) ──────────────────────────
-        Route::resource('atk-purchases', \App\Http\Controllers\AtkPurchaseController::class);
-        Route::post('atk-purchases/{purchase}/confirm', [\App\Http\Controllers\AtkPurchaseController::class, 'confirm'])
-            ->name('atk-purchases.confirm');
-        Route::post('atk-purchases/{purchase}/cancel', [\App\Http\Controllers\AtkPurchaseController::class, 'cancel'])
-            ->name('atk-purchases.cancel');
-        Route::get('/api/atk-by-category/{category}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkByCategory']);
-        Route::get('/api/atk-detail/{atk}', [\App\Http\Controllers\AtkPurchaseController::class, 'getAtkDetail']);
-        Route::resource('atk-categories', AtkCategoryController::class);
+        // ── ATK Purchases / Pengeluaran (admin & kasir: LIHAT & INPUT saja) ──
+        Route::resource('atk-purchases', AtkPurchaseController::class)
+            ->only(['index', 'create', 'store', 'show']);
+
+        // API helper untuk form input (dipakai kasir juga)
+        Route::get('/api/atk-by-category/{category}', [AtkPurchaseController::class, 'getAtkByCategory']);
+        Route::get('/api/atk-detail/{atk}', [AtkPurchaseController::class, 'getAtkDetail']);
 
         // ── Jadwal (admin & kasir bisa akses) ────────────────────────────────
         Route::get('schedules/all', [TherapistScheduleController::class, 'allSchedules'])->name('schedules.all');
@@ -133,7 +133,7 @@ Route::middleware(['auth', 'role:admin,kasir'])
         Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class)
             ->only(['index', 'create', 'store', 'show']);
 
-        // ── ✅ Klaim bonus (admin & kasir bisa akses) ──────────────────────────
+        // ── Klaim bonus (admin & kasir bisa akses) ───────────────────────────
         Route::post('customers/{customer}/redeem-bonus', [\App\Http\Controllers\Admin\CustomerController::class, 'redeemBonus'])
             ->name('customers.redeem-bonus');
 
@@ -173,6 +173,16 @@ Route::middleware(['auth', 'role:admin,kasir'])
                     Route::delete('/{customerMembership}', [\App\Http\Controllers\Admin\CustomerMembershipController::class, 'destroy'])->name('destroy');
                 });
 
+            // ── Pengeluaran: edit/update/hapus/konfirmasi/batal khusus admin ──
+            Route::resource('atk-purchases', AtkPurchaseController::class)
+                ->only(['edit', 'update', 'destroy']);
+            Route::post('atk-purchases/{purchase}/confirm', [AtkPurchaseController::class, 'confirm'])
+                ->name('atk-purchases.confirm');
+            Route::post('atk-purchases/{purchase}/cancel', [AtkPurchaseController::class, 'cancel'])
+                ->name('atk-purchases.cancel');
+
+            // ── Master data pengeluaran (khusus admin) ────────────────────────
+            Route::resource('atk-categories', AtkCategoryController::class);
             Route::resource('atk-items', \App\Http\Controllers\AtkController::class);
             Route::post('atk-items/{atk}/adjust-stock', [\App\Http\Controllers\AtkController::class, 'adjustStock'])
                 ->name('atk-items.adjust-stock');
@@ -198,15 +208,12 @@ Route::middleware(['auth', 'role:admin,kasir'])
                 Route::get('/{waTemplate}/preview',   [WaMessageTemplateController::class, 'preview'])->name('preview');
             });
 
-            // ── ✅ Kelola User (Admin & Kasir) — admin-only ───────────────────
+            // ── Kelola User (Admin & Kasir) — admin-only ──────────────────────
             Route::resource('users', UserController::class)
                 ->only(['index', 'create', 'store', 'destroy']);
 
             Route::post('therapists/{therapist}/reset-password', [\App\Http\Controllers\Admin\TherapistController::class, 'resetPassword'])
                 ->name('therapists.reset-password');
-
-            // ── ❌ Baris duplikat "bookings/{booking}/complete" DIHAPUS dari sini ──
-            // (sudah dipindahkan ke atas, ke grup shared admin+kasir)
         });
     });
 
