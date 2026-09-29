@@ -14,35 +14,31 @@ use Carbon\Carbon;
 class AtkPurchaseController extends Controller
 {
     /**
-     * Tampilkan daftar pembelian ATK
+     * Tampilkan daftar pembelian ATK (admin & kasir)
      */
     public function index(Request $request)
     {
         $query = AtkPurchase::with(['atk.category', 'createdBy'])
             ->orderBy('purchase_date', 'desc');
 
-        // Filter berdasarkan status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter berdasarkan periode
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $startDate = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay();
             $endDate   = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay();
             $query->whereBetween('purchase_date', [$startDate, $endDate]);
         }
 
-        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('atk', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
-        // Filter berdasarkan kategori
         if ($request->filled('category_id')) {
             $query->whereHas('atk', function ($q) use ($request) {
                 $q->where('atk_category_id', $request->category_id);
@@ -57,7 +53,7 @@ class AtkPurchaseController extends Controller
     }
 
     /**
-     * Form untuk membuat pembelian ATK baru
+     * Form input pembelian ATK (admin & kasir)
      */
     public function create()
     {
@@ -67,7 +63,7 @@ class AtkPurchaseController extends Controller
     }
 
     /**
-     * Simpan pembelian ATK baru
+     * Simpan pembelian ATK (admin & kasir)
      */
     public function store(Request $request)
     {
@@ -87,11 +83,9 @@ class AtkPurchaseController extends Controller
             $validated['created_by']  = Auth::id();
             $validated['status']      = 'completed';
 
-            // Buat pembelian
             $purchase = AtkPurchase::create($validated);
 
-            // Update stok ATK
-            $atk         = Atk::find($validated['atk_id']);
+            $atk         = Atk::findOrFail($validated['atk_id']);
             $stockBefore = $atk->stock;
             $stockAfter  = $atk->stock + $validated['quantity'];
 
@@ -100,7 +94,6 @@ class AtkPurchaseController extends Controller
                 'last_purchase_price' => $validated['unit_price'],
             ]);
 
-            // Catat history stok
             AtkStockHistory::create([
                 'atk_id'          => $validated['atk_id'],
                 'quantity_before' => $stockBefore,
@@ -108,7 +101,7 @@ class AtkPurchaseController extends Controller
                 'quantity_change' => $validated['quantity'],
                 'type'            => 'in',
                 'user_id'         => Auth::id(),
-                'notes'           => "Pembelian: {$purchase->receipt_number}",
+                'notes'           => 'Pembelian: ' . ($purchase->receipt_number ?: '-'),
             ]);
 
             // Record pengurang pendapatan (Opex)
@@ -116,16 +109,16 @@ class AtkPurchaseController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.atk_purchases_show', $purchase)
+            return redirect()->route('admin.atk-purchases.show', $purchase)
                 ->with('success', 'Pembelian ATK berhasil dicatat dan dikurangi dari pendapatan!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Tampilkan detail pembelian ATK
+     * Detail pembelian ATK (admin & kasir)
      */
     public function show(AtkPurchase $purchase)
     {
@@ -135,7 +128,7 @@ class AtkPurchaseController extends Controller
     }
 
     /**
-     * Form edit pembelian ATK
+     * Form edit pembelian ATK (admin only)
      */
     public function edit(AtkPurchase $purchase)
     {
@@ -149,7 +142,7 @@ class AtkPurchaseController extends Controller
     }
 
     /**
-     * Update pembelian ATK
+     * Update pembelian ATK (admin only)
      */
     public function update(Request $request, AtkPurchase $purchase)
     {
@@ -173,16 +166,32 @@ class AtkPurchaseController extends Controller
 
             DB::commit();
 
-            return redirect()->route('atk.purchases.show', $purchase)
+            return redirect()->route('admin.atk-purchases.show', $purchase)
                 ->with('success', 'Pembelian ATK berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Konfirmasi/selesaikan pembelian
+     * Hapus pembelian ATK (admin only)
+     * Hanya boleh untuk status pending / cancelled agar stok & opex tidak rusak.
+     */
+    public function destroy(AtkPurchase $purchase)
+    {
+        if ($purchase->status === 'completed') {
+            return back()->withErrors(['error' => 'Pembelian yang sudah selesai tidak dapat dihapus. Batalkan terlebih dahulu.']);
+        }
+
+        $purchase->delete();
+
+        return redirect()->route('admin.atk-purchases.index')
+            ->with('success', 'Pembelian ATK berhasil dihapus!');
+    }
+
+    /**
+     * Konfirmasi/selesaikan pembelian (admin only)
      */
     public function confirm(Request $request, AtkPurchase $purchase)
     {
@@ -209,7 +218,7 @@ class AtkPurchaseController extends Controller
                 'quantity_change' => $purchase->quantity,
                 'type'            => 'in',
                 'user_id'         => Auth::id(),
-                'notes'           => "Konfirmasi pembelian: {$purchase->receipt_number}",
+                'notes'           => 'Konfirmasi pembelian: ' . ($purchase->receipt_number ?: '-'),
             ]);
 
             $purchase->update(['status' => 'completed']);
@@ -218,7 +227,7 @@ class AtkPurchaseController extends Controller
 
             DB::commit();
 
-            return redirect()->route('atk.purchases.show', $purchase)
+            return redirect()->route('admin.atk-purchases.show', $purchase)
                 ->with('success', 'Pembelian ATK berhasil dikonfirmasi!');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -227,7 +236,7 @@ class AtkPurchaseController extends Controller
     }
 
     /**
-     * Batalkan pembelian ATK
+     * Batalkan pembelian ATK (admin only)
      */
     public function cancel(Request $request, AtkPurchase $purchase)
     {
@@ -241,9 +250,9 @@ class AtkPurchaseController extends Controller
             if ($purchase->status === 'completed') {
                 $atk         = $purchase->atk;
                 $stockBefore = $atk->stock;
-                $stockAfter  = $atk->stock - $purchase->quantity;
+                $stockAfter  = max(0, $atk->stock - $purchase->quantity);
 
-                $atk->update(['stock' => max(0, $stockAfter)]);
+                $atk->update(['stock' => $stockAfter]);
 
                 AtkStockHistory::create([
                     'atk_id'          => $purchase->atk_id,
@@ -262,7 +271,7 @@ class AtkPurchaseController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.atk_purchases_index')
+            return redirect()->route('admin.atk-purchases.index')
                 ->with('success', 'Pembelian ATK berhasil dibatalkan!');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -290,7 +299,7 @@ class AtkPurchaseController extends Controller
     }
 
     /**
-     * Get ATK items berdasarkan kategori (untuk AJAX)
+     * Get ATK items berdasarkan kategori (AJAX, admin & kasir)
      */
     public function getAtkByCategory(AtkCategory $category)
     {
@@ -302,7 +311,7 @@ class AtkPurchaseController extends Controller
     }
 
     /**
-     * Get detail ATK (untuk AJAX)
+     * Get detail ATK (AJAX, admin & kasir)
      */
     public function getAtkDetail(Atk $atk)
     {

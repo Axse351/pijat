@@ -111,7 +111,8 @@ Route::middleware(['auth', 'role:admin,kasir'])
 
         // ── ATK Purchases / Pengeluaran (admin & kasir: LIHAT & INPUT saja) ──
         Route::resource('atk-purchases', AtkPurchaseController::class)
-            ->only(['index', 'create', 'store', 'show']);
+            ->only(['index', 'create', 'store', 'show'])
+            ->parameters(['atk-purchases' => 'purchase']);
 
         // API helper untuk form input (dipakai kasir juga)
         Route::get('/api/atk-by-category/{category}', [AtkPurchaseController::class, 'getAtkByCategory']);
@@ -175,7 +176,8 @@ Route::middleware(['auth', 'role:admin,kasir'])
 
             // ── Pengeluaran: edit/update/hapus/konfirmasi/batal khusus admin ──
             Route::resource('atk-purchases', AtkPurchaseController::class)
-                ->only(['edit', 'update', 'destroy']);
+                ->only(['edit', 'update', 'destroy'])
+                ->parameters(['atk-purchases' => 'purchase']);
             Route::post('atk-purchases/{purchase}/confirm', [AtkPurchaseController::class, 'confirm'])
                 ->name('atk-purchases.confirm');
             Route::post('atk-purchases/{purchase}/cancel', [AtkPurchaseController::class, 'cancel'])
