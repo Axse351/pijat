@@ -15,7 +15,8 @@
                 @endif
 
                 @if ($errors->any())
-                    <div class="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm">
+                    <div
+                        class="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm">
                         <ul class="list-disc list-inside">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -26,7 +27,8 @@
 
                 <!-- Kategori -->
                 <div class="mb-5">
-                    <label for="atk_category_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <label for="atk_category_id"
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         Kategori COA <span class="text-red-500">*</span>
                     </label>
                     <select name="atk_category_id" id="atk_category_id" required
@@ -34,7 +36,7 @@
                         <option value="">-- Pilih Kategori --</option>
                         @foreach ($categories as $category)
                             <option value="{{ $category->id }}"
-                                {{ (isset($atk) ? $atk->atk_category_id : old('atk_category_id')) == $category->id ? 'selected' : '' }}>
+                                {{ old('atk_category_id', isset($atk) ? $atk->atk_category_id : null) == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }} ({{ $category->code }})
                             </option>
                         @endforeach
@@ -50,7 +52,7 @@
                         Nama Item <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="name" id="name" required
-                        value="{{ isset($atk) ? $atk->name : old('name') }}"
+                        value="{{ old('name', isset($atk) ? $atk->name : '') }}"
                         placeholder="Contoh: Token Listrik, Garam SPA, Tissue"
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('name') border-red-500 @enderror">
                     @error('name')
@@ -64,8 +66,7 @@
                         Kode Item <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="code" id="code" required
-                        value="{{ isset($atk) ? $atk->code : old('code') }}"
-                        placeholder="Contoh: 55, 81, 210"
+                        value="{{ old('code', isset($atk) ? $atk->code : '') }}" placeholder="Contoh: 55, 81, 210"
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('code') border-red-500 @enderror">
                     @error('code')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -74,32 +75,68 @@
 
                 <!-- Stok -->
                 @if (isset($atk))
-                    {{-- Edit mode: tampilkan stok saat ini, tidak bisa diubah langsung --}}
-                    <div class="mb-5 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-3">ℹ️ Informasi Stok</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                            <div>
-                                <span class="text-blue-700 dark:text-blue-300">Stok Saat Ini:</span>
-                                <p class="font-bold text-blue-900 dark:text-blue-100 text-lg">{{ $atk->stock }} unit</p>
-                            </div>
-                            <div>
-                                <span class="text-blue-700 dark:text-blue-300">Harga Terakhir:</span>
-                                <p class="font-semibold text-blue-900 dark:text-blue-100">
-                                    {{ $atk->last_purchase_price ? 'Rp ' . number_format($atk->last_purchase_price, 0, ',', '.') : '—' }}
-                                </p>
-                            </div>
+                    @if (auth()->user()->role === 'admin')
+                        {{-- Edit mode (ADMIN): stok bisa diubah langsung --}}
+                        <div
+                            class="mb-5 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-3">📦 Stok</h3>
+
+                            <label for="stock"
+                                class="block text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                                Stok Saat Ini (unit) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" name="stock" id="stock" min="0" required
+                                value="{{ old('stock', $atk->stock) }}"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('stock') border-red-500 @enderror">
+                            @error('stock')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+
+                            <label for="stock_reason"
+                                class="block text-sm font-semibold text-blue-800 dark:text-blue-200 mt-4 mb-2">
+                                Alasan Perubahan Stok (Optional)
+                            </label>
+                            <input type="text" name="stock_reason" id="stock_reason" maxlength="255"
+                                value="{{ old('stock_reason') }}" placeholder="Contoh: Stok awal, koreksi hitung fisik"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+
+                            <p class="text-xs text-blue-600 dark:text-blue-400 mt-3">
+                                Harga terakhir:
+                                <strong>{{ $atk->last_purchase_price ? 'Rp ' . number_format($atk->last_purchase_price, 0, ',', '.') : '—' }}</strong>.
+                                Perubahan stok akan tercatat di riwayat stok.
+                            </p>
                         </div>
-                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                            💡 Untuk mengubah stok, gunakan fitur <strong>Penyesuaian Stok</strong> di halaman detail item.
-                        </p>
-                    </div>
+                    @else
+                        {{-- Edit mode (KASIR): hanya lihat, tidak bisa ubah --}}
+                        <div
+                            class="mb-5 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-3">ℹ️ Informasi Stok</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <span class="text-blue-700 dark:text-blue-300">Stok Saat Ini:</span>
+                                    <p class="font-bold text-blue-900 dark:text-blue-100 text-lg">{{ $atk->stock }}
+                                        unit</p>
+                                </div>
+                                <div>
+                                    <span class="text-blue-700 dark:text-blue-300">Harga Terakhir:</span>
+                                    <p class="font-semibold text-blue-900 dark:text-blue-100">
+                                        {{ $atk->last_purchase_price ? 'Rp ' . number_format($atk->last_purchase_price, 0, ',', '.') : '—' }}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                💡 Stok hanya bisa diubah oleh admin.
+                            </p>
+                        </div>
+                    @endif
                 @else
                     {{-- Create mode: bisa set stok awal --}}
                     <div class="mb-5">
                         <label for="stock" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             Stok Awal
                         </label>
-                        <input type="number" name="stock" id="stock" min="0" value="{{ old('stock', 0) }}"
+                        <input type="number" name="stock" id="stock" min="0"
+                            value="{{ old('stock', 0) }}"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('stock') border-red-500 @enderror">
                         <p class="mt-1 text-xs text-gray-400">Biarkan 0 jika belum ada stok saat ini.</p>
                         @error('stock')
@@ -109,10 +146,12 @@
 
                     <!-- Harga Awal -->
                     <div class="mb-5">
-                        <label for="last_purchase_price" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label for="last_purchase_price"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             Harga Satuan Awal (Rp)
                         </label>
-                        <input type="number" name="last_purchase_price" id="last_purchase_price" min="0" value="{{ old('last_purchase_price', 0) }}"
+                        <input type="number" name="last_purchase_price" id="last_purchase_price" min="0"
+                            value="{{ old('last_purchase_price', 0) }}"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('last_purchase_price') border-red-500 @enderror">
                         <p class="mt-1 text-xs text-gray-400">Biarkan 0 jika harga belum diketahui.</p>
                         @error('last_purchase_price')
@@ -126,9 +165,8 @@
                     <label for="description" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         Deskripsi (Optional)
                     </label>
-                    <textarea name="description" id="description" rows="3"
-                        placeholder="Penjelasan tambahan tentang item ini..."
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ isset($atk) ? $atk->description : old('description') }}</textarea>
+                    <textarea name="description" id="description" rows="3" placeholder="Penjelasan tambahan tentang item ini..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('description', isset($atk) ? $atk->description : '') }}</textarea>
                 </div>
 
                 <!-- Buttons -->

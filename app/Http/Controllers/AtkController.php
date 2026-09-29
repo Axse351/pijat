@@ -26,8 +26,11 @@ class AtkController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+            // Dikelompokkan agar orWhere tidak merusak filter lain
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
         }
 
         $atks       = $query->paginate(20);
@@ -91,19 +94,58 @@ class AtkController extends Controller
 
     public function update(Request $request, Atk $atk)
     {
-        $validated = $request->validate([
+        $isAdmin = Auth::user()->role === 'admin';
+
+        $rules = [
             'atk_category_id' => 'required|exists:atk_categories,id',
             'name'            => "required|string|unique:atks,name,{$atk->id}",
             'code'            => "required|string|unique:atks,code,{$atk->id}",
             'description'     => 'nullable|string',
-            'stock'               => 'nullable|integer|min:0',
-            'last_purchase_price' => 'nullable|numeric|min:0',
-        ]);
+        ];
 
-        $atk->update($validated);
+        // Hanya admin yang boleh mengubah stok dari form edit
+        if ($isAdmin) {
+            $rules['stock']        = 'required|integer|min:0';
+            $rules['stock_reason'] = 'nullable|string|max:255';
+        }
 
-        return redirect()->route('admin.atk-items.show', $atk)
-            ->with('success', 'Item COA berhasil diperbarui!');
+        $validated = $request->validate($rules);
+
+        try {
+            DB::beginTransaction();
+
+            $stockBefore = $atk->stock;
+            $reason      = $validated['stock_reason'] ?? null;
+            unset($validated['stock_reason']);
+
+            // Kasir: pastikan stok tidak ikut terupdate walau dikirim manual
+            if (! $isAdmin) {
+                unset($validated['stock']);
+            }
+
+            $atk->update($validated);
+
+            // Catat riwayat jika stok berubah
+            if ($isAdmin && (int) $atk->stock !== (int) $stockBefore) {
+                AtkStockHistory::create([
+                    'atk_id'          => $atk->id,
+                    'quantity_before' => $stockBefore,
+                    'quantity_after'  => $atk->stock,
+                    'quantity_change' => $atk->stock - $stockBefore,
+                    'type'            => 'adjustment',
+                    'user_id'         => Auth::id(),
+                    'notes'           => $reason ?: 'Koreksi stok lewat form edit',
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.atk-items.show', $atk)
+                ->with('success', 'Item COA berhasil diperbarui!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
     }
 
     public function destroy(Atk $atk)
