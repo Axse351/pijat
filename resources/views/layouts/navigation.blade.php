@@ -87,25 +87,22 @@
                                             + Input Pengeluaran
                                         </a>
 
-                                        {{-- Admin only: master data --}}
-                                        @if (Auth::user()->role === 'admin')
-                                            <div
-                                                class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider border-t border-gray-100 dark:border-gray-600 mt-1">
-                                                Master Data
-                                            </div>
-                                            @if (Route::has('admin.atk-categories.index'))
-                                                <a href="{{ route('admin.atk-categories.index') }}"
-                                                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-categories.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
-                                                    Kategori Pengeluaran
-                                                </a>
-                                            @endif
-                                            @if (Route::has('admin.atk-items.index'))
-                                                <a href="{{ route('admin.atk-items.index') }}"
-                                                    class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-items.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
-                                                    Item Pengeluaran
-                                                </a>
-                                            @endif
+                                        {{-- Master data pengeluaran --}}
+                                        <div
+                                            class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider border-t border-gray-100 dark:border-gray-600 mt-1">
+                                            Master Data
+                                        </div>
+                                        @if (Auth::user()->role === 'admin' && Route::has('admin.atk-categories.index'))
+                                            <a href="{{ route('admin.atk-categories.index') }}"
+                                                class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-categories.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+                                                Kategori Pengeluaran
+                                            </a>
                                         @endif
+                                        {{-- Item Pengeluaran: admin & kasir --}}
+                                        <a href="{{ route('admin.atk-items.index') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 {{ request()->routeIs('admin.atk-items.*') ? 'bg-indigo-100 text-indigo-600 font-semibold' : '' }}">
+                                            Item Pengeluaran
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -288,7 +285,6 @@
 
             @auth
                 @if (in_array(Auth::user()->role, ['admin', 'kasir']))
-
                     <x-responsive-nav-link :href="route('admin.bookings.index')" :active="request()->routeIs('admin.bookings.*')">
                         Booking
                     </x-responsive-nav-link>
@@ -312,18 +308,14 @@
                         + Input Pengeluaran
                     </x-responsive-nav-link>
 
-                    @if (Auth::user()->role === 'admin')
-                        @if (Route::has('admin.atk-categories.index'))
-                            <x-responsive-nav-link :href="route('admin.atk-categories.index')" :active="request()->routeIs('admin.atk-categories.*')">
-                                Kategori Pengeluaran
-                            </x-responsive-nav-link>
-                        @endif
-                        @if (Route::has('admin.atk-items.index'))
-                            <x-responsive-nav-link :href="route('admin.atk-items.index')" :active="request()->routeIs('admin.atk-items.*')">
-                                Item Pengeluaran
-                            </x-responsive-nav-link>
-                        @endif
+                    @if (Auth::user()->role === 'admin' && Route::has('admin.atk-categories.index'))
+                        <x-responsive-nav-link :href="route('admin.atk-categories.index')" :active="request()->routeIs('admin.atk-categories.*')">
+                            Kategori Pengeluaran
+                        </x-responsive-nav-link>
                     @endif
+                    <x-responsive-nav-link :href="route('admin.atk-items.index')" :active="request()->routeIs('admin.atk-items.*')">
+                        Item Pengeluaran
+                    </x-responsive-nav-link>
 
                     <x-responsive-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
                         Kehadiran
@@ -361,7 +353,6 @@
                     <x-responsive-nav-link :href="route('terapis.leaves.index')" :active="request()->routeIs('terapis.leaves.*')">
                         Pengajuan Izin
                     </x-responsive-nav-link>
-
                 @endif
             @endauth
 
