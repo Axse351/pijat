@@ -114,9 +114,9 @@ Route::middleware(['auth', 'role:admin,kasir'])
             ->only(['index', 'create', 'store', 'show'])
             ->parameters(['atk-purchases' => 'purchase']);
 
-        // ── Item Pengeluaran (admin & kasir: LIHAT & INPUT saja) ─────────────
+        // ── Item Pengeluaran (admin & kasir: lihat, input, edit; hapus khusus admin) ──
         Route::resource('atk-items', \App\Http\Controllers\AtkController::class)
-            ->only(['index', 'create', 'store', 'show'])
+            ->only(['index', 'create', 'store', 'show', 'edit', 'update'])
             ->parameters(['atk-items' => 'atk']);
 
         // API helper untuk form input (dipakai kasir juga)
@@ -191,9 +191,9 @@ Route::middleware(['auth', 'role:admin,kasir'])
             // ── Master data pengeluaran (khusus admin) ────────────────────────
             Route::resource('atk-categories', AtkCategoryController::class);
 
-            // Item pengeluaran: edit/update/hapus/adjust stok khusus admin
+            // Item pengeluaran: hapus & adjust stok khusus admin
             Route::resource('atk-items', \App\Http\Controllers\AtkController::class)
-                ->only(['edit', 'update', 'destroy'])
+                ->only(['destroy'])
                 ->parameters(['atk-items' => 'atk']);
             Route::post('atk-items/{atk}/adjust-stock', [\App\Http\Controllers\AtkController::class, 'adjustStock'])
                 ->name('atk-items.adjust-stock');
