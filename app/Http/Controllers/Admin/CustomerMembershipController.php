@@ -13,8 +13,6 @@ class CustomerMembershipController extends Controller
 {
     public function index(Customer $customer)
     {
-        $customer->load('user');
-
         $activeMembership = CustomerMembership::with('membership')
             ->where('customer_id', $customer->id)
             ->where('is_active', true)
@@ -30,7 +28,6 @@ class CustomerMembershipController extends Controller
 
     public function create(Customer $customer)
     {
-        $customer->load('user');
         $memberships = Membership::orderBy('name')->get();
 
         return view('admin.customer_memberships.create', compact('customer', 'memberships'));
@@ -43,7 +40,9 @@ class CustomerMembershipController extends Controller
         ]);
 
         $membership = Membership::findOrFail($request->membership_id);
+        $endDate    = Carbon::today()->addDays($membership->duration_days);
 
+        // Nonaktifkan membership lama
         CustomerMembership::where('customer_id', $customer->id)
             ->where('is_active', true)
             ->update(['is_active' => false]);
@@ -52,7 +51,7 @@ class CustomerMembershipController extends Controller
             'customer_id'   => $customer->id,
             'membership_id' => $membership->id,
             'start_date'    => Carbon::today(),
-            'end_date'      => Carbon::today()->addDays($membership->duration_days),
+            'end_date'      => $endDate,
             'is_active'     => true,
         ]);
 
@@ -60,16 +59,15 @@ class CustomerMembershipController extends Controller
             ->route('admin.customers.membership.index', $customer)
             ->with('success', "Membership {$membership->name} berhasil diberikan.")
             ->with('welcome_membership', [
-                'customer_name'   => $customer->user->name,
+                'customer_name'   => $customer->name,
                 'membership_name' => $membership->name,
-                'end_date'        => Carbon::today()->addDays($membership->duration_days)->translatedFormat('d F Y'),
-                'phone'           => $customer->phone ?? $customer->user->phone ?? null, // ← tambah baris ini saja
+                'end_date'        => $endDate->translatedFormat('d F Y'),
+                'phone'           => $customer->phone,
             ]);
     }
 
     public function edit(Customer $customer, CustomerMembership $customerMembership)
     {
-        $customer->load('user');
         $memberships = Membership::orderBy('name')->get();
 
         return view('admin.customer_memberships.edit', compact('customer', 'customerMembership', 'memberships'));
@@ -80,16 +78,25 @@ class CustomerMembershipController extends Controller
         $request->validate([
             'membership_id' => 'required|exists:memberships,id',
             'start_date'    => 'required|date',
-            'is_active'     => 'boolean',
+            'is_active'     => 'nullable|boolean',
         ]);
 
         $membership = Membership::findOrFail($request->membership_id);
+        $isActive   = $request->boolean('is_active');
+
+        // Hanya boleh ada 1 membership aktif per pelanggan
+        if ($isActive) {
+            CustomerMembership::where('customer_id', $customer->id)
+                ->where('id', '!=', $customerMembership->id)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
+        }
 
         $customerMembership->update([
             'membership_id' => $membership->id,
             'start_date'    => $request->start_date,
             'end_date'      => Carbon::parse($request->start_date)->addDays($membership->duration_days),
-            'is_active'     => $request->boolean('is_active'),
+            'is_active'     => $isActive,
         ]);
 
         return redirect()

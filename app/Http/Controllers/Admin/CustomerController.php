@@ -13,11 +13,22 @@ use Carbon\Carbon;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::with(['user', 'bookings' => function ($q) {
-            $q->where('status', 'completed')->orderByDesc('scheduled_at');
-        }])->latest()->get();
+        $search = trim((string) $request->query('q', ''));
+
+        $customers = Customer::with([
+            'user',
+            'activeMembership.membership',
+            'bookings' => function ($q) {
+                $q->where('status', 'completed')->orderByDesc('scheduled_at');
+            },
+        ])
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->get();
 
         $customers->each(function ($c) {
             $completed      = $c->bookings;
@@ -27,7 +38,7 @@ class CustomerController extends Controller
                 && Carbon::parse($c->last_visit)->lt(now()->subDays(30));
         });
 
-        return view('admin.customers.index', compact('customers'));
+        return view('admin.customers.index', compact('customers', 'search'));
     }
 
     public function create()
@@ -71,6 +82,12 @@ class CustomerController extends Controller
             ->with('success', 'Pelanggan berhasil ditambahkan.');
     }
 
+    public function edit(Customer $customer)
+    {
+        $customer->load('user');
+        return view('admin.customers.edit', compact('customer'));
+    }
+
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
@@ -104,14 +121,6 @@ class CustomerController extends Controller
             ->with('success', 'Data pelanggan berhasil diperbarui.');
     }
 
-    public function edit(Customer $customer)
-    {
-        $customer->load('user');
-        return view('admin.customers.edit', compact('customer'));
-    }
-
-
-
     public function destroy(Customer $customer)
     {
         DB::transaction(function () use ($customer) {
@@ -122,7 +131,7 @@ class CustomerController extends Controller
             ->with('success', 'Pelanggan berhasil dihapus.');
     }
 
-    // ✅ Klaim bonus — reset poin ke 0
+    // Klaim bonus — reset poin ke 0
     public function redeemBonus(Customer $customer)
     {
         if (!$customer->hasBonus()) {

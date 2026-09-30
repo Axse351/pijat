@@ -8,8 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 class Customer extends Model
 {
     use HasFactory;
+
     protected $table = 'customers';
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'ulang_tahun'         => 'date',
+        'points'              => 'integer',
+        'total_points_earned' => 'integer',
+    ];
+
+    // --- Relations ---
+
     public function bookings()
     {
         return $this->hasMany(Booking::class);
@@ -20,17 +30,20 @@ class Customer extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** Semua riwayat membership pelanggan */
     public function memberships()
     {
         return $this->hasMany(CustomerMembership::class);
     }
-    protected $casts = [
-        'ulang_tahun'        => 'date',
-        'points'             => 'integer',
-        'total_points_earned' => 'integer',
-    ];
 
-    // --- Relations ---
+    /** Membership yang aktif dan belum kadaluarsa */
+    public function activeMembership()
+    {
+        return $this->hasOne(CustomerMembership::class)
+            ->where('is_active', true)
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->latest('id');
+    }
 
     // --- Point Helpers ---
 
@@ -61,7 +74,8 @@ class Customer extends Model
     {
         return min($this->points, 10);
     }
-    // ✅ Masking nomor telepon — tampilkan hanya 3 digit terakhir
+
+    // Masking nomor telepon — tampilkan hanya 3 digit terakhir
     public function maskedPhone(): ?string
     {
         if (!$this->phone) {

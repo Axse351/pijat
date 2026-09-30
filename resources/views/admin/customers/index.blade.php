@@ -3,10 +3,12 @@
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Pelanggan</h2>
             <div class="flex gap-2">
-                <a href="{{ route('admin.wa-templates.index') }}"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 text-sm font-medium rounded-lg transition-colors">
-                    📱 Template WA
-                </a>
+                @if (auth()->user()->role === 'admin')
+                    <a href="{{ route('admin.wa-templates.index') }}"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 text-sm font-medium rounded-lg transition-colors">
+                        📱 Template WA
+                    </a>
+                @endif
                 <a href="{{ route('admin.customers.create') }}"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
                     + Tambah Pelanggan
@@ -28,13 +30,14 @@
             @endif
 
             @php
-                // ── Guard agar fungsi tidak dideklarasi ulang saat view di-cache ──
-                // ── Carbon::parse() digunakan agar aman untuk format datetime maupun date saja ──
+                $isAdmin = auth()->user()->role === 'admin';
+                $search = $search ?? request('q', '');
+
+                // Guard agar fungsi tidak dideklarasi ulang saat view di-cache
                 if (!function_exists('daysUntilBirthday')) {
                     function daysUntilBirthday($ulang_tahun): int
                     {
                         $today = \Carbon\Carbon::today();
-                        // parse() toleran terhadap '1990-05-15' maupun '1990-05-15 00:00:00'
                         $bday = \Carbon\Carbon::parse($ulang_tahun)->setYear($today->year)->startOfDay();
                         if ($bday->lt($today)) {
                             $bday->addYear();
@@ -48,16 +51,37 @@
                 );
                 $inactiveCustomers = $customers->filter(fn($c) => $c->is_inactive);
                 $bonusReadyCustomers = $customers->filter(fn($c) => $c->hasBonus());
-
-                // ── Ambil template WA sekali saja ──
-                $waTemplates = \App\Models\WaMessageTemplate::whereIn('key', [
-                    'customer_birthday',
-                    'customer_reactivation',
-                    'customer_bonus_ready',
-                ])
-                    ->where('is_active', true)
-                    ->pluck('template', 'key');
             @endphp
+
+            {{-- Filter cari nama --}}
+            <form method="GET" action="{{ route('admin.customers.index') }}" class="mb-4">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400 text-sm">🔍</span>
+                        <input type="text" name="q" value="{{ $search }}"
+                            placeholder="Cari nama pelanggan..." autocomplete="off"
+                            class="w-full pl-9 pr-3 py-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit"
+                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                            Cari
+                        </button>
+                        @if ($search !== '')
+                            <a href="{{ route('admin.customers.index') }}"
+                                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors">
+                                Reset
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                @if ($search !== '')
+                    <p class="mt-2 text-xs text-gray-500">
+                        Hasil pencarian untuk "<span class="font-semibold">{{ $search }}</span>":
+                        {{ $customers->count() }} pelanggan
+                    </p>
+                @endif
+            </form>
 
             {{-- Banner: Bonus siap klaim --}}
             @if ($bonusReadyCustomers->count())
@@ -85,7 +109,7 @@
                                         WA</a>
                                 @endif
                                 <form method="POST" action="{{ route('admin.customers.redeem-bonus', $c) }}"
-                                    onsubmit="return confirm('Klaim bonus gratis 1 jam untuk {{ $c->name }}?')">
+                                    onsubmit="return confirm('Klaim bonus gratis 1 jam untuk {{ addslashes($c->name) }}?')">
                                     @csrf
                                     <button type="submit"
                                         class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-md">🎁
@@ -169,7 +193,7 @@
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="bg-gray-50 dark:bg-gray-700/50">
-                                    @foreach (['#', 'Nama', 'Telepon', 'Kunjungan', '🏆 Poin', 'Terakhir Datang', 'Ulang Tahun', 'Bergabung', 'Aksi'] as $th)
+                                    @foreach (['#', 'Nama', 'Telepon', 'Membership', 'Kunjungan', '🏆 Poin', 'Terakhir Datang', 'Ulang Tahun', 'Bergabung', 'Aksi'] as $th)
                                         <th
                                             class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             {{ $th }}</th>
@@ -229,7 +253,14 @@
 
                                         $pts = $customer->points ?? 0;
                                         $hasBonus = $customer->hasBonus();
-                                        $progressPct = $hasBonus ? 100 : ($pts / 10) * 100;
+                                        $progressPct = $hasBonus ? 100 : min(100, ($pts / 10) * 100);
+
+                                        // Membership aktif
+                                        $cm = $customer->activeMembership;
+                                        $cmEnd = $cm ? \Carbon\Carbon::parse($cm->end_date) : null;
+                                        $cmDaysLeft = $cmEnd
+                                            ? (int) now()->startOfDay()->diffInDays($cmEnd->startOfDay())
+                                            : null;
                                     @endphp
                                     <tr
                                         class="hover:bg-gray-50 dark:hover:bg-gray-700/50
@@ -254,7 +285,28 @@
                                         </td>
 
                                         <td class="px-5 py-3.5 text-gray-600 dark:text-gray-400">
-                                            {{ auth()->user()->role === 'admin' ? $customer->phone ?? '—' : $customer->maskedPhone() ?? '—' }}
+                                            {{ $isAdmin ? $customer->phone ?? '—' : $customer->maskedPhone() ?? '—' }}
+                                        </td>
+
+                                        {{-- Membership --}}
+                                        <td class="px-5 py-3.5">
+                                            @if ($cm && $cm->membership)
+                                                <div class="flex flex-col gap-0.5">
+                                                    <span
+                                                        class="inline-flex w-fit items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-full">
+                                                        🎖 {{ $cm->membership->name }}
+                                                    </span>
+                                                    <span
+                                                        class="text-xs {{ $cmDaysLeft <= 7 ? 'text-orange-500 font-medium' : 'text-gray-400' }}">
+                                                        s/d {{ $cmEnd->format('d M Y') }}
+                                                        @if ($cmDaysLeft <= 7)
+                                                            ({{ $cmDaysLeft === 0 ? 'hari ini' : $cmDaysLeft . ' hari lagi' }})
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400 text-xs">Non-member</span>
+                                            @endif
                                         </td>
 
                                         <td class="px-5 py-3.5">
@@ -356,18 +408,23 @@
 
                                         <td class="px-5 py-3.5">
                                             <div class="flex gap-2 flex-wrap">
-                                                <a href="{{ route('admin.customers.membership.index', $customer) }}"
-                                                    class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-medium rounded-lg">🎖
-                                                    Membership</a>
-                                                <a href="{{ route('admin.customers.edit', $customer) }}"
-                                                    class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-medium rounded-lg">Edit</a>
-                                                <form method="POST"
-                                                    action="{{ route('admin.customers.destroy', $customer) }}"
-                                                    onsubmit="return confirm('Hapus pelanggan ini?')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit"
-                                                        class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg">Hapus</button>
-                                                </form>
+                                                {{-- Route ini khusus admin, jadi tombol disembunyikan untuk kasir --}}
+                                                @if ($isAdmin)
+                                                    <a href="{{ route('admin.customers.membership.index', $customer) }}"
+                                                        class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-medium rounded-lg">🎖
+                                                        Membership</a>
+                                                    <a href="{{ route('admin.customers.edit', $customer) }}"
+                                                        class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-medium rounded-lg">Edit</a>
+                                                    <form method="POST"
+                                                        action="{{ route('admin.customers.destroy', $customer) }}"
+                                                        onsubmit="return confirm('Hapus pelanggan ini?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit"
+                                                            class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg">Hapus</button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-xs text-gray-400">—</span>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -376,9 +433,16 @@
                         </table>
                     </div>
                 @else
-                    <div class="text-center py-16 text-gray-400 text-sm">Belum ada pelanggan. <a
-                            href="{{ route('admin.customers.create') }}"
-                            class="text-indigo-500 hover:underline">Tambah sekarang</a></div>
+                    <div class="text-center py-16 text-gray-400 text-sm">
+                        @if ($search !== '')
+                            Tidak ada pelanggan dengan nama "<span class="font-medium">{{ $search }}</span>".
+                            <a href="{{ route('admin.customers.index') }}"
+                                class="text-indigo-500 hover:underline">Reset pencarian</a>
+                        @else
+                            Belum ada pelanggan. <a href="{{ route('admin.customers.create') }}"
+                                class="text-indigo-500 hover:underline">Tambah sekarang</a>
+                        @endif
+                    </div>
                 @endif
             </div>
         </div>
